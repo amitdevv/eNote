@@ -26,7 +26,9 @@ import {
   ClipboardList, 
   Edit3, 
   Eye, 
-  CheckCircle
+  CheckCircle,
+  Grid3X3,
+  List
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { Badge } from '@/components/ui/badge';
@@ -51,14 +53,16 @@ import { cn } from '@/lib/utils';
 interface HeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  sortBy: 'recent' | 'alphabetical' | 'status' | 'workspace';
-  onSortChange: (sort: 'recent' | 'alphabetical' | 'status' | 'workspace') => void;
+  sortBy: 'recent' | 'alphabetical' | 'status';
+  onSortChange: (sort: 'recent' | 'alphabetical' | 'status') => void;
   filterBy: 'all' | 'ideas' | 'drafts' | 'review' | 'done';
   onFilterChange: (filter: 'all' | 'ideas' | 'drafts' | 'review' | 'done') => void;
   onNewNote: () => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
   isEditorMode?: boolean;
   noteId?: string;
+  viewMode?: 'grid' | 'list';
+  onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -71,18 +75,18 @@ export const Header: React.FC<HeaderProps> = ({
   onNewNote,
   searchInputRef,
   isEditorMode = false,
-  noteId
+  noteId,
+  viewMode = 'grid',
+  onViewModeChange
 }) => {
   const { notes, addNote, getNoteById } = useNotesStore();
   const { 
     title: editorTitle,
     content: editorContent,
     status: editorStatus, 
-    workspace: editorWorkspace, 
     tags: editorTags, 
     fontFamily: editorFontFamily,
     setStatus: setEditorStatus,
-    setWorkspace: setEditorWorkspace,
     setTags: setEditorTags,
     setFontFamily: setEditorFontFamily,
     addTag: addEditorTag,
@@ -160,7 +164,6 @@ export const Header: React.FC<HeaderProps> = ({
     { value: 'recent', label: 'Recent' },
     { value: 'alphabetical', label: 'Alphabetical' },
     { value: 'status', label: 'Status' },
-    { value: 'workspace', label: 'Workspace' },
   ];
 
   const filterOptions = [
@@ -214,17 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
               </SelectContent>
             </Select>
 
-            {/* Workspace */}
-            <Select value={editorWorkspace} onValueChange={setEditorWorkspace}>
-              <SelectTrigger className="w-24 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Personal">Personal</SelectItem>
-                <SelectItem value="Work">Work</SelectItem>
-                <SelectItem value="Projects">Projects</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Removed workspace selector - simplified structure */}
 
             {/* Font */}
             <FontSelector 
@@ -389,6 +382,38 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Side - Controls */}
         <div className="flex items-center gap-3">
+          {/* View Toggle Buttons */}
+          {onViewModeChange && (
+            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md">
+              <Button
+                onClick={() => onViewModeChange('grid')}
+                size="sm"
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                className={cn(
+                  "h-8 px-3 rounded-r-none border-r border-gray-200 dark:border-gray-700",
+                  viewMode === 'grid' 
+                    ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900" 
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                )}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => onViewModeChange('list')}
+                size="sm"
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                className={cn(
+                  "h-8 px-3 rounded-l-none",
+                  viewMode === 'list' 
+                    ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900" 
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                )}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          
           {/* New Note Button */}
           <Button 
             onClick={onNewNote}

@@ -58,17 +58,22 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        paragraph: {
+          HTMLAttributes: {
+            class: 'text-wrap break-words',
+          },
+        },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 dark:text-blue-400 underline cursor-pointer',
+          class: 'text-blue-600 dark:text-blue-400 underline cursor-pointer break-all',
         },
       }),
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: 'bg-gray-100 dark:bg-gray-800 rounded-md p-4 font-mono text-sm border border-gray-200 dark:border-gray-700',
+          class: 'bg-gray-100 dark:bg-gray-800 rounded-md p-4 font-mono text-sm border border-gray-200 dark:border-gray-700 overflow-x-auto whitespace-pre-wrap break-words',
         },
       }),
       TaskList.configure({
@@ -79,7 +84,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       TaskItem.configure({
         nested: true,
         HTMLAttributes: {
-          class: 'task-item',
+          class: 'task-item break-words',
         },
       }),
       HorizontalRule.configure({
@@ -97,7 +102,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none max-w-none',
+          'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
           'dark:prose-invert',
           'prose-headings:text-gray-900 dark:prose-headings:text-gray-100',
           'prose-p:text-gray-700 dark:prose-p:text-gray-300',
@@ -110,10 +115,27 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
           'prose-ul:text-gray-700 dark:prose-ul:text-gray-300',
           'prose-ol:text-gray-700 dark:prose-ol:text-gray-300',
           'prose-li:text-gray-700 dark:prose-li:text-gray-300',
-          'min-h-[400px] p-4'
+          'min-h-[400px] w-full max-w-full box-border break-words text-wrap'
         ),
-        style: `font-family: "${fontFamily}", sans-serif !important; font-display: swap;`,
+        style: `font-family: "${fontFamily}", sans-serif !important; font-display: swap; max-width: 100% !important; width: 100% !important; overflow-x: hidden !important; word-wrap: break-word !important; overflow-wrap: break-word !important;`,
         'data-placeholder': placeholder,
+        spellcheck: 'false',
+      },
+      handlePaste: (view, event, slice) => {
+        // Handle pasted content to ensure it respects word wrapping
+        return false; // Let TipTap handle the paste normally
+      },
+      handleTextInput: (view, from, to, text) => {
+        // Allow normal text input behavior
+        return false;
+      },
+      transformPastedText: (text) => {
+        // Ensure pasted text doesn't break word wrapping
+        return text;
+      },
+      transformPastedHTML: (html) => {
+        // Clean up pasted HTML to remove any conflicting styles
+        return html.replace(/style="[^"]*"/g, '').replace(/white-space:\s*[^;]*;?/gi, '');
       },
     },
     onUpdate: ({ editor }) => {
@@ -132,7 +154,6 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     if (editor && editor.view && editor.view.dom) {
       const editorElement = editor.view.dom as HTMLElement;
       editorElement.style.fontFamily = `"${fontFamily}", sans-serif`;
-      editorElement.style.fontDisplay = 'swap';
       
       // Also apply to all child elements with high specificity
       const style = document.createElement('style');
@@ -179,13 +200,16 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 
     return (
     <div 
-      className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg overflow-hidden"
+      className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg overflow-hidden w-full max-w-full"
       style={{ fontFamily }}
     >
-      <EditorContent 
-        editor={editor} 
-        style={{ fontFamily }}
-      />
+      <div className="w-full max-w-full overflow-hidden">
+        <EditorContent 
+          editor={editor} 
+          style={{ fontFamily }}
+          className="w-full max-w-full"
+        />
+      </div>
     </div>
   );
 };

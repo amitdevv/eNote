@@ -20,6 +20,7 @@ interface NoteCardProps {
   onClick: () => void;
   onDelete: () => void;
   onToggleStarred: () => void;
+  viewMode?: 'grid' | 'list';
 }
 
 const statusConfig = {
@@ -69,7 +70,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   note, 
   onClick, 
   onDelete,
-  onToggleStarred
+  onToggleStarred,
+  viewMode = 'grid'
 }) => {
   const statusInfo = statusConfig[note.status];
 
@@ -94,6 +96,162 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     );
   };
 
+  if (viewMode === 'list') {
+    return (
+      <Card 
+        className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
+        onClick={onClick}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            {/* Left side - Title and content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base leading-tight truncate">
+                  {note.title}
+                </h3>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Badge 
+                    variant="outline" 
+                    className={cn("text-xs font-medium border", statusInfo.color)}
+                  >
+                    <statusInfo.icon className={cn("w-3 h-3 mr-1", statusInfo.iconColor)} />
+                    {statusInfo.label}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700">
+                    {note.workspace}
+                  </Badge>
+                </div>
+              </div>
+              <div style={{ fontFamily: note.fontFamily || 'Inter' }}>
+                <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {(() => {
+                    const plainTextContent = htmlToPlainText(note.content);
+                    const firstLine = plainTextContent.split('\n').find(line => line.trim() !== '') || 'No content';
+                    return (
+                      <div className="truncate">
+                        {firstLine.trim() || '\u00A0'}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+            
+            {/* Right side - Tags, date, and actions */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex flex-wrap gap-1">
+                {note.tags.slice(0, 2).map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="secondary" 
+                    className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+                {note.tags.length > 2 && (
+                  <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    +{note.tags.length - 2}
+                  </Badge>
+                )}
+              </div>
+              
+              <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                {note.updatedAt ? (() => {
+                  const date = note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt);
+                  return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  });
+                })() : 'No date'}
+              </span>
+              
+              <div className="flex-shrink-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-[#333333]"
+                    >
+                      <MoreHorizontal className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 z-50 bg-white dark:bg-[#333333] border-gray-200 dark:border-gray-700" sideOffset={5}>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClick();
+                      }} 
+                      className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit note
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleStarred();
+                      }} 
+                      className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <Star className={`w-4 h-4 mr-2 ${note.starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                      {note.starred ? 'Remove from starred' : 'Add to starred'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportNoteAsText(note);
+                      }}
+                      className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as Text
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportNoteAsMarkdown(note);
+                      }}
+                      className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export as Markdown
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        exportNoteAsPDF(note);
+                      }}
+                      className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                      }}
+                      className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete note
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Grid view (default)
   return (
     <Card 
       className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
@@ -223,10 +381,13 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
           
           <span className="text-xs text-gray-400 dark:text-gray-500">
-            {note.updatedAt ? note.updatedAt.toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric' 
-            }) : 'No date'}
+            {note.updatedAt ? (() => {
+              const date = note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt);
+              return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric' 
+              });
+            })() : 'No date'}
           </span>
         </div>
       </CardContent>

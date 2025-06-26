@@ -8,7 +8,7 @@ export const useAutoSave = () => {
     title, 
     content, 
     status, 
-    workspace, 
+    folderId,
     tags, 
     fontFamily, 
     isDirty,
@@ -24,7 +24,7 @@ export const useAutoSave = () => {
     title,
     content,
     status,
-    workspace,
+    folderId,
     tags,
     fontFamily
   });
@@ -35,11 +35,11 @@ export const useAutoSave = () => {
       title,
       content,
       status,
-      workspace,
+      folderId,
       tags,
       fontFamily
     };
-  }, [title, content, status, workspace, tags, fontFamily]);
+  }, [title, content, status, folderId, tags, fontFamily]);
 
   const saveNote = () => {
     const data = currentDataRef.current;
@@ -62,7 +62,7 @@ export const useAutoSave = () => {
       content: data.content,
       type: 'markdown' as const,
       status: data.status,
-      workspace: data.workspace,
+      folderId: data.folderId || undefined,
       tags: data.tags,
       fontFamily: data.fontFamily,
     };

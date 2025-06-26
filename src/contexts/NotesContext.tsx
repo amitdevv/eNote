@@ -54,7 +54,7 @@ const ensureDatesAreObjects = (notes: Note[]): Note[] => {
 export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rawNotes, setRawNotes] = useLocalStorage<Note[]>('notes', []);
   const [notes, setNotes] = useState<Note[]>(() => ensureDatesAreObjects(rawNotes));
-  const [selectedWorkspace, setSelectedWorkspace] = useLocalStorage<string>('selectedWorkspace', 'inbox');
+  const [selectedWorkspace, setSelectedWorkspace] = useLocalStorage<string>('selectedWorkspace', 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'list'>('viewMode', 'grid');
   const [sortBy, setSortBy] = useLocalStorage<'recent' | 'alphabetical' | 'status' | 'workspace'>('sortBy', 'recent');

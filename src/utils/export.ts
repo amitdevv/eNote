@@ -1,9 +1,6 @@
 import { Note } from '@/types/note';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css';
 
 // Helper function to safely convert dates
 const ensureDate = (date: Date | string): Date => {
@@ -13,6 +10,469 @@ const ensureDate = (date: Date | string): Date => {
 // Helper function to safely format dates
 const formatDate = (date: Date | string): string => {
   return ensureDate(date).toLocaleDateString();
+};
+
+// Convert HTML content to plain text with structure
+const htmlToPlainText = (html: string): string => {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<div[^>]*>/gi, '')
+    .replace(/<h[1-6][^>]*>/gi, '')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '$1')
+    .replace(/<b[^>]*>(.*?)<\/b>/gi, '$1')
+    .replace(/<em[^>]*>(.*?)<\/em>/gi, '$1')
+    .replace(/<i[^>]*>(.*?)<\/i>/gi, '$1')
+    .replace(/<ul[^>]*>/gi, '')
+    .replace(/<\/ul>/gi, '')
+    .replace(/<ol[^>]*>/gi, '')
+    .replace(/<\/ol>/gi, '')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<blockquote[^>]*>/gi, '> ')
+    .replace(/<\/blockquote>/gi, '\n')
+    .replace(/<code[^>]*>(.*?)<\/code>/gi, '$1')
+    .replace(/<pre[^>]*>(.*?)<\/pre>/gi, '\n$1\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\n\s*\n/g, '\n')
+    .trim();
+};
+
+// Helper function to wrap text properly with fixed line width
+const wrapText = (pdf: jsPDF, text: string, maxWidth: number, fontSize: number = 10): string[] => {
+  pdf.setFontSize(fontSize);
+  
+  // Handle empty or whitespace-only text
+  if (!text || !text.trim()) {
+    return [''];
+  }
+  
+  // Split by existing line breaks first
+  const paragraphs = text.split('\n');
+  const wrappedLines: string[] = [];
+  
+  for (const paragraph of paragraphs) {
+    if (!paragraph.trim()) {
+      wrappedLines.push(''); // Preserve empty lines
+      continue;
+    }
+    
+    // Use jsPDF's splitTextToSize for proper text wrapping
+    const lines = pdf.splitTextToSize(paragraph, maxWidth);
+    wrappedLines.push(...lines);
+  }
+  
+  return wrappedLines;
+};
+
+// Helper function to wrap code with fixed width and preserve formatting
+const wrapCodeText = (pdf: jsPDF, code: string, maxWidth: number): string[] => {
+  pdf.setFontSize(9);
+  pdf.setFont('courier', 'normal');
+  
+  const lines = code.split('\n');
+  const wrappedLines: string[] = [];
+  
+  for (const line of lines) {
+    if (!line) {
+      wrappedLines.push(''); // Preserve empty lines in code
+      continue;
+    }
+    
+    // For code, we want to preserve indentation and structure
+    // Check if line fits within maxWidth
+    const lineWidth = pdf.getTextWidth(line);
+    const availableWidth = maxWidth - 8; // Account for code block padding
+    
+    if (lineWidth <= availableWidth) {
+      wrappedLines.push(line);
+    } else {
+      // Split long code lines at reasonable points (spaces, operators, etc.)
+      const words = line.split(/(\s+|[{}();,.])/);
+      let currentLine = '';
+      
+      for (const word of words) {
+        const testLine = currentLine + word;
+        const testWidth = pdf.getTextWidth(testLine);
+        
+        if (testWidth <= availableWidth) {
+          currentLine = testLine;
+        } else {
+          if (currentLine) {
+            wrappedLines.push(currentLine);
+            currentLine = word;
+          } else {
+            // Single word/token is too long, force break
+            wrappedLines.push(word);
+            currentLine = '';
+          }
+        }
+      }
+      
+      if (currentLine) {
+        wrappedLines.push(currentLine);
+      }
+    }
+  }
+  
+  return wrappedLines;
+};
+
+// Parse content and structure it for PDF
+const parseContentForPDF = (content: string) => {
+  const elements = [];
+  const lines = content.split('\n');
+  
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    
+    if (!line) {
+      i++;
+      continue;
+    }
+    
+    // Headers
+    if (line.startsWith('# ')) {
+      elements.push({ type: 'h1', text: line.substring(2) });
+    } else if (line.startsWith('## ')) {
+      elements.push({ type: 'h2', text: line.substring(3) });
+    } else if (line.startsWith('### ')) {
+      elements.push({ type: 'h3', text: line.substring(4) });
+    }
+    // Code blocks
+    else if (line.startsWith('```')) {
+      const language = line.substring(3).trim();
+      const codeLines = [];
+      i++;
+      
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      
+      elements.push({ 
+        type: 'code', 
+        text: codeLines.join('\n'), 
+        language: language || 'Code'
+      });
+    }
+    // Lists
+    else if (line.startsWith('• ') || line.startsWith('- ') || line.startsWith('* ')) {
+      elements.push({ type: 'list', text: line.substring(2) });
+    }
+    // Todos (checkboxes)
+    else if (line.includes('☐') || line.includes('☑') || line.includes('✓')) {
+      const isChecked = line.includes('☑') || line.includes('✓');
+      const text = line.replace(/[☐☑✓]/g, '').trim();
+      elements.push({ type: 'todo', text: text, checked: isChecked });
+    }
+    // Blockquotes  
+    else if (line.startsWith('> ')) {
+      elements.push({ type: 'quote', text: line.substring(2) });
+    }
+    // Regular paragraphs
+    else {
+      elements.push({ type: 'paragraph', text: line });
+    }
+    
+    i++;
+  }
+  
+  return elements;
+};
+
+// Export single note as PDF with lightweight text-based approach
+export const exportNoteAsPDF = async (note: Note, currentTitle?: string, currentContent?: string): Promise<void> => {
+  try {
+    const title = currentTitle || note.title;
+    const content = currentContent || note.content;
+    
+    // Parse and calculate content height first
+    const plainContent = htmlToPlainText(content);
+    const elements = parseContentForPDF(plainContent);
+    
+    // Calculate total height needed
+    const margin = 20;
+    const pageWidth = 210; // A4 width in mm
+    const maxWidth = pageWidth - (margin * 2);
+    let totalHeight = margin; // Start with top margin
+    
+    // Create temporary PDF to measure text heights
+    const tempPdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Calculate header height
+    tempPdf.setFontSize(20);
+    tempPdf.setFont('helvetica', 'bold');
+    const titleWrapped = wrapText(tempPdf, title, maxWidth, 20);
+    totalHeight += titleWrapped.length * 8; // Title height
+    
+    totalHeight += 5; // Space after title
+    
+    // Metadata
+    const metaText = `Status: ${note.status} | Workspace: ${note.workspace} | Created: ${formatDate(note.createdAt)} | Updated: ${formatDate(note.updatedAt)}`;
+    const metaWrapped = wrapText(tempPdf, metaText, maxWidth, 10);
+    totalHeight += metaWrapped.length * 4;
+    
+    // Tags
+    if (note.tags.length > 0) {
+      const tagsText = `Tags: ${note.tags.join(', ')}`;
+      const tagsWrapped = wrapText(tempPdf, tagsText, maxWidth, 10);
+      totalHeight += tagsWrapped.length * 4 + 3;
+    }
+    
+    totalHeight += 15; // Separator line and space
+    
+    // Calculate content height with proper wrapping
+    for (const element of elements) {
+      switch (element.type) {
+        case 'h1':
+          totalHeight += 5; // Top spacing
+          const h1Wrapped = wrapText(tempPdf, element.text, maxWidth, 16);
+          totalHeight += h1Wrapped.length * 7;
+          break;
+          
+        case 'h2':
+          totalHeight += 4;
+          const h2Wrapped = wrapText(tempPdf, element.text, maxWidth, 14);
+          totalHeight += h2Wrapped.length * 6;
+          break;
+          
+        case 'h3':
+          totalHeight += 3;
+          const h3Wrapped = wrapText(tempPdf, element.text, maxWidth, 12);
+          totalHeight += h3Wrapped.length * 5;
+          break;
+          
+        case 'code':
+          totalHeight += 3; // Top spacing
+          if (element.language && element.language !== 'Code') {
+            totalHeight += 4; // Language label
+          }
+          const codeWrapped = wrapCodeText(tempPdf, element.text, maxWidth);
+          totalHeight += codeWrapped.length * 4 + 6; // Code lines + padding
+          totalHeight += 3; // Bottom spacing
+          break;
+          
+        case 'todo':
+          const todoWrapped = wrapText(tempPdf, element.text, maxWidth - 15, 10); // Account for checkbox
+          totalHeight += todoWrapped.length * 5;
+          break;
+          
+        case 'list':
+          const listWrapped = wrapText(tempPdf, element.text, maxWidth - 10, 10); // Account for bullet
+          totalHeight += listWrapped.length * 4;
+          break;
+          
+        case 'quote':
+          const quoteWrapped = wrapText(tempPdf, element.text, maxWidth - 15, 10); // Account for quote line
+          totalHeight += quoteWrapped.length * 4 + 2;
+          break;
+          
+        case 'paragraph':
+        default:
+          const paraWrapped = wrapText(tempPdf, element.text, maxWidth, 10);
+          totalHeight += paraWrapped.length * 4 + 2;
+          break;
+      }
+    }
+    
+    totalHeight += 30; // Footer space
+    
+    // Set minimum height (like screen height - around 200mm)
+    const minHeight = 200;
+    const finalHeight = Math.max(minHeight, totalHeight);
+    
+    // Create PDF with dynamic height
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [pageWidth, finalHeight] // Custom page size [width, height]
+    });
+
+    // Now render the content with proper line wrapping
+    let yPosition = margin;
+
+    // Add header with wrapping
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    const titleLines = wrapText(pdf, title, maxWidth, 20);
+    for (const line of titleLines) {
+      pdf.text(line, margin, yPosition);
+      yPosition += 8;
+    }
+
+    // Add metadata line with wrapping
+    yPosition += 5;
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    const metaTextActual = `Status: ${note.status} | Workspace: ${note.workspace} | Created: ${formatDate(note.createdAt)} | Updated: ${formatDate(note.updatedAt)}`;
+    const metaLines = wrapText(pdf, metaTextActual, maxWidth, 10);
+    for (const line of metaLines) {
+      pdf.text(line, margin, yPosition);
+      yPosition += 4;
+    }
+
+    // Add tags if any with wrapping
+    if (note.tags.length > 0) {
+      yPosition += 3;
+      const tagsText = `Tags: ${note.tags.join(', ')}`;
+      const tagsLines = wrapText(pdf, tagsText, maxWidth, 10);
+      for (const line of tagsLines) {
+        pdf.text(line, margin, yPosition);
+        yPosition += 4;
+      }
+    }
+
+    // Add separator line
+    yPosition += 5;
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 10;
+
+    // Add content with proper line wrapping
+    for (const element of elements) {
+      switch (element.type) {
+        case 'h1':
+          yPosition += 5;
+          pdf.setFontSize(16);
+          pdf.setFont('helvetica', 'bold');
+          const h1Lines = wrapText(pdf, element.text, maxWidth, 16);
+          for (const line of h1Lines) {
+            pdf.text(line, margin, yPosition);
+            yPosition += 7;
+          }
+          break;
+
+        case 'h2':
+          yPosition += 4;
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          const h2Lines = wrapText(pdf, element.text, maxWidth, 14);
+          for (const line of h2Lines) {
+            pdf.text(line, margin, yPosition);
+            yPosition += 6;
+          }
+          break;
+
+        case 'h3':
+          yPosition += 3;
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'bold');
+          const h3Lines = wrapText(pdf, element.text, maxWidth, 12);
+          for (const line of h3Lines) {
+            pdf.text(line, margin, yPosition);
+            yPosition += 5;
+          }
+          break;
+
+        case 'code':
+          yPosition += 3;
+          // Add language label if specified
+          if (element.language && element.language !== 'Code') {
+            pdf.setFontSize(9);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(element.language, margin, yPosition);
+            yPosition += 4;
+          }
+          
+          // Add code block with proper wrapping
+          const codeLines = wrapCodeText(pdf, element.text, maxWidth);
+          const codeHeight = codeLines.length * 4 + 6;
+          pdf.setFillColor(245, 245, 245); // Light gray
+          pdf.rect(margin - 2, yPosition - 2, maxWidth + 4, codeHeight, 'F');
+          
+          // Add code text with wrapping
+          pdf.setFontSize(9);
+          pdf.setFont('courier', 'normal');
+          for (const codeLine of codeLines) {
+            pdf.text(codeLine, margin + 2, yPosition + 3);
+            yPosition += 4;
+          }
+          yPosition += 3;
+          break;
+
+        case 'todo':
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          const checkbox = element.checked ? '☑' : '☐';
+          const todoLines = wrapText(pdf, element.text, maxWidth - 15, 10);
+          for (let i = 0; i < todoLines.length; i++) {
+            const prefix = i === 0 ? `${checkbox} ` : '   '; // Indent continuation lines
+            pdf.text(prefix + todoLines[i], margin, yPosition);
+            yPosition += 5;
+          }
+          break;
+
+        case 'list':
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          const listLines = wrapText(pdf, element.text, maxWidth - 10, 10);
+          for (let i = 0; i < listLines.length; i++) {
+            const prefix = i === 0 ? '• ' : '  '; // Indent continuation lines
+            pdf.text(prefix + listLines[i], margin + 3, yPosition);
+            yPosition += 4;
+          }
+          break;
+
+        case 'quote':
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'italic');
+          const quoteLines = wrapText(pdf, element.text, maxWidth - 15, 10);
+          // Add quote line for the entire quote block
+          pdf.setLineWidth(2);
+          pdf.setDrawColor(180, 180, 180);
+          const quoteStartY = yPosition - 2;
+          const quoteEndY = yPosition + (quoteLines.length * 4);
+          pdf.line(margin, quoteStartY, margin, quoteEndY);
+          
+          for (const line of quoteLines) {
+            pdf.text(line, margin + 5, yPosition);
+            yPosition += 4;
+          }
+          yPosition += 2;
+          break;
+
+        case 'paragraph':
+        default:
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          const paraLines = wrapText(pdf, element.text, maxWidth, 10);
+          for (const line of paraLines) {
+            pdf.text(line, margin, yPosition);
+            yPosition += 4;
+          }
+          yPosition += 2;
+          break;
+      }
+    }
+
+    // Add footer at the bottom
+    const footerY = finalHeight - 15;
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Generated from eNote • ${new Date().toLocaleDateString()}`, margin, footerY);
+
+    // Download PDF
+    const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+    pdf.save(fileName);
+
+  } catch (error) {
+    console.error('PDF export error:', error);
+    alert('Failed to export PDF. Please try again.');
+  }
 };
 
 // Convert HTML content to Markdown (basic conversion)
@@ -43,163 +503,6 @@ const htmlToMarkdown = (html: string): string => {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .trim();
-};
-
-const createCodeBlockHTML = (code: string, language: string = '') => {
-  // Try to detect language if not specified
-  let detectedLanguage = language;
-  if (!language) {
-    const result = hljs.highlightAuto(code);
-    detectedLanguage = result.language || '';
-  }
-
-  // Apply syntax highlighting
-  let highlightedCode;
-  try {
-    if (detectedLanguage && hljs.getLanguage(detectedLanguage)) {
-      highlightedCode = hljs.highlight(code, { language: detectedLanguage }).value;
-    } else {
-      highlightedCode = hljs.highlightAuto(code).value;
-    }
-  } catch (error) {
-    // Fallback to plain text if highlighting fails
-    highlightedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  // Language display name mapping
-  const languageNames = {
-    'javascript': 'JavaScript',
-    'typescript': 'TypeScript',
-    'python': 'Python',
-    'java': 'Java',
-    'cpp': 'C++',
-    'c': 'C',
-    'csharp': 'C#',
-    'php': 'PHP',
-    'ruby': 'Ruby',
-    'go': 'Go',
-    'rust': 'Rust',
-    'swift': 'Swift',
-    'kotlin': 'Kotlin',
-    'dart': 'Dart',
-    'scala': 'Scala',
-    'r': 'R',
-    'matlab': 'MATLAB',
-    'sql': 'SQL',
-    'html': 'HTML',
-    'css': 'CSS',
-    'scss': 'SCSS',
-    'sass': 'Sass',
-    'less': 'Less',
-    'json': 'JSON',
-    'xml': 'XML',
-    'yaml': 'YAML',
-    'yml': 'YAML',
-    'toml': 'TOML',
-    'ini': 'INI',
-    'bash': 'Bash',
-    'shell': 'Shell',
-    'powershell': 'PowerShell',
-    'batch': 'Batch',
-    'dockerfile': 'Dockerfile',
-    'makefile': 'Makefile',
-    'markdown': 'Markdown',
-    'latex': 'LaTeX',
-    'plaintext': 'Plain Text'
-  };
-
-  const displayName = languageNames[detectedLanguage.toLowerCase()] || 
-                     (detectedLanguage ? detectedLanguage.charAt(0).toUpperCase() + detectedLanguage.slice(1) : 'Code');
-
-  return `
-    <div style="
-      background-color: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      margin: 16px 0;
-      overflow: hidden;
-      font-family: 'Courier New', Consolas, Monaco, monospace;
-    ">
-      ${detectedLanguage ? `
-        <div style="
-          background-color: #e9ecef;
-          padding: 8px 16px;
-          border-bottom: 1px solid #dee2e6;
-          font-size: 12px;
-          font-weight: 600;
-          color: #6c757d;
-        ">
-          ${displayName}
-        </div>
-      ` : ''}
-      <div style="
-        padding: 16px;
-        background-color: #f8f9fa;
-        overflow-x: auto;
-        line-height: 1.5;
-        font-size: 14px;
-      ">
-        <pre style="
-          margin: 0;
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          color: #212529;
-        "><code>${highlightedCode}</code></pre>
-      </div>
-    </div>
-  `;
-};
-
-const processMarkdownForPDF = (content: string): string => {
-  // Enhanced code block processing with syntax highlighting
-  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  
-  let processedContent = content.replace(codeBlockRegex, (match, language, code) => {
-    return createCodeBlockHTML(code.trim(), language || '');
-  });
-
-  // Process inline code with background
-  processedContent = processedContent.replace(/`([^`]+)`/g, 
-    '<code style="background-color: #f1f3f4; padding: 2px 4px; border-radius: 4px; font-family: \'Courier New\', monospace; color: #d73a49;">$1</code>'
-  );
-
-  // Process other markdown elements (enhanced styling)
-  processedContent = processedContent
-    // Headers with better spacing and colors
-    .replace(/^### (.*$)/gm, '<h3 style="color: #2c3e50; font-size: 18px; font-weight: 600; margin: 20px 0 10px 0; border-bottom: 2px solid #3498db; padding-bottom: 5px;">$1</h3>')
-    .replace(/^## (.*$)/gm, '<h2 style="color: #2c3e50; font-size: 22px; font-weight: 700; margin: 24px 0 12px 0; border-bottom: 3px solid #3498db; padding-bottom: 8px;">$1</h2>')
-    .replace(/^# (.*$)/gm, '<h1 style="color: #2c3e50; font-size: 28px; font-weight: 800; margin: 30px 0 15px 0; border-bottom: 4px solid #3498db; padding-bottom: 10px;">$1</h1>')
-    
-    // Lists with better spacing
-    .replace(/^\* (.*$)/gm, '<li style="margin: 5px 0; color: #2c3e50;">$1</li>')
-    .replace(/^- (.*$)/gm, '<li style="margin: 5px 0; color: #2c3e50;">$1</li>')
-    .replace(/^\+ (.*$)/gm, '<li style="margin: 5px 0; color: #2c3e50;">$1</li>')
-    
-    // Bold and italic
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #2c3e50; font-weight: 600;">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em style="color: #34495e; font-style: italic;">$1</em>')
-    
-    // Links with better styling
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #3498db; text-decoration: underline;">$1</a>')
-    
-    // Blockquotes with background
-    .replace(/^> (.*$)/gm, '<blockquote style="border-left: 4px solid #3498db; background-color: #ecf0f1; margin: 16px 0; padding: 12px 16px; font-style: italic; color: #2c3e50;">$1</blockquote>')
-    
-    // Horizontal rules
-    .replace(/^---$/gm, '<hr style="border: none; border-top: 2px solid #bdc3c7; margin: 20px 0;">')
-    
-    // Line breaks
-    .replace(/\n/g, '<br>');
-
-  // Wrap list items in ul tags
-  processedContent = processedContent.replace(/(<li.*?<\/li>)/g, (match) => {
-    if (!match.includes('<ul>')) {
-      return `<ul style="margin: 10px 0; padding-left: 20px;">${match}</ul>`;
-    }
-    return match;
-  });
-
-  return processedContent;
 };
 
 // Export single note as Markdown
@@ -238,36 +541,7 @@ export const exportNoteAsText = (note: Note, currentTitle?: string, currentConte
   const content = currentContent || note.content;
   
   // Convert HTML to plain text for clean export
-  const plainTextContent = content
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<p[^>]*>/gi, '')
-    .replace(/<\/div>/gi, '\n')
-    .replace(/<div[^>]*>/gi, '')
-    .replace(/<h[1-6][^>]*>/gi, '')
-    .replace(/<\/h[1-6]>/gi, '\n')
-    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '$1')
-    .replace(/<b[^>]*>(.*?)<\/b>/gi, '$1')
-    .replace(/<em[^>]*>(.*?)<\/em>/gi, '$1')
-    .replace(/<i[^>]*>(.*?)<\/i>/gi, '$1')
-    .replace(/<ul[^>]*>/gi, '')
-    .replace(/<\/ul>/gi, '')
-    .replace(/<ol[^>]*>/gi, '')
-    .replace(/<\/ol>/gi, '')
-    .replace(/<li[^>]*>/gi, '• ')
-    .replace(/<\/li>/gi, '\n')
-    .replace(/<blockquote[^>]*>/gi, '')
-    .replace(/<\/blockquote>/gi, '')
-    .replace(/<code[^>]*>(.*?)<\/code>/gi, '$1')
-    .replace(/<pre[^>]*>(.*?)<\/pre>/gi, '$1')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/\n\s*\n/g, '\n')
-    .trim();
+  const plainTextContent = htmlToPlainText(content);
 
   let textContent = `${title}\n\n`;
   textContent += plainTextContent;
@@ -282,178 +556,6 @@ export const exportNoteAsText = (note: Note, currentTitle?: string, currentConte
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-};
-
-// Export single note as PDF with current content
-export const exportNoteAsPDF = async (note: Note, currentTitle?: string, currentContent?: string): Promise<void> => {
-  try {
-    const title = currentTitle || note.title;
-    const content = currentContent || note.content;
-    
-    // Create a temporary container for rendering
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.width = '800px';
-    container.style.backgroundColor = 'white';
-    container.style.padding = '40px';
-    container.style.fontFamily = '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif';
-    container.style.lineHeight = '1.6';
-    container.style.color = '#2c3e50';
-
-    // Process markdown content with enhanced styling and syntax highlighting
-    const processedContent = processMarkdownForPDF(content);
-
-    container.innerHTML = `
-      <div style="
-        max-width: 720px;
-        margin: 0 auto;
-        background: white;
-        padding: 0;
-      ">
-        <!-- Header Section -->
-        <div style="
-          text-align: center;
-          margin-bottom: 40px;
-          border-bottom: 3px solid #3498db;
-          padding-bottom: 20px;
-        ">
-          <h1 style="
-            color: #2c3e50;
-            font-size: 32px;
-            font-weight: 800;
-            margin: 0 0 10px 0;
-            text-align: center;
-          ">${title}</h1>
-          <div style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-top: 15px;
-          ">
-            <div>
-              <strong>Status:</strong> 
-              <span style="
-                background-color: #3498db;
-                color: white;
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 600;
-              ">${note.status}</span>
-            </div>
-            <div>
-              <strong>Workspace:</strong> 
-              <span style="
-                background-color: #95a5a6;
-                color: white;
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 600;
-              ">${note.workspace}</span>
-            </div>
-            <div><strong>Created:</strong> ${formatDate(note.createdAt)}</div>
-            <div><strong>Updated:</strong> ${formatDate(note.updatedAt)}</div>
-          </div>
-          ${note.tags.length > 0 ? `
-            <div style="margin-top: 15px;">
-              <strong style="color: #7f8c8d;">Tags:</strong>
-              ${note.tags.map(tag => `
-                <span style="
-                  background-color: #e74c3c;
-                  color: white;
-                  padding: 4px 8px;
-                  border-radius: 12px;
-                  font-size: 12px;
-                  font-weight: 600;
-                  margin-left: 5px;
-                ">${tag}</span>
-              `).join('')}
-            </div>
-          ` : ''}
-        </div>
-
-        <!-- Content Section -->
-        <div style="
-          font-size: 16px;
-          line-height: 1.8;
-          color: #2c3e50;
-          text-align: justify;
-        ">
-          ${processedContent}
-        </div>
-
-        <!-- Footer -->
-        <div style="
-          margin-top: 50px;
-          padding-top: 20px;
-          border-top: 2px solid #ecf0f1;
-          text-align: center;
-          font-size: 12px;
-          color: #95a5a6;
-        ">
-          <p>Generated from eNote • ${new Date().toLocaleDateString()}</p>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(container);
-
-    // Convert to canvas with higher quality
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width: 800,
-      windowWidth: 800,
-      scrollX: 0,
-      scrollY: 0
-    });
-
-    document.body.removeChild(container);
-
-    // Create PDF
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const heightLeft = imgHeight;
-
-    let position = 0;
-    const margin = 10;
-
-    // Add image to PDF (first page)
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
-    let currentHeight = heightLeft;
-
-    // Add additional pages if needed
-    while (currentHeight >= pageHeight) {
-      position = currentHeight - pageHeight;
-      pdf.addPage();
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, -position, imgWidth, imgHeight);
-      currentHeight -= pageHeight;
-    }
-
-    // Download PDF
-    const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-    pdf.save(fileName);
-
-  } catch (error) {
-    console.error('PDF export error:', error);
-    alert('Failed to export PDF. Please try again.');
-  }
 };
 
 // Export notes as JSON
@@ -499,15 +601,17 @@ export const exportAllNotesAsMarkdown = async (notes: Note[]): Promise<void> => 
       }
       content += '\n---\n\n';
 
-      // Add content - always markdown now
+      // Add content
       content += htmlToMarkdown(note.content);
 
+      // Add to zip
       const fileName = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
       zip.file(fileName, content);
     });
 
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
+    // Generate and download zip
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `notes_export_${new Date().toISOString().split('T')[0]}.zip`;
@@ -516,7 +620,7 @@ export const exportAllNotesAsMarkdown = async (notes: Note[]): Promise<void> => 
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Error creating ZIP file:', error);
-    alert('Failed to export notes as ZIP. Please try again.');
+    console.error('Markdown export error:', error);
+    alert('Failed to export notes as Markdown. Please try again.');
   }
 }; 

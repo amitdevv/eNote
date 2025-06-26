@@ -4,7 +4,7 @@ export interface Note {
   content: string;
   type: 'markdown'; // Only markdown now
   status: 'idea' | 'research' | 'outline' | 'draft' | 'review' | 'done';
-  workspace: string;
+  folderId?: string; // Optional folder assignment
   createdAt: Date;
   updatedAt: Date;
   tags: string[];
@@ -13,9 +13,13 @@ export interface Note {
   fontFamily?: string; // Font family for note content
 }
 
-export interface Workspace {
+export interface Folder {
   id: string;
   name: string;
   color: string;
-  noteCount: number;
+  parentId?: string; // For nested folders
+  createdAt: Date;
+  updatedAt: Date;
+  noteCount?: number; // Computed property
 }
+

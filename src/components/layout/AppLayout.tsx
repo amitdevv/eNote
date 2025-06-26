@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -6,6 +6,7 @@ import { NoteCard } from '@/components/notes/NoteCard';
 import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
+import { useFoldersStore } from '@/stores/foldersStore';
 import { FileText, Plus } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
@@ -23,16 +24,25 @@ export const AppLayout: React.FC = () => {
     setFilterBy
   } = useNotesStore();
   
+  const { folders, updateFolderNoteCounts, getFolderById } = useFoldersStore();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { noteId } = useParams();
   
+  // Get URL search parameters for navigation
+  const searchParams = new URLSearchParams(location.search);
+  const workspaceParam = searchParams.get('workspace');
+  const folderParam = searchParams.get('folder');
+  
   const [selectedWorkspace, setSelectedWorkspace] = useState('all');
+  const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation type state
-  const [navType, setNavType] = useState<'workspace' | 'special' | 'type'>('workspace');
+  const [navType, setNavType] = useState<'workspace' | 'special' | 'type' | 'folder'>('workspace');
   const [navValue, setNavValue] = useState('all');
 
   // Check if we're in editor mode
@@ -41,16 +51,51 @@ export const AppLayout: React.FC = () => {
   // Enhanced search functionality
   const searchResults = searchQuery.trim() ? searchNotes(notes, searchQuery) : [];
 
+  // Update folder note counts when notes change
+  useEffect(() => {
+    const folderNoteCounts: Record<string, number> = {};
+    
+    notes.forEach(note => {
+      if (note.folderId) {
+        folderNoteCounts[note.folderId] = (folderNoteCounts[note.folderId] || 0) + 1;
+      }
+    });
+    
+    updateFolderNoteCounts(folderNoteCounts);
+  }, [notes, updateFolderNoteCounts]);
+
+  // Handle URL parameters for navigation
+  useEffect(() => {
+    if (folderParam) {
+      // Navigate to specific folder
+      const folder = getFolderById(folderParam);
+      if (folder) {
+        setNavType('folder');
+        setSelectedFolder(folderParam);
+        setSelectedWorkspace(folder.workspace);
+        setNavValue(folder.workspace);
+      }
+    } else if (workspaceParam) {
+      // Navigate to specific workspace
+      setNavType('workspace');
+      setNavValue(workspaceParam);
+      setSelectedWorkspace(workspaceParam);
+      setSelectedFolder('');
+    }
+  }, [folderParam, workspaceParam, getFolderById]);
+
   // Filter and sort notes for normal view
   const getFilteredNotes = () => {
     let filtered = notes;
 
     // Apply navigation-based filtering
-    if (navType === 'special') {
+    if (navType === 'folder') {
+      // Filter by selected folder
+      filtered = filtered.filter(note => note.folderId === selectedFolder);
+    } else if (navType === 'special') {
       switch (navValue) {
-        case 'inbox':
-          // Show recent notes or unprocessed notes
-          filtered = filtered.filter(note => note.status === 'idea');
+        case 'all':
+          // Show all notes - no filtering needed
           break;
         case 'today':
           // Show notes updated today
@@ -62,23 +107,6 @@ export const AppLayout: React.FC = () => {
           filtered = filtered.filter(note => note.starred);
           break;
       }
-    } else if (navType === 'type') {
-      switch (navValue) {
-        case 'all':
-          // Show all notes
-          break;
-        case 'todo':
-          // For legacy support - show all notes since we removed todo type
-          break;
-        case 'markdown':
-          filtered = filtered.filter(note => note.type === 'markdown');
-          break;
-        case 'code':
-          // For legacy support - show all notes since we removed code type
-          break;
-      }
-    } else if (navType === 'workspace' && navValue !== 'all') {
-      filtered = filtered.filter(note => note.workspace === navValue);
     }
 
     // Apply additional status filter from header
@@ -98,8 +126,6 @@ export const AppLayout: React.FC = () => {
           return a.title.localeCompare(b.title);
         case 'status':
           return a.status.localeCompare(b.status);
-        case 'workspace':
-          return a.workspace.localeCompare(b.workspace);
         case 'recent':
         default:
           return b.updatedAt.getTime() - a.updatedAt.getTime();
@@ -117,10 +143,9 @@ export const AppLayout: React.FC = () => {
     today.setHours(0, 0, 0, 0);
     
     return {
-      inbox: notes.filter(note => note.status === 'idea').length,
+      all: notes.length,
       today: notes.filter(note => note.updatedAt >= today).length,
       starred: notes.filter(note => note.starred).length,
-      all: notes.length,
       todo: 0, // Legacy - no todo notes anymore
       markdown: notes.filter(note => note.type === 'markdown').length,
       code: 0, // Legacy - no code notes anymore
@@ -138,24 +163,52 @@ export const AppLayout: React.FC = () => {
       navigate('/notes');
     }
 
+    // Clear folder selection when changing navigation
+    setSelectedFolder('');
+
     // Determine navigation type and value
-    if (['inbox', 'today', 'starred'].includes(workspace)) {
+    if (['all', 'today', 'starred'].includes(workspace)) {
       setNavType('special');
       setNavValue(workspace);
-      setSelectedWorkspace('all'); // Reset workspace filter
-    } else if (['all', 'todo', 'markdown', 'code'].includes(workspace)) {
-      setNavType('type');
-      setNavValue(workspace);
-      setSelectedWorkspace('all'); // Reset workspace filter
+      setSelectedWorkspace('all');
     } else {
-      setNavType('workspace');
-      setNavValue(workspace);
-      setSelectedWorkspace(workspace);
+      setNavType('special');
+      setNavValue('all');
+      setSelectedWorkspace('all');
+    }
+  };
+
+  const handleFolderSelect = (folderId: string) => {
+    // Navigate to notes view when folder is selected
+    if (location.pathname.startsWith('/editor')) {
+      navigate('/notes');
+    }
+
+    setNavType('folder');
+    setSelectedFolder(folderId);
+    
+    // Set workspace based on folder's workspace
+    const folder = getFolderById(folderId);
+    if (folder) {
+      setSelectedWorkspace(folder.workspace);
+      setNavValue(folder.workspace);
     }
   };
 
   const handleNewNote = () => {
-    navigate('/editor');
+    // Build URL with current context for auto-assigning folder
+    let url = '/editor';
+    const params = new URLSearchParams();
+    
+    if (navType === 'folder' && selectedFolder) {
+      params.set('folderId', selectedFolder);
+    }
+    
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
+    
+    navigate(url);
   };
 
   const handleEditNote = (noteId: string) => {
@@ -195,15 +248,24 @@ export const AppLayout: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto">
         {filteredNotes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={
+            viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
+          }>
             {filteredNotes.map((note) => (
-              <NoteCard
+              <div 
                 key={note.id}
-                note={note}
-                onClick={() => handleEditNote(note.id)}
-                onDelete={() => handleDeleteNote(note.id)}
-                onToggleStarred={() => handleToggleStarred(note.id)}
-              />
+                className={viewMode === 'list' ? "max-w-full" : ""}
+              >
+                <NoteCard
+                  note={note}
+                  onClick={() => handleEditNote(note.id)}
+                  onDelete={() => handleDeleteNote(note.id)}
+                  onToggleStarred={() => handleToggleStarred(note.id)}
+                  viewMode={viewMode}
+                />
+              </div>
             ))}
           </div>
         ) : (
@@ -213,14 +275,14 @@ export const AppLayout: React.FC = () => {
                 <FileText className="w-8 h-8 text-gray-400 dark:text-gray-600" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                {navType === 'special' && navValue !== 'all' 
+                {navType === 'folder' 
+                  ? `No notes in "${getFolderById(selectedFolder)?.name || 'Unknown Folder'}"` 
+                  : navType === 'special' && navValue !== 'all' 
                   ? `No ${navValue} notes` 
-                  : navType === 'workspace' && navValue !== 'all'
-                  ? `No notes in ${navValue}`
                   : "No notes yet"}
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6">
-                {navType === 'special' || (navType === 'workspace' && navValue !== 'all')
+                {navType === 'folder' || (navType === 'special' && navValue !== 'all')
                   ? `You don't have any notes in this section yet.`
                   : "Get started by creating your first note. Use markdown to format your content, add tags, and organize your thoughts."}
               </p>
@@ -232,13 +294,14 @@ export const AppLayout: React.FC = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Create your first note
                 </button>
-                {(navType === 'special' || (navType === 'workspace' && navValue !== 'all')) && (
+                {(navType === 'folder' || (navType === 'special' && navValue !== 'all')) && (
                   <div className="text-sm">
                     <button
                       onClick={() => {
-                        setNavType('workspace');
+                        setNavType('special');
                         setNavValue('all');
                         setSelectedWorkspace('all');
+                        setSelectedFolder('');
                       }}
                       className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
@@ -262,6 +325,9 @@ export const AppLayout: React.FC = () => {
         onNewNote={handleNewNote}
         noteCount={filteredNotes.length}
         sidebarCounts={getSidebarCounts()}
+        onFolderSelect={handleFolderSelect}
+        selectedFolder={selectedFolder}
+        onNoteSelect={handleEditNote}
       />
       
       <div className="flex-1 flex flex-col">
@@ -276,10 +342,14 @@ export const AppLayout: React.FC = () => {
           searchInputRef={searchInputRef}
           isEditorMode={isEditorMode}
           noteId={noteId}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
         
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200">
-          {renderMainContent()}
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full max-w-full">
+          <div className={isEditorMode ? "w-full max-w-full h-full" : ""}>
+            {renderMainContent()}
+          </div>
         </main>
       </div>
     </div>

@@ -16,6 +16,7 @@ export const NotesApp: React.FC = () => {
   const [selectedWorkspace, setSelectedWorkspace] = useState('all');
   const [sortBy, setSortBy] = useState<'recent' | 'alphabetical' | 'status' | 'workspace'>('recent');
   const [filterBy, setFilterBy] = useState<'all' | 'ideas' | 'drafts' | 'review' | 'done'>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isSearchMode, setIsSearchMode] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +115,8 @@ export const NotesApp: React.FC = () => {
           onFilterChange={setFilterBy}
           onNewNote={handleNewNote}
           searchInputRef={searchInputRef}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
         
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200">
@@ -126,15 +129,24 @@ export const NotesApp: React.FC = () => {
           ) : (
             <div className="max-w-7xl mx-auto">
               {filteredNotes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className={
+                  viewMode === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    : "space-y-4"
+                }>
                   {filteredNotes.map((note) => (
-                    <NoteCard
+                    <div 
                       key={note.id}
-                      note={note}
-                      onClick={() => handleEditNote(note.id)}
-                      onDelete={() => handleDeleteNote(note.id)}
-                      onToggleStarred={() => handleToggleStarred(note.id)}
-                    />
+                      className={viewMode === 'list' ? "max-w-full" : ""}
+                    >
+                      <NoteCard
+                        note={note}
+                        onClick={() => handleEditNote(note.id)}
+                        onDelete={() => handleDeleteNote(note.id)}
+                        onToggleStarred={() => handleToggleStarred(note.id)}
+                        viewMode={viewMode}
+                      />
+                    </div>
                   ))}
                 </div>
               ) : (

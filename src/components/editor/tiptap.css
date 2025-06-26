@@ -1,6 +1,10 @@
 /* TipTap Editor Styles */
 .prose {
-  max-width: none;
+  max-width: 100% !important;
+  width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .prose h1 {
@@ -127,6 +131,89 @@
 /* ProseMirror specific styles */
 .ProseMirror {
   outline: none;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+  white-space: normal !important;
+  overflow-x: hidden !important;
+  padding: 1rem;
+  padding-bottom: 5rem; /* Extra space for text stats */
+  min-height: 200px;
+  font-family: inherit !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  /* Fallback for older browsers */
+  -ms-word-break: break-all !important;
+  word-break: break-all !important;
+  /* But prefer breaking at word boundaries when possible */
+  word-break: break-word !important;
+}
+
+/* Force text wrapping on all content */
+.ProseMirror,
+.ProseMirror * {
+  font-family: inherit !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  overflow-x: hidden !important;
+}
+
+/* Specific text wrapping for all text elements */
+.ProseMirror p,
+.ProseMirror div,
+.ProseMirror span,
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6,
+.ProseMirror li,
+.ProseMirror blockquote,
+.ProseMirror td,
+.ProseMirror th {
+  max-width: 100% !important;
+  width: auto !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+  white-space: normal !important;
+  overflow-x: hidden !important;
+  text-wrap: wrap !important;
+}
+
+/* Force text nodes to wrap */
+.ProseMirror .ProseMirror-text {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+
+/* Handle very long words that might not break */
+.ProseMirror {
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  /* Fallback for older browsers */
+  -ms-word-break: break-all !important;
+  word-break: break-all !important;
+  /* But prefer breaking at word boundaries when possible */
+  word-break: break-word !important;
+}
+
+/* Ensure inline elements wrap */
+.ProseMirror strong,
+.ProseMirror em,
+.ProseMirror code,
+.ProseMirror a,
+.ProseMirror span {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
@@ -226,6 +313,9 @@
   overflow-x: auto;
   margin: 1rem 0;
   border: 1px solid #374151;
+  max-width: 100% !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .ProseMirror pre code {
@@ -234,32 +324,14 @@
   background: none;
   font-size: 0.875rem;
   line-height: 1.5;
-}
-
-/* Placeholder styles */
-.ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: #9ca3af;
-  pointer-events: none;
-  height: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-width: 100%;
 }
 
 /* Focus styles */
 .ProseMirror:focus {
   outline: none;
-}
-
-/* General prose improvements */
-.ProseMirror {
-  padding: 1rem;
-  padding-bottom: 5rem; /* Extra space for text stats */
-  min-height: 200px;
-  font-family: inherit !important;
-}
-
-.ProseMirror * {
-  font-family: inherit !important;
 }
 
 .ProseMirror h1,
@@ -278,6 +350,9 @@
 
 .ProseMirror p {
   margin: 0.75rem 0;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
 }
 
 .ProseMirror p:first-child {
@@ -350,6 +425,12 @@
   color: #dc2626;
 }
 
+/* Handle long words and URLs */
+.ProseMirror a {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
 /* Syntax highlighting improvements */
 .hljs-keyword {
   color: #569cd6;
@@ -387,4 +468,21 @@
 
 .hljs-literal {
   color: #569cd6;
-} 
+}
+
+/* Force container constraints */
+.ProseMirror,
+.ProseMirror-content {
+  contain: layout !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Handle extremely long sequences like URLs or code */
+.ProseMirror *:not(pre):not(code) {
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+ 

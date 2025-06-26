@@ -9,7 +9,7 @@ interface EditorStore {
   title: string;
   content: string;
   status: Note['status'];
-  workspace: string;
+  folderId: string;
   tags: string[];
   fontFamily: string;
   
@@ -23,7 +23,7 @@ interface EditorStore {
   setTitle: (title: string) => void;
   setContent: (content: string) => void;
   setStatus: (status: Note['status']) => void;
-  setWorkspace: (workspace: string) => void;
+  setFolderId: (folderId: string) => void;
   setTags: (tags: string[]) => void;
   setFontFamily: (fontFamily: string) => void;
   addTag: (tag: string) => void;
@@ -41,7 +41,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   title: '',
   content: '',
   status: 'idea',
-  workspace: 'Personal',
+  folderId: '',
   tags: [],
   fontFamily: 'Inter',
   isDirty: false,
@@ -55,11 +55,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         title: note.title,
         content: note.content,
         status: note.status,
-        workspace: note.workspace,
+        folderId: note.folderId || '',
         tags: note.tags,
         fontFamily: note.fontFamily || 'Inter',
         isDirty: false,
-        lastSaved: note.updatedAt,
+        lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
       });
     } else {
       // New note
@@ -68,7 +68,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         title: '',
         content: '',
         status: 'idea',
-        workspace: 'Personal',
+        folderId: '',
         tags: [],
         fontFamily: 'Inter',
         isDirty: false,
@@ -89,8 +89,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ status, isDirty: true });
   },
 
-  setWorkspace: (workspace) => {
-    set({ workspace, isDirty: true });
+  setFolderId: (folderId) => {
+    set({ folderId, isDirty: true });
   },
 
   setTags: (tags) => {
@@ -130,7 +130,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       title: '',
       content: '',
       status: 'idea',
-      workspace: 'Personal',
+      folderId: '',
       tags: [],
       fontFamily: 'Inter',
       isDirty: false,
