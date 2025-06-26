@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -52,9 +51,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   sidebarCounts
 }) => {
   const { theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
-
-
 
   // Unified tags system - replaces both status and tags
   const predefinedTags = [
@@ -171,8 +167,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/settings')}
-            className="w-full justify-start h-9 px-3 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-200"
+            onClick={() => onWorkspaceChange('settings')}
+            className={cn(
+              "w-full justify-start h-9 px-3 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-200",
+              selectedWorkspace === 'settings' && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
+            )}
           >
             <Settings className="w-4 h-4 mr-3" />
             <span className="text-sm">Settings</span>

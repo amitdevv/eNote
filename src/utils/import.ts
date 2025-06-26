@@ -1,66 +1,55 @@
 import { Note } from '@/types/note';
 
-// Parse markdown content to extract metadata and content
-const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => {
-  let title = fileName.replace(/\.md$/, '').replace(/_/g, ' ');
-  let noteContent = content;
-  const tags: string[] = [];
-  let status: Note['status'] = 'idea';
+// Parse markdown content to extract metadata and content (currently unused)
+// const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => {
+//   let title = fileName.replace(/\.md$/, '').replace(/_/g, ' ');
+//   let noteContent = content;
+//   const tags: string[] = [];
 
-  // Look for title (first # heading)
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  if (titleMatch) {
-    title = titleMatch[1].trim();
-  }
+//   // Look for title (first # heading)
+//   const titleMatch = content.match(/^#\s+(.+)$/m);
+//   if (titleMatch) {
+//     title = titleMatch[1].trim();
+//   }
 
-  // Look for metadata section
-  const metadataMatch = content.match(/\*\*Created:\*\*.*?\n\*\*Updated:\*\*.*?\n.*?\n---\n\n([\s\S]*)/);
-  if (metadataMatch) {
-    noteContent = metadataMatch[1];
+//   // Look for metadata section
+//   const metadataMatch = content.match(/\*\*Created:\*\*.*?\n\*\*Updated:\*\*.*?\n.*?\n---\n\n([\s\S]*)/);
+//   if (metadataMatch) {
+//     noteContent = metadataMatch[1];
     
-    // Extract status
-    const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)/);
-    if (statusMatch) {
-      const extractedStatus = statusMatch[1].trim().toLowerCase();
-      if (['idea', 'research', 'outline', 'draft', 'review', 'done'].includes(extractedStatus)) {
-        status = extractedStatus as Note['status'];
-      }
-    }
+//     // Extract tags
+//     const tagsMatch = content.match(/\*\*Tags:\*\*\s*(.+)/);
+//     if (tagsMatch) {
+//       tags.push(...tagsMatch[1].split(',').map(tag => tag.trim()));
+//     }
+//   }
 
-    // Extract tags
-    const tagsMatch = content.match(/\*\*Tags:\*\*\s*(.+)/);
-    if (tagsMatch) {
-      tags.push(...tagsMatch[1].split(',').map(tag => tag.trim()));
-    }
-  }
+//   // Convert markdown to HTML (basic conversion)
+//   const htmlContent = noteContent
+//     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+//     .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+//     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+//     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+//     .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+//     .replace(/```(\w+)?\n([\s\S]*?)```/gim, '<pre><code class="language-$1">$2</code></pre>')
+//     .replace(/`(.*?)`/gim, '<code>$1</code>')
+//     .replace(/^- (.*$)/gim, '<li>$1</li>')
+//     .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+//     .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+//     .replace(/\n/gim, '<br>');
 
-  // Convert markdown to HTML (basic conversion)
-  const htmlContent = noteContent
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-    .replace(/```(\w+)?\n([\s\S]*?)```/gim, '<pre><code class="language-$1">$2</code></pre>')
-    .replace(/`(.*?)`/gim, '<code>$1</code>')
-    .replace(/^- (.*$)/gim, '<li>$1</li>')
-    .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-    .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
-    .replace(/\n/gim, '<br>');
+//   // Always use markdown type since we only support markdown now
+//   let noteType: Note['type'] = 'markdown';
 
-  // Always use markdown type since we only support markdown now
-  let noteType: Note['type'] = 'markdown';
-
-  return {
-    title,
-    content: htmlContent,
-    type: noteType,
-    status,
-    tags,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-};
+//   return {
+//     title,
+//     content: htmlContent,
+//     type: noteType,
+//     tags,
+//     createdAt: new Date(),
+//     updatedAt: new Date(),
+//   };
+// };
 
 // Import from JSON (exported notes)
 export const importFromJSON = (file: File): Promise<Partial<Note>[]> => {

@@ -13,10 +13,10 @@ export interface SearchResult {
   matches: SearchMatch[];
 }
 
-// Strip HTML tags from content for searching
-const stripHtml = (html: string): string => {
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-};
+// Strip HTML tags from content for searching (currently unused)
+// const stripHtml = (html: string): string => {
+//   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+// };
 
 // Search notes with scoring
 export const searchNotes = (notes: Note[], query: string): SearchResult[] => {

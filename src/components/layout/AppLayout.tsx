@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { FileText, Plus, Loader2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
+import { SettingsPage } from '@/components/settings/SettingsPage';
 
 export const AppLayout: React.FC = () => {
   const { 
@@ -48,8 +49,9 @@ export const AppLayout: React.FC = () => {
   const [navType, setNavType] = useState<'workspace' | 'special' | 'type' | 'folder'>('workspace');
   const [navValue, setNavValue] = useState('all');
 
-  // Check if we're in editor mode
+  // Check if we're in editor mode or settings mode
   const isEditorMode = location.pathname.startsWith('/editor');
+  const isSettingsMode = location.pathname === '/settings';
 
   // Expose debugging functions globally (temporary) - after state declarations
   React.useEffect(() => {
@@ -103,7 +105,11 @@ export const AppLayout: React.FC = () => {
 
   // Simplified navigation - no folders
   useEffect(() => {
-    if (workspaceParam) {
+    if (isSettingsMode) {
+      setNavType('special');
+      setNavValue('settings');
+      setSelectedFolder('');
+    } else if (workspaceParam) {
       setNavType('special');
       setNavValue(workspaceParam);
       setSelectedFolder('');
@@ -112,7 +118,7 @@ export const AppLayout: React.FC = () => {
       setNavValue('all');
       setSelectedFolder('');
     }
-  }, [workspaceParam]);
+  }, [workspaceParam, isSettingsMode]);
 
   // Predefined tags for filtering - unified system
   const predefinedTags = ['project', 'coding', 'college', 'personal', 'ideas', 'done', 'ongoing', 'future'];
@@ -197,8 +203,14 @@ export const AppLayout: React.FC = () => {
   };
 
   const handleWorkspaceChange = (workspace: string) => {
-    // Navigate to notes view when sidebar item is clicked
-    if (location.pathname.startsWith('/editor')) {
+    // Navigate to appropriate page when sidebar item is clicked
+    if (workspace === 'settings') {
+      navigate('/settings');
+      return;
+    }
+    
+    // Navigate to notes view when other sidebar items are clicked
+    if (location.pathname.startsWith('/editor') || location.pathname === '/settings') {
       navigate('/notes');
     }
 
@@ -253,6 +265,10 @@ export const AppLayout: React.FC = () => {
           </div>
         </div>
       );
+    }
+
+    if (isSettingsMode) {
+      return <SettingsPage />;
     }
 
     if (isEditorMode) {
@@ -339,16 +355,18 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-[#171717] transition-colors duration-200">
-      <Sidebar
-        selectedWorkspace={navValue}
-        onWorkspaceChange={handleWorkspaceChange}
-        onNewNote={handleNewNote}
-        noteCount={filteredNotes.length}
-        sidebarCounts={getSidebarCounts()}
-      />
+    <div className="flex h-screen bg-gray-50 dark:bg-[#171717] transition-colors duration-200 overflow-hidden">
+      <div className="flex-shrink-0 sticky top-0 h-screen">
+        <Sidebar
+          selectedWorkspace={navValue}
+          onWorkspaceChange={handleWorkspaceChange}
+          onNewNote={handleNewNote}
+          noteCount={filteredNotes.length}
+          sidebarCounts={getSidebarCounts()}
+        />
+      </div>
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}

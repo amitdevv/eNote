@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { LandingPage } from '@/components/landing/LandingPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/components/auth/LoginPage';
-import { SettingsPage } from '@/components/settings/SettingsPage';
 import { Toaster } from '@/components/ui/toaster';
 import { Loader2 } from 'lucide-react';
 import './App.css';
@@ -71,7 +70,7 @@ const AppContent = () => {
             path="/settings" 
             element={
               <ProtectedRoute>
-                <SettingsPage />
+                <AppLayout />
               </ProtectedRoute>
             } 
           />
