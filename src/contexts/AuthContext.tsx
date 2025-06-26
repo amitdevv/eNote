@@ -46,10 +46,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signInWithGoogle = async () => {
+    // Get the correct redirect URL for production vs development
+    const getRedirectUrl = () => {
+      const baseUrl = window.location.origin;
+      
+      // If we're in development, use localhost
+      if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+        return `${baseUrl}/notes`;
+      }
+      
+      // For production, use your deployed URL
+      return 'https://ekeepit.vercel.app/notes';
+    };
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`
+        redirectTo: getRedirectUrl()
       }
     });
     if (error) throw error;
