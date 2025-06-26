@@ -1,4 +1,4 @@
-import { Note, TodoItem } from '@/types/note';
+import { Note } from '@/types/note';
 
 // Parse markdown content to extract metadata and content
 const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => {
@@ -55,45 +55,16 @@ const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => 
     .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
     .replace(/\n/gim, '<br>');
 
-  // Check if it's a todo list
-  const todoMatches = content.match(/^(\[[ x]\])\s+(.+?)(\s+\((high|medium|low)\))?$/gim);
-  let todos: TodoItem[] | undefined;
+  // Always use markdown type since we only support markdown now
   let noteType: Note['type'] = 'markdown';
-
-  if (todoMatches) {
-    noteType = 'todo';
-    todos = todoMatches.map((match, index) => {
-      const isCompleted = match.startsWith('[x]');
-      const text = match.replace(/^\[[ x]\]\s+/, '').replace(/\s+\((high|medium|low)\)$/, '');
-      const priorityMatch = match.match(/\((high|medium|low)\)$/);
-      const priority = priorityMatch ? priorityMatch[1] as 'high' | 'medium' | 'low' : 'medium';
-
-      return {
-        id: `imported-${Date.now()}-${index}`,
-        text,
-        completed: isCompleted,
-        createdAt: new Date(),
-        priority
-      };
-    });
-  }
-
-  // Check if it's code
-  const codeBlockMatch = content.match(/```(\w+)\n([\s\S]*?)```/);
-  if (codeBlockMatch && !todoMatches) {
-    noteType = 'code';
-    noteContent = codeBlockMatch[2];
-  }
 
   return {
     title,
-    content: noteType === 'code' ? noteContent : htmlContent,
+    content: htmlContent,
     type: noteType,
     status,
     workspace,
     tags,
-    todos,
-    language: codeBlockMatch ? codeBlockMatch[1] : undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -111,12 +82,9 @@ export const importFromJSON = (file: File): Promise<Partial<Note>[]> => {
         if (data.notes && Array.isArray(data.notes)) {
           const importedNotes = data.notes.map((note: any) => ({
             ...note,
+            type: 'markdown', // Force all imported notes to be markdown
             createdAt: new Date(note.createdAt),
             updatedAt: new Date(note.updatedAt),
-            todos: note.todos?.map((todo: any) => ({
-              ...todo,
-              createdAt: new Date(todo.createdAt)
-            }))
           }));
           resolve(importedNotes);
         } else {

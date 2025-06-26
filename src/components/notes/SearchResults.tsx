@@ -4,10 +4,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  FileText, 
-  Hash, 
-  Code, 
-  CheckSquare, 
   Search,
   Clock,
   Tag,
@@ -38,13 +34,38 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
     );
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'markdown': return Hash;
-      case 'code': return Code;
-      case 'todo': return CheckSquare;
-      default: return FileText;
-    }
+  // Helper function to convert HTML content to plain text
+  const htmlToPlainText = (html: string): string => {
+    return html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<div[^>]*>/gi, '')
+      .replace(/<h[1-6][^>]*>/gi, '')
+      .replace(/<\/h[1-6]>/gi, '\n')
+      .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '$1')
+      .replace(/<b[^>]*>(.*?)<\/b>/gi, '$1')
+      .replace(/<em[^>]*>(.*?)<\/em>/gi, '$1')
+      .replace(/<i[^>]*>(.*?)<\/i>/gi, '$1')
+      .replace(/<ul[^>]*>/gi, '')
+      .replace(/<\/ul>/gi, '')
+      .replace(/<ol[^>]*>/gi, '')
+      .replace(/<\/ol>/gi, '')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<blockquote[^>]*>/gi, '')
+      .replace(/<\/blockquote>/gi, '')
+      .replace(/<code[^>]*>(.*?)<\/code>/gi, '$1')
+      .replace(/<pre[^>]*>(.*?)<\/pre>/gi, '$1')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/\n\s*\n/g, '\n')
+      .trim();
   };
 
   const getStatusColor = (status: string) => {
@@ -61,14 +82,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
   // Get content preview
   const getContentPreview = (note: any) => {
-    let content = '';
-    
-    if (note.type === 'todo' && note.todos) {
-      content = note.todos.slice(0, 3).map((todo: any) => `${todo.completed ? '✓' : '○'} ${todo.text}`).join(', ');
-    } else {
-      content = note.content.replace(/<[^>]*>/g, ''); // Strip HTML
-    }
-    
+    const content = htmlToPlainText(note.content);
     return content.length > 150 ? content.substring(0, 150) + '...' : content;
   };
 
@@ -82,12 +96,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
       <div className="space-y-3">
         {results.map((result) => {
-          const TypeIcon = getTypeIcon(result.note.type);
-          
           return (
             <Card 
               key={result.note.id} 
-              className="hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 cursor-pointer border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+              className="transition-all duration-200 cursor-pointer border-none bg-white dark:bg-[#1e1e1e]"
               onClick={() => onSelectNote(result.note.id)}
             >
               <CardHeader className="pb-3">
@@ -105,14 +117,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                         className={cn("text-xs font-medium border", getStatusColor(result.note.status))}
                       >
                         {result.note.status}
-                      </Badge>
-                      
-                      <Badge 
-                        variant="outline" 
-                        className="text-xs font-medium border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-                      >
-                        <TypeIcon className="w-3 h-3 mr-1" />
-                        {result.note.type}
                       </Badge>
                       
                       <Badge 

@@ -8,18 +8,11 @@ interface FontSelectorProps {
 
 const fonts = [
   { value: 'Inter', label: 'Inter', style: 'font-sans' },
-  { value: 'Roboto', label: 'Roboto', style: 'font-sans' },
+  { value: 'Fira Code', label: 'Fira Code', style: 'font-mono' },
+  { value: 'Recursive', label: 'Recursive', style: 'font-sans' },
   { value: 'Open Sans', label: 'Open Sans', style: 'font-sans' },
+  { value: 'Roboto', label: 'Roboto', style: 'font-sans' },
   { value: 'Lato', label: 'Lato', style: 'font-sans' },
-  { value: 'Poppins', label: 'Poppins', style: 'font-sans' },
-  { value: 'Nunito', label: 'Nunito', style: 'font-sans' },
-  { value: 'Source Sans Pro', label: 'Source Sans Pro', style: 'font-sans' },
-  { value: 'Montserrat', label: 'Montserrat', style: 'font-sans' },
-  { value: 'Georgia', label: 'Georgia', style: 'font-serif' },
-  { value: 'Times New Roman', label: 'Times New Roman', style: 'font-serif' },
-  { value: 'Merriweather', label: 'Merriweather', style: 'font-serif' },
-  { value: 'JetBrains Mono', label: 'JetBrains Mono', style: 'font-mono' },
-  { value: 'System Default', label: 'System Default', style: 'font-sans' },
 ];
 
 export const FontSelector: React.FC<FontSelectorProps> = ({ 
@@ -28,18 +21,18 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
 }) => {
   return (
     <Select value={currentFont} onValueChange={onFontChange}>
-      <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+      <SelectTrigger className="w-40 bg-white dark:bg-[#333333]   text-gray-900 dark:text-gray-100">
         <SelectValue placeholder="Select font" />
       </SelectTrigger>
-      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+      <SelectContent className="bg-white dark:bg-[#333333]  ">
         {fonts.map((font) => (
           <SelectItem 
             key={font.value} 
             value={font.value}
-            className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1e1e1e]"
           >
             <div 
-              style={{ fontFamily: font.value === 'System Default' ? 'system-ui' : font.value }}
+              style={{ fontFamily: `"${font.value}", ${font.style === 'font-mono' ? 'monospace' : 'sans-serif'}` }}
               className="flex items-center"
             >
               <span>{font.label}</span>

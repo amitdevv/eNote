@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Note } from '@/types/note';
-import { sampleNotes } from '@/lib/data';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface NotesContextType {
@@ -53,7 +52,7 @@ const ensureDatesAreObjects = (notes: Note[]): Note[] => {
 };
 
 export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [rawNotes, setRawNotes] = useLocalStorage<Note[]>('notes', sampleNotes);
+  const [rawNotes, setRawNotes] = useLocalStorage<Note[]>('notes', []);
   const [notes, setNotes] = useState<Note[]>(() => ensureDatesAreObjects(rawNotes));
   const [selectedWorkspace, setSelectedWorkspace] = useLocalStorage<string>('selectedWorkspace', 'inbox');
   const [searchQuery, setSearchQuery] = useState('');

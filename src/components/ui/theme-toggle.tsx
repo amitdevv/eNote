@@ -21,7 +21,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       size={size}
       onClick={toggleTheme}
       className={cn(
-        "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800",
+        " hover:bg-gray-100 dark:hover:bg-[#333333]",
         className
       )}
     >

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FontSelector } from '@/components/ui/font-selector';
+
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
   Select, 
@@ -10,26 +10,34 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
 import { 
   Plus, 
-  ChevronDown, 
   Search,
+  ArrowLeft,
+  Hash,
+  Flag,
+  Folder,
+  Tag,
+  X,
   Download,
-  Upload,
-  FileText,
-  Download as DownloadIcon
+  FileText as FileTextIcon,
+  Lightbulb, 
+  ClipboardList, 
+  Edit3, 
+  Eye, 
+  CheckCircle
 } from 'lucide-react';
-import { useNotes } from '@/contexts/NotesContext';
+import { FontSelector } from '@/components/ui/font-selector';
+import { Badge } from '@/components/ui/badge';
+import { useNotesStore } from '@/stores/notesStore';
+import { useEditorStore } from '@/stores/editorStore';
 import { 
   exportNotesAsJSON, 
   exportAllNotesAsMarkdown,
+  exportNoteAsMarkdown,
+  exportNoteAsPDF,
+  exportNoteAsText
 } from '@/utils/export';
 import { 
   importFromJSON, 
@@ -37,6 +45,8 @@ import {
   importFromMarkdownZip,
   importFromText 
 } from '@/utils/import';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   searchQuery: string;
@@ -47,6 +57,8 @@ interface HeaderProps {
   onFilterChange: (filter: 'all' | 'ideas' | 'drafts' | 'review' | 'done') => void;
   onNewNote: () => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
+  isEditorMode?: boolean;
+  noteId?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,10 +69,52 @@ export const Header: React.FC<HeaderProps> = ({
   filterBy,
   onFilterChange,
   onNewNote,
-  searchInputRef
+  searchInputRef,
+  isEditorMode = false,
+  noteId
 }) => {
-  const { notes, addNote } = useNotes();
-  const [selectedFont, setSelectedFont] = React.useState('Inter');
+  const { notes, addNote, getNoteById } = useNotesStore();
+  const { 
+    title: editorTitle,
+    content: editorContent,
+    status: editorStatus, 
+    workspace: editorWorkspace, 
+    tags: editorTags, 
+    fontFamily: editorFontFamily,
+    setStatus: setEditorStatus,
+    setWorkspace: setEditorWorkspace,
+    setTags: setEditorTags,
+    setFontFamily: setEditorFontFamily,
+    addTag: addEditorTag,
+    removeTag: removeEditorTag
+  } = useEditorStore();
+  
+  const [exportValue, setExportValue] = React.useState("export");
+  const [newTag, setNewTag] = React.useState('');
+  
+  // Editor mode state
+  const navigate = useNavigate();
+  const currentNote = noteId ? getNoteById(noteId) : null;
+
+  const handleBackToNotes = () => {
+    navigate('/notes');
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim()) {
+      addEditorTag(newTag.trim());
+      setNewTag('');
+    }
+  };
+
+  const statusOptions = [
+    { value: 'idea', label: 'Idea', icon: Lightbulb, color: 'text-blue-600 dark:text-blue-400' },
+    { value: 'research', label: 'Research', icon: Search, color: 'text-purple-600 dark:text-purple-400' },
+    { value: 'outline', label: 'Outline', icon: ClipboardList, color: 'text-orange-600 dark:text-orange-400' },
+    { value: 'draft', label: 'Draft', icon: Edit3, color: 'text-yellow-600 dark:text-yellow-400' },
+    { value: 'review', label: 'Review', icon: Eye, color: 'text-indigo-600 dark:text-indigo-400' },
+    { value: 'done', label: 'Done', icon: CheckCircle, color: 'text-green-600 dark:text-green-400' },
+  ];
 
   // Export functions
   const handleExportJSON = () => {
@@ -117,6 +171,133 @@ export const Header: React.FC<HeaderProps> = ({
     { value: 'done', label: 'Done' },
   ];
 
+  if (isEditorMode) {
+    return (
+      <header className="bg-white dark:bg-[#171717] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-colors duration-200">
+        <div className="flex items-center justify-between">
+          {/* Left Side - Back and Note Info */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToNotes}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Notes
+            </button>
+            
+            <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
+            
+            <div className="flex items-center gap-2">
+              <Hash className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {currentNote ? 'Edit Note' : 'New Note'}
+              </span>
+            </div>
+          </div>
+
+          {/* Right Side - Editor Controls */}
+          <div className="flex items-center gap-3">
+            {/* Status */}
+            <Select value={editorStatus} onValueChange={(value) => setEditorStatus(value as any)}>
+              <SelectTrigger className="w-28 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center gap-2">
+                      <option.icon className={cn("w-3 h-3", option.color)} />
+                      {option.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Workspace */}
+            <Select value={editorWorkspace} onValueChange={setEditorWorkspace}>
+              <SelectTrigger className="w-24 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Personal">Personal</SelectItem>
+                <SelectItem value="Work">Work</SelectItem>
+                <SelectItem value="Projects">Projects</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Font */}
+            <FontSelector 
+              currentFont={editorFontFamily} 
+              onFontChange={setEditorFontFamily}
+            />
+
+            {/* Tags */}
+            <div className="flex items-center gap-2">
+              {editorTags.slice(0, 2).map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
+                  <button
+                    onClick={() => removeEditorTag(tag)}
+                    className="ml-1 hover:text-red-600"
+                  >
+                    <X className="w-2 h-2" />
+                  </button>
+                </Badge>
+              ))}
+              {editorTags.length > 2 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{editorTags.length - 2}
+                </Badge>
+              )}
+              <div className="flex items-center gap-1">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Add tag..."
+                  className="w-20 h-8 text-xs"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                />
+                <button
+                  onClick={handleAddTag}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Export */}
+            {currentNote && (
+              <Select value="export" onValueChange={(value) => {
+                if (value === "pdf") {
+                  exportNoteAsPDF(currentNote || { title: editorTitle, content: editorContent } as any, editorTitle, editorContent);
+                } else if (value === "txt") {
+                  exportNoteAsText(currentNote || { title: editorTitle, content: editorContent } as any, editorTitle, editorContent);
+                }
+              }}>
+                <SelectTrigger className="w-20 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="export">
+                    Export
+                  </SelectItem>
+                  <SelectItem value="txt">
+                    Export as Text
+                  </SelectItem>
+                  <SelectItem value="pdf">
+                    Export as PDF
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="bg-white dark:bg-[#171717] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-colors duration-200">
       <div className="flex items-center gap-4">
@@ -161,59 +342,58 @@ export const Header: React.FC<HeaderProps> = ({
         </Select>
 
         {/* Export Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 text-sm">
-              <DownloadIcon className="w-4 h-4 mr-1" />
+        <Select value={exportValue} onValueChange={(value) => {
+          if (value === "json") {
+            handleExportJSON();
+          } else if (value === "markdown") {
+            handleExportMarkdown();
+          } else if (value === "import") {
+            // Import will be handled by the file input
+            const fileInput = document.querySelector('#import-file-input') as HTMLInputElement;
+            fileInput?.click();
+          }
+          // Reset to default value
+          setExportValue("export");
+        }}>
+          <SelectTrigger className="w-24 h-9 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="export">
               Export
-              <ChevronDown className="w-3 h-3 ml-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={handleExportJSON}>
-              <FileText className="w-4 h-4 mr-2" />
+            </SelectItem>
+            <SelectItem value="json">
               Export as JSON
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExportMarkdown}>
-              <Download className="w-4 h-4 mr-2" />
+            </SelectItem>
+            <SelectItem value="markdown">
               Export as Markdown (ZIP)
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <label className="cursor-pointer flex items-center">
-                <Upload className="w-4 h-4 mr-2" />
-                Import Files
-                <input
-                  type="file"
-                  multiple
-                  accept=".json,.md,.txt,.zip"
-                  onChange={handleFileImport}
-                  className="hidden"
-                />
-              </label>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </SelectItem>
+            <SelectItem value="import">
+              Import Files
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        
+        {/* Hidden file input for import */}
+        <input
+          id="import-file-input"
+          type="file"
+          multiple
+          accept=".json,.md,.txt,.zip"
+          onChange={handleFileImport}
+          className="hidden"
+        />
 
         {/* Spacer */}
         <div className="flex-1"></div>
 
         {/* Right Side - Controls */}
         <div className="flex items-center gap-3">
-          {/* Font Selector */}
-          <div className="flex items-center gap-1">
-            <FontSelector 
-              currentFont={selectedFont} 
-              onFontChange={setSelectedFont}
-            />
-           
-          </div>
-
           {/* New Note Button */}
           <Button 
             onClick={onNewNote}
             size="sm"
-            className="h-9 bg-black hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white"
+            className="h-9 bg-[#333333] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Note

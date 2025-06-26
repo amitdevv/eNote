@@ -37,8 +37,17 @@
   padding-left: 1.5rem;
 }
 
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
 .prose li {
   margin-bottom: 0.25rem;
+  display: list-item;
 }
 
 .prose blockquote {
@@ -157,18 +166,19 @@
   outline-offset: 2px;
 }
 
-/* Task List Styles */
+/* Task List Styles - Override list styles for todo lists */
 .ProseMirror .task-list {
-  list-style: none;
+  list-style: none !important;
   padding: 0;
   margin: 0;
 }
 
 .ProseMirror .task-item {
-  display: flex;
+  display: flex !important;
   align-items: flex-start;
   margin: 0.25rem 0;
   padding-left: 0;
+  list-style: none !important;
 }
 
 .ProseMirror .task-item > label {
@@ -243,7 +253,13 @@
 /* General prose improvements */
 .ProseMirror {
   padding: 1rem;
+  padding-bottom: 5rem; /* Extra space for text stats */
   min-height: 200px;
+  font-family: inherit !important;
+}
+
+.ProseMirror * {
+  font-family: inherit !important;
 }
 
 .ProseMirror h1,
@@ -276,6 +292,46 @@
 .ProseMirror ol {
   margin: 0.75rem 0;
   padding-left: 1.5rem;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror ul ul {
+  list-style-type: circle;
+}
+
+.ProseMirror ul ul ul {
+  list-style-type: square;
+}
+
+.ProseMirror li {
+  display: list-item;
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+/* Dark theme list marker colors */
+.dark .ProseMirror ul li::marker {
+  color: #d1d5db;
+}
+
+.dark .ProseMirror ol li::marker {
+  color: #d1d5db;
+}
+
+/* Light theme list marker colors */
+.ProseMirror ul li::marker {
+  color: #4b5563;
+}
+
+.ProseMirror ol li::marker {
+  color: #4b5563;
 }
 
 .ProseMirror blockquote {

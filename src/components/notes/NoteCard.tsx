@@ -4,16 +4,15 @@ import { Note } from '@/types/note';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CodeBlock } from '@/components/notes/CodeBlock';
 import { 
-  MoreHorizontal, Edit3, Trash2, Star, FileText, Hash, Code, CheckSquare,
-  Lightbulb, Search, ClipboardList, Eye, CheckCircle, Download
+  MoreHorizontal, Edit3, Trash2, Star,
+  Lightbulb, Search, ClipboardList, Eye, CheckCircle, Download, FileText
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { 
   exportNoteAsMarkdown, 
-  exportNoteAsPDF 
+  exportNoteAsPDF,
+  exportNoteAsText
 } from '@/utils/export';
 
 interface NoteCardProps {
@@ -32,12 +31,38 @@ const statusConfig = {
   done: { label: 'Done', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800', icon: CheckCircle, iconColor: 'text-green-600 dark:text-green-400' },
 };
 
-const typeConfig = {
-  markdown: { icon: Hash, label: 'Markdown', color: 'text-blue-600 dark:text-blue-400' },
-  code: { icon: Code, label: 'Code', color: 'text-purple-600 dark:text-purple-400' },
-  todo: { icon: CheckSquare, label: 'To-do', color: 'text-green-600 dark:text-green-400' },
-  // Fallback for legacy notes
-  text: { icon: FileText, label: 'Text', color: 'text-gray-600 dark:text-gray-400' },
+// Helper function to convert HTML content to plain text
+const htmlToPlainText = (html: string): string => {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<div[^>]*>/gi, '')
+    .replace(/<h[1-6][^>]*>/gi, '')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '$1')
+    .replace(/<b[^>]*>(.*?)<\/b>/gi, '$1')
+    .replace(/<em[^>]*>(.*?)<\/em>/gi, '$1')
+    .replace(/<i[^>]*>(.*?)<\/i>/gi, '$1')
+    .replace(/<ul[^>]*>/gi, '')
+    .replace(/<\/ul>/gi, '')
+    .replace(/<ol[^>]*>/gi, '')
+    .replace(/<\/ol>/gi, '')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<blockquote[^>]*>/gi, '')
+    .replace(/<\/blockquote>/gi, '')
+    .replace(/<code[^>]*>(.*?)<\/code>/gi, '$1')
+    .replace(/<pre[^>]*>(.*?)<\/pre>/gi, '$1')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\n\s*\n/g, '\n')
+    .trim();
 };
 
 export const NoteCard: React.FC<NoteCardProps> = ({ 
@@ -47,111 +72,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onToggleStarred
 }) => {
   const statusInfo = statusConfig[note.status];
-  const typeInfo = typeConfig[note.type as keyof typeof typeConfig] || typeConfig.markdown;
 
   const renderContent = () => {
-    if (note.type === 'todo' && note.todos) {
-      const completedCount = note.todos.filter(todo => todo.completed).length;
-      const totalCount = note.todos.length;
-      
-      return (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {completedCount} of {totalCount} completed
-            </span>
-            <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-green-500 dark:bg-green-400 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2 max-h-32 overflow-y-auto">
-            {note.todos.slice(0, 4).map((todo) => (
-              <div key={todo.id} className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={todo.completed}
-                  onCheckedChange={() => {}}
-                  className="h-4 w-4"
-                />
-                <span className={cn(
-                  "flex-1 truncate text-gray-700 dark:text-gray-300",
-                  todo.completed && "line-through text-gray-500 dark:text-gray-500"
-                )}>
-                  {todo.text}
-                </span>
-                {todo.priority && (
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "text-xs px-1 py-0",
-                      todo.priority === 'high' && "border-red-200 dark:border-red-800 text-red-600 dark:text-red-400",
-                      todo.priority === 'medium' && "border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400",
-                      todo.priority === 'low' && "border-green-200 dark:border-green-800 text-green-600 dark:text-green-400"
-                    )}
-                  >
-                    {todo.priority}
-                  </Badge>
-                )}
-              </div>
-            ))}
-            {note.todos.length > 4 && (
-              <div className="text-xs text-gray-500 dark:text-gray-500 text-center pt-1">
-                +{note.todos.length - 4} more tasks
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    if (note.type === 'code') {
-      return (
-        <div className="space-y-2">
-          <CodeBlock
-            code={note.content}
-            language={note.language || 'javascript'}
-            theme="light"
-            maxLines={4}
-            className="text-xs"
-          />
-        </div>
-      );
-    }
-
-    if (note.type === 'markdown') {
-      return (
-        <div className="space-y-2">
-          <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-4 font-mono">
-            {note.content.split('\n').slice(0, 4).map((line, index) => (
-              <div key={index} className={cn(
-                line.startsWith('#') && "font-semibold text-gray-900 dark:text-gray-100",
-                line.startsWith('##') && "text-sm",
-                line.startsWith('###') && "text-xs",
-                line.startsWith('-') && "ml-2",
-                line.startsWith('*') && "ml-2"
-              )}>
-                {line || '\u00A0'}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Handle legacy text notes and any other types
+    const plainTextContent = htmlToPlainText(note.content);
+    const lines = plainTextContent.split('\n').filter(line => line.trim() !== '').slice(0, 3);
+    
     return (
-      <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed line-clamp-3">
-        {note.content}
-      </p>
+      <div className="space-y-1">
+        <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          {lines.length > 0 ? (
+            lines.map((line, index) => (
+              <div key={index} className="line-clamp-1">
+                {line.trim() || '\u00A0'}
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-400 dark:text-gray-500 italic">No content</div>
+          )}
+        </div>
+      </div>
     );
   };
 
   return (
     <Card 
-      className="group hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 relative overflow-visible cursor-pointer"
+      className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
       onClick={onClick}
     >
       <CardHeader className="pb-3">
@@ -168,13 +113,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 <statusInfo.icon className={cn("w-3 h-3 mr-1.5", statusInfo.iconColor)} />
                 {statusInfo.label}
               </Badge>
-              <Badge 
-                variant="outline" 
-                className={cn("text-xs font-medium border-gray-200 dark:border-gray-700", typeInfo.color)}
-              >
-                <typeInfo.icon className="w-3 h-3 mr-1" />
-                {typeInfo.label}
-              </Badge>
               <Badge variant="outline" className="text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700">
                 {note.workspace}
               </Badge>
@@ -187,12 +125,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-[#333333]"
                 >
                   <MoreHorizontal className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 z-50 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" sideOffset={5}>
+              <DropdownMenuContent align="end" className="w-48 z-50 bg-white dark:bg-[#333333] border-gray-200 dark:border-gray-700" sideOffset={5}>
                 <DropdownMenuItem 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -214,6 +152,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                   {note.starred ? 'Remove from starred' : 'Add to starred'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    exportNoteAsText(note);
+                  }}
+                  className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Export as Text
+                </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={(e) => {
                     e.stopPropagation();

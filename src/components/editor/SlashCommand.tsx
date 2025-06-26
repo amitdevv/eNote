@@ -287,7 +287,7 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
     };
 
     return (
-      <div className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 shadow-lg">
+      <div className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#333333] p-1 shadow-lg">
         <div className="mb-2 px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
           {isRichTextEditor ? 'Rich text blocks' : 'Text formatting'}
         </div>
@@ -298,12 +298,12 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
               className={cn(
                 'flex w-full items-center space-x-3 rounded-md px-2 py-2 text-left text-sm transition-colors',
                 index === selectedIndex
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  ? 'bg-gray-100 dark:bg-[#1e1e1e] text-gray-900 dark:text-gray-100'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1e1e1e]'
               )}
               onClick={() => selectItem(index)}
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700">
+              <div className="flex h-8 w-8 items-center justify-center rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#1e1e1e]">
                 <item.icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
               </div>
               <div className="flex-1">

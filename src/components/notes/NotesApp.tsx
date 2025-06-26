@@ -147,7 +147,7 @@ export const NotesApp: React.FC = () => {
                   </p>
                   <button
                     onClick={handleNewNote}
-                    className="inline-flex items-center px-4 py-2 bg-black hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-md transition-colors duration-200"
+                    className="inline-flex items-center px-4 py-2 bg-[#333333]  text-white rounded-md "
                   >
                     Create your first note
                   </button>

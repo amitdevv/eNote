@@ -10,7 +10,6 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { SlashCommandExtension } from './SlashCommandExtension';
 import './tiptap.css';
 import { Link } from '@tiptap/extension-link';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 // Import language syntaxes
@@ -26,23 +25,7 @@ import json from 'highlight.js/lib/languages/json';
 import yaml from 'highlight.js/lib/languages/yaml';
 import markdown from 'highlight.js/lib/languages/markdown';
 
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  Quote,
-  Link as LinkIcon,
-  Undo,
-  Redo,
-  CheckSquare,
-  Minus
-} from 'lucide-react';
+
 
 // Create lowlight instance and register languages
 const lowlight = createLowlight();
@@ -129,7 +112,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
           'prose-li:text-gray-700 dark:prose-li:text-gray-300',
           'min-h-[400px] p-4'
         ),
-        style: `font-family: ${fontFamily}`,
+        style: `font-family: "${fontFamily}", sans-serif !important; font-display: swap;`,
         'data-placeholder': placeholder,
       },
     },
@@ -144,39 +127,47 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }, [content, editor]);
 
-  const ToolbarButton = ({ 
-    isActive, 
-    onClick, 
-    children, 
-    disabled = false 
-  }: { 
-    isActive?: boolean; 
-    onClick: () => void; 
-    children: React.ReactNode; 
-    disabled?: boolean;
-  }) => (
-    <Button
-      type="button"
-      variant={isActive ? "default" : "ghost"}
-      size="sm"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "h-8 w-8 p-0",
-        isActive 
-          ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
-          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
-      )}
-    >
-      {children}
-    </Button>
-  );
+  // Update font family when it changes
+  useEffect(() => {
+    if (editor && editor.view && editor.view.dom) {
+      const editorElement = editor.view.dom as HTMLElement;
+      editorElement.style.fontFamily = `"${fontFamily}", sans-serif`;
+      editorElement.style.fontDisplay = 'swap';
+      
+      // Also apply to all child elements with high specificity
+      const style = document.createElement('style');
+      style.textContent = `
+        .ProseMirror, .ProseMirror * {
+          font-family: "${fontFamily}", sans-serif !important;
+          font-display: swap !important;
+        }
+      `;
+      
+      // Remove previous font style if exists
+      const prevStyle = document.getElementById('tiptap-font-override');
+      if (prevStyle) {
+        prevStyle.remove();
+      }
+      
+      style.id = 'tiptap-font-override';
+      document.head.appendChild(style);
+      
+      // Cleanup function
+      return () => {
+        const styleToRemove = document.getElementById('tiptap-font-override');
+        if (styleToRemove) {
+          styleToRemove.remove();
+        }
+      };
+    }
+  }, [fontFamily, editor]);
+
+
 
   if (!editor) {
     return (
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900">
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-lg p-4">
         <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
           <div className="space-y-3">
             <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
             <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2"></div>
@@ -186,105 +177,15 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     );
   }
 
-  return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-200">
-      {/* Toolbar */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-2 bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
-        <div className="flex flex-wrap gap-1">
-          {/* Text Formatting */}
-          <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
-            <ToolbarButton
-              isActive={editor.isActive('bold')}
-              onClick={() => editor.chain().focus().toggleBold().run()}
-            >
-              <Bold className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('italic')}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-            >
-              <Italic className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('strike')}
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-            >
-              <Strikethrough className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('code')}
-              onClick={() => editor.chain().focus().toggleCode().run()}
-            >
-              <Code className="w-4 h-4" />
-            </ToolbarButton>
-          </div>
-
-          {/* Headings */}
-          <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
-            <ToolbarButton
-              isActive={editor.isActive('heading', { level: 1 })}
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            >
-              <Heading1 className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('heading', { level: 2 })}
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            >
-              <Heading2 className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('heading', { level: 3 })}
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            >
-              <Heading3 className="w-4 h-4" />
-            </ToolbarButton>
-          </div>
-
-          {/* Lists */}
-          <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
-            <ToolbarButton
-              isActive={editor.isActive('bulletList')}
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-            >
-              <List className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('orderedList')}
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            >
-              <ListOrdered className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              isActive={editor.isActive('blockquote')}
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            >
-              <Quote className="w-4 h-4" />
-            </ToolbarButton>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-1">
-            <ToolbarButton
-              onClick={() => editor.chain().focus().undo().run()}
-              disabled={!editor.can().undo()}
-            >
-              <Undo className="w-4 h-4" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => editor.chain().focus().redo().run()}
-              disabled={!editor.can().redo()}
-            >
-              <Redo className="w-4 h-4" />
-            </ToolbarButton>
-          </div>
-        </div>
-      </div>
-
-      {/* Editor */}
-      <div className="bg-white dark:bg-gray-900 transition-colors duration-200">
-        <EditorContent editor={editor} />
-      </div>
+    return (
+    <div 
+      className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg overflow-hidden"
+      style={{ fontFamily }}
+    >
+      <EditorContent 
+        editor={editor} 
+        style={{ fontFamily }}
+      />
     </div>
   );
 };
