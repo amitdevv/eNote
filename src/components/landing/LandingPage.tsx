@@ -6,8 +6,7 @@ import { fetchRealUserCount } from '@/config/stats';
 import {
   FileText,
   Users,
-  Star,
-  ExternalLink
+  Star
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
