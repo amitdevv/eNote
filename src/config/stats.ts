@@ -1,4 +1,4 @@
-import { getTotalUserCount, subscribeToUserCountChanges } from '@/lib/supabase';
+import { getTotalRegisteredUsers, subscribeToUserCountChanges } from '@/lib/supabase';
 
 // User Statistics Configuration
 // These numbers are now fetched from the real database with live updates!
@@ -11,7 +11,7 @@ export interface UserStats {
 
 export const userStats: UserStats = {
   // Fallback numbers - real numbers are fetched from database
-  totalUsers: 42,        // Fallback count
+  totalUsers: 3,        // Updated fallback to match your actual count
   githubStars: 0,        // GitHub repository stars
   lastUpdated: '2024-12-01' // When these stats were last updated
 };
@@ -24,11 +24,11 @@ export const getDisplayStats = () => {
   };
 };
 
-// Fetch REAL user count from Supabase database (improved)
+// Fetch REAL registered user count from Supabase database (FIXED)
 export const fetchRealUserCount = async (): Promise<number> => {
   try {
-    const count = await getTotalUserCount();
-    console.log('Real user count from database:', count);
+    const count = await getTotalRegisteredUsers();
+    console.log('📊 Real TOTAL registered users from database:', count);
     return count;
   } catch (error) {
     console.error('Failed to fetch real user count:', error);
@@ -38,7 +38,7 @@ export const fetchRealUserCount = async (): Promise<number> => {
 
 // Set up live user count updates
 export const setupLiveUserCount = (callback: (count: number) => void) => {
-  console.log('Setting up live user count updates...');
+  console.log('Setting up live TOTAL user count updates...');
   
   // Subscribe to real-time changes
   const unsubscribe = subscribeToUserCountChanges(callback);

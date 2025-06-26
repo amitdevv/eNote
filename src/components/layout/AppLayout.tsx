@@ -357,13 +357,13 @@ export const AppLayout: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-[#171717] transition-colors duration-200 overflow-hidden">
       <div className="flex-shrink-0 sticky top-0 h-screen">
-        <Sidebar
-          selectedWorkspace={navValue}
-          onWorkspaceChange={handleWorkspaceChange}
-          onNewNote={handleNewNote}
-          noteCount={filteredNotes.length}
-          sidebarCounts={getSidebarCounts()}
-        />
+      <Sidebar
+        selectedWorkspace={navValue}
+        onWorkspaceChange={handleWorkspaceChange}
+        onNewNote={handleNewNote}
+        noteCount={filteredNotes.length}
+        sidebarCounts={getSidebarCounts()}
+      />
       </div>
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

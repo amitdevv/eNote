@@ -79,4 +79,87 @@ create trigger handle_updated_at before update on public.notes
   for each row execute procedure public.handle_updated_at();
 
 create trigger handle_updated_at before update on public.folders
-  for each row execute procedure public.handle_updated_at(); 
+  for each row execute procedure public.handle_updated_at();
+
+-- Add this function to your Supabase database to count all registered users
+-- Run this in your Supabase SQL Editor
+
+CREATE OR REPLACE FUNCTION get_total_user_count()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Count all users from auth.users table
+  RETURN (
+    SELECT COUNT(*)::INTEGER 
+    FROM auth.users 
+    WHERE deleted_at IS NULL
+  );
+END;
+$$;
+
+-- Grant execute permission to anon users
+GRANT EXECUTE ON FUNCTION get_total_user_count() TO anon;
+GRANT EXECUTE ON FUNCTION get_total_user_count() TO authenticated;
+
+-- Alternative approach: Create a user_profiles table that tracks all users
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email TEXT,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+CREATE POLICY "Public profiles are viewable by everyone" ON public.user_profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own profile" ON public.user_profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile" ON public.user_profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, email, full_name, avatar_url)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger to automatically create profile when user signs up
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Function to get user count from profiles table
+CREATE OR REPLACE FUNCTION get_user_profiles_count()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN (SELECT COUNT(*)::INTEGER FROM public.user_profiles);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_user_profiles_count() TO anon;
+GRANT EXECUTE ON FUNCTION get_user_profiles_count() TO authenticated; 
