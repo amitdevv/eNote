@@ -1,7 +1,7 @@
-import { getActiveUserCount } from '@/lib/supabase';
+import { getTotalUserCount, subscribeToUserCountChanges } from '@/lib/supabase';
 
 // User Statistics Configuration
-// These numbers are now fetched from the real database!
+// These numbers are now fetched from the real database with live updates!
 
 export interface UserStats {
   totalUsers: number;
@@ -24,16 +24,50 @@ export const getDisplayStats = () => {
   };
 };
 
-// Fetch REAL user count from Supabase database
+// Fetch REAL user count from Supabase database (improved)
 export const fetchRealUserCount = async (): Promise<number> => {
   try {
-    const count = await getActiveUserCount();
+    const count = await getTotalUserCount();
     console.log('Real user count from database:', count);
     return count;
   } catch (error) {
     console.error('Failed to fetch real user count:', error);
     return userStats.totalUsers; // Fallback to static count
   }
+};
+
+// Set up live user count updates
+export const setupLiveUserCount = (callback: (count: number) => void) => {
+  console.log('Setting up live user count updates...');
+  
+  // Subscribe to real-time changes
+  const unsubscribe = subscribeToUserCountChanges(callback);
+  
+  return unsubscribe;
+};
+
+// Fetch user count with periodic updates
+export const fetchUserCountWithUpdates = (
+  onUpdate: (count: number) => void,
+  intervalMinutes: number = 5
+) => {
+  // Initial fetch
+  fetchRealUserCount().then(onUpdate);
+  
+  // Set up periodic updates
+  const interval = setInterval(async () => {
+    try {
+      const count = await fetchRealUserCount();
+      onUpdate(count);
+    } catch (error) {
+      console.error('Error in periodic user count update:', error);
+    }
+  }, intervalMinutes * 60 * 1000); // Convert minutes to milliseconds
+  
+  // Return cleanup function
+  return () => {
+    clearInterval(interval);
+  };
 };
 
 // TODO: Fetch GitHub stars from GitHub API

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { fetchRealUserCount } from '@/config/stats';
+import { fetchRealUserCount, setupLiveUserCount, fetchUserCountWithUpdates } from '@/config/stats';
 import {
   FileText,
   Users,
-  Star
+  Star,
+  ExternalLink
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -14,26 +15,60 @@ export const LandingPage: React.FC = () => {
   const [userCount, setUserCount] = useState<number>(42); // Start with fallback
   const [loading, setLoading] = useState(true);
 
-  // Fetch real user count on component mount
+  // Fetch real user count and set up live updates (background functionality)
   useEffect(() => {
-    const loadRealUserCount = async () => {
+    let unsubscribe: (() => void) | null = null;
+    let periodicCleanup: (() => void) | null = null;
+
+    const initializeUserCount = async () => {
       try {
-        const realCount = await fetchRealUserCount();
-        setUserCount(realCount);
+        console.log('Loading initial user count...');
+        
+        // Get initial count
+        const initialCount = await fetchRealUserCount();
+        setUserCount(initialCount);
+        setLoading(false);
+
+        // Set up real-time updates (if supported) - silent background updates
+        try {
+          unsubscribe = setupLiveUserCount((newCount) => {
+            console.log('Live user count update:', newCount);
+            setUserCount(newCount);
+          });
+          
+          console.log('Real-time user count updates enabled');
+        } catch (realtimeError) {
+          console.log('Real-time updates not available, using periodic updates');
+          
+          // Fallback to periodic updates every 2 minutes
+          periodicCleanup = fetchUserCountWithUpdates((newCount) => {
+            console.log('Periodic user count update:', newCount);
+            setUserCount(newCount);
+          }, 2);
+        }
       } catch (error) {
-        console.error('Failed to load real user count:', error);
-        // Keep fallback number
-      } finally {
+        console.error('Failed to load user count:', error);
         setLoading(false);
       }
     };
 
-    loadRealUserCount();
+    initializeUserCount();
+
+    // Cleanup on unmount
+    return () => {
+      if (unsubscribe) {
+        console.log('Cleaning up user count subscriptions');
+        unsubscribe();
+      }
+      if (periodicCleanup) {
+        periodicCleanup();
+      }
+    };
   }, []);
 
   const handleGitHubStar = () => {
     // Replace with your actual GitHub repository URL
-    window.open('https://github.com/amitdevv/eNote', '_blank');
+    window.open('https://github.com/yourusername/eNote', '_blank');
   };
 
   return (
@@ -58,18 +93,18 @@ export const LandingPage: React.FC = () => {
                 onClick={() => navigate('/notes')}
                 className="text-gray-600 dark:text-gray-300  dark:bg-[#333333]"
               >
-                Try eNote Now
+                Open App
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Real Stats Bar - User Count + GitHub Star */}
-      <div className="  py-3">
+      {/* Simplified Stats Bar - User Count + GitHub Star */}
+      <div className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-gray-800 py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center space-x-8 text-sm">
-            {/* Real User Count from Database */}
+            {/* Real User Count from Database (with live updates in background) */}
             <div className="flex items-center space-x-2">
               <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
               <span className="text-gray-600 dark:text-gray-400">
@@ -92,7 +127,8 @@ export const LandingPage: React.FC = () => {
             >
               <Star className="w-4 h-4 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
               <span className="font-medium">Star on GitHub</span>
-              </button>
+              <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </button>
           </div>
         </div>
       </div>

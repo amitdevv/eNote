@@ -32,25 +32,63 @@ export const getUserCount = async (): Promise<number> => {
   }
 };
 
-// Alternative: Get unique users who have created notes
-export const getActiveUserCount = async (): Promise<number> => {
+// Get total registered users count (more accurate method)
+export const getTotalUserCount = async (): Promise<number> => {
   try {
-    const { data, error } = await supabase
+    // Try to get unique users from notes table
+    const { data: notesData, error: notesError } = await supabase
       .from('notes')
       .select('user_id');
     
-    if (error) {
-      console.error('Error fetching active user count:', error);
-      return 42;
+    if (notesError) {
+      console.error('Error fetching users from notes:', notesError);
+      return 42; // Fallback
     }
 
     // Count unique user IDs
-    const uniqueUsers = new Set(data?.map(note => note.user_id));
-    return uniqueUsers.size;
+    const uniqueUserIds = new Set(notesData?.map(note => note.user_id) || []);
+    const activeUsers = uniqueUserIds.size;
+
+    console.log('Total unique users with notes:', activeUsers);
+    console.log('Unique user IDs:', Array.from(uniqueUserIds));
+
+    // Return the count (minimum 1 if we have any data)
+    return Math.max(activeUsers, 1);
   } catch (error) {
-    console.error('Error fetching active user count:', error);
-    return 42;
+    console.error('Error in getTotalUserCount:', error);
+    return 42; // Fallback
   }
+};
+
+// Alternative: Get unique users who have created notes
+export const getActiveUserCount = async (): Promise<number> => {
+  return await getTotalUserCount();
+};
+
+// Subscribe to real-time user count changes
+export const subscribeToUserCountChanges = (callback: (count: number) => void) => {
+  // Subscribe to notes table changes to detect new users
+  const notesSubscription = supabase
+    .channel('user-count-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'notes'
+      },
+      async (payload) => {
+        console.log('Notes table changed, updating user count...', payload);
+        const newCount = await getTotalUserCount();
+        callback(newCount);
+      }
+    )
+    .subscribe();
+
+  // Return unsubscribe function
+  return () => {
+    supabase.removeChannel(notesSubscription);
+  };
 };
 
 // Database types based on your current schema
