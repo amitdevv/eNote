@@ -5,7 +5,6 @@ const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => 
   let title = fileName.replace(/\.md$/, '').replace(/_/g, ' ');
   let noteContent = content;
   const tags: string[] = [];
-  let workspace = 'Personal';
   let status: Note['status'] = 'idea';
 
   // Look for title (first # heading)
@@ -19,12 +18,6 @@ const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => 
   if (metadataMatch) {
     noteContent = metadataMatch[1];
     
-    // Extract workspace
-    const workspaceMatch = content.match(/\*\*Workspace:\*\*\s*(.+)/);
-    if (workspaceMatch) {
-      workspace = workspaceMatch[1].trim();
-    }
-
     // Extract status
     const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)/);
     if (statusMatch) {
@@ -63,7 +56,6 @@ const parseMarkdownFile = (content: string, fileName: string): Partial<Note> => 
     content: htmlContent,
     type: noteType,
     status,
-    workspace,
     tags,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -100,69 +92,133 @@ export const importFromJSON = (file: File): Promise<Partial<Note>[]> => {
 };
 
 // Import from Markdown file
-export const importFromMarkdown = (file: File): Promise<Partial<Note>> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string;
-        const note = parseMarkdownFile(content, file.name);
-        resolve(note);
-      } catch (error) {
-        reject(error);
+export const importFromMarkdown = async (file: File): Promise<Partial<Note>> => {
+  const content = await file.text();
+  const lines = content.split('\n');
+  
+  let title = '';
+  let tags: string[] = [];
+  let noteContent = '';
+  let contentStartIndex = 0;
+
+  // Extract title (first # heading)
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('# ')) {
+      title = line.substring(2).trim();
+      break;
+    }
+  }
+
+  // Extract metadata
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    if (line.startsWith('**Tags:**')) {
+      const tagsText = line.replace('**Tags:**', '').trim();
+      if (tagsText && tagsText !== 'None') {
+        tags = tagsText.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
       }
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
-  });
+    }
+    
+    if (line === '---') {
+      contentStartIndex = i + 1;
+      break;
+    }
+  }
+
+  // Extract content (everything after metadata)
+  if (contentStartIndex > 0) {
+    noteContent = lines.slice(contentStartIndex).join('\n').trim();
+  } else {
+    // If no metadata separator found, use everything after title
+    const titleLineIndex = lines.findIndex(line => line.trim().startsWith('# '));
+    if (titleLineIndex >= 0) {
+      noteContent = lines.slice(titleLineIndex + 1).join('\n').trim();
+    } else {
+      noteContent = content;
+    }
+  }
+
+  return {
+    title: title || file.name.replace('.md', ''),
+    content: noteContent,
+    tags,
+    type: 'markdown',
+  };
 };
 
 // Import from multiple Markdown files (ZIP)
 export const importFromMarkdownZip = async (file: File): Promise<Partial<Note>[]> => {
-  try {
-    const JSZip = (await import('jszip')).default;
-    const zip = new JSZip();
-    const contents = await zip.loadAsync(file);
-    const notes: Partial<Note>[] = [];
+  const JSZip = (await import('jszip')).default;
+  const zip = new JSZip();
+  
+  const zipContent = await zip.loadAsync(file);
+  const notes: Partial<Note>[] = [];
 
-    for (const [fileName, fileData] of Object.entries(contents.files)) {
-      if (!fileData.dir && fileName.endsWith('.md')) {
-        const content = await fileData.async('text');
-        const note = parseMarkdownFile(content, fileName);
-        notes.push(note);
+  for (const [filename, zipEntry] of Object.entries(zipContent.files)) {
+    if (!zipEntry.dir && filename.endsWith('.md')) {
+      const content = await zipEntry.async('string');
+      const lines = content.split('\n');
+      
+      let title = '';
+      let tags: string[] = [];
+      let noteContent = '';
+
+      // Extract title from filename or first heading
+      title = filename.replace('.md', '').replace(/_/g, ' ');
+      
+      // Look for title in content
+      for (const line of lines) {
+        if (line.trim().startsWith('# ')) {
+          title = line.substring(2).trim();
+          break;
+        }
       }
-    }
 
-    return notes;
-  } catch (error) {
-    throw new Error('Failed to read ZIP file');
+      // Extract tags from metadata
+      for (const line of lines) {
+        if (line.trim().startsWith('**Tags:**')) {
+          const tagsText = line.replace('**Tags:**', '').trim();
+          if (tagsText && tagsText !== 'None') {
+            tags = tagsText.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+          }
+          break;
+        }
+      }
+
+      // Extract content (everything after metadata separator or title)
+      const separatorIndex = lines.findIndex(line => line.trim() === '---');
+      if (separatorIndex >= 0) {
+        noteContent = lines.slice(separatorIndex + 1).join('\n').trim();
+      } else {
+        const titleIndex = lines.findIndex(line => line.trim().startsWith('# '));
+        noteContent = lines.slice(titleIndex + 1).join('\n').trim();
+      }
+
+      notes.push({
+        title: title || 'Untitled',
+        content: noteContent,
+        tags,
+        type: 'markdown',
+      });
+    }
   }
+
+  return notes;
 };
 
 // Import from plain text
-export const importFromText = (file: File): Promise<Partial<Note>> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string;
-        const title = file.name.replace(/\.(txt|md)$/, '').replace(/_/g, ' ');
-        
-        resolve({
-          title,
-          content: content.replace(/\n/g, '<br>'),
-          type: 'markdown',
-          status: 'idea',
-          workspace: 'Personal',
-          tags: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      } catch (error) {
-        reject(error);
-      }
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
-  });
+export const importFromText = async (file: File): Promise<Partial<Note>> => {
+  const content = await file.text();
+  const lines = content.split('\n');
+  const title = lines[0]?.trim() || file.name.replace('.txt', '');
+  const noteContent = lines.slice(1).join('\n').trim();
+
+  return {
+    title,
+    content: noteContent,
+    tags: [],
+    type: 'markdown',
+  };
 }; 

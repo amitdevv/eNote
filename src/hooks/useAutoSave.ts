@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useEditorStore } from '@/stores/editorStore';
 import { useNotesStore } from '@/stores/notesStore';
 
@@ -7,97 +7,64 @@ export const useAutoSave = () => {
     currentNoteId, 
     title, 
     content, 
-    status, 
-    folderId,
     tags, 
-    fontFamily, 
-    isDirty,
-    markClean,
-    setAutoSaveTimer 
+    fontFamily,
+    markClean 
   } = useEditorStore();
   
   const { addNote, updateNote } = useNotesStore();
-  const lastSaveRef = useRef<string>('');
-  
-  // Create a stable reference to current note data
-  const currentDataRef = useRef({
-    title,
-    content,
-    status,
-    folderId,
-    tags,
-    fontFamily
-  });
-  
-  // Update ref when data changes
-  useEffect(() => {
-    currentDataRef.current = {
-      title,
-      content,
-      status,
-      folderId,
-      tags,
-      fontFamily
-    };
-  }, [title, content, status, folderId, tags, fontFamily]);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const saveNote = () => {
-    const data = currentDataRef.current;
-    
-    // Don't save if there's no meaningful content
-    if (!data.title.trim() && !data.content.trim()) {
-      return;
-    }
-
-    // Create a unique string representation of current data
-    const currentDataString = JSON.stringify(data);
-    
-    // Skip if nothing has changed since last save
-    if (lastSaveRef.current === currentDataString) {
+  const saveNote = useCallback(async () => {
+    // Only save if we have something to save
+    if (!title.trim() && !content.trim() && (!tags || tags.length === 0)) {
       return;
     }
 
     const noteData = {
-      title: data.title.trim() || 'Untitled',
-      content: data.content,
-      type: 'markdown' as const,
-      status: data.status,
-      folderId: data.folderId || undefined,
-      tags: data.tags,
-      fontFamily: data.fontFamily,
+      title: title.trim() || 'Untitled',
+      content: content,
+      tags: tags || [],
+      fontFamily: fontFamily || 'Inter',
+      type: 'markdown' as const
     };
 
-    if (currentNoteId) {
-      updateNote(currentNoteId, noteData);
-    } else {
-      // For new notes, add and update the editor with the new ID
-      const newId = addNote(noteData);
-      useEditorStore.setState({ currentNoteId: newId });
+    try {
+      if (currentNoteId) {
+        await updateNote(currentNoteId, noteData);
+      } else {
+        const newId = await addNote(noteData);
+        if (newId) {
+          useEditorStore.setState({ currentNoteId: newId });
+        }
+      }
+      markClean();
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+  }, [currentNoteId, title, content, tags, fontFamily, addNote, updateNote, markClean]);
+
+  // Auto-save with debounce
+  useEffect(() => {
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
 
-    lastSaveRef.current = currentDataString;
-    markClean();
-  };
-
-  // Auto-save effect
-  useEffect(() => {
-    if (!isDirty) return;
-
-    const timer = setTimeout(() => {
+    // Set new timeout for 2 seconds
+    timeoutRef.current = setTimeout(() => {
       saveNote();
-    }, 2000); // 2 second delay
+    }, 2000);
 
-    setAutoSaveTimer(timer);
-
+    // Cleanup
     return () => {
-      clearTimeout(timer);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [isDirty]); // Only depend on isDirty flag
+  }, [title, content, tags, fontFamily, saveNote]);
 
-  // Manual save function
-  const manualSave = () => {
-    saveNote();
+  return {
+    saveNote
   };
-
-  return { manualSave };
 }; 

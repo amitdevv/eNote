@@ -7,19 +7,12 @@ import { useNotesStore } from '@/stores/notesStore';
 import { Folder } from '@/types/note';
 import {
   ChevronRight,
-  FolderPlus,
-  MoreVertical,
-  Edit,
-  Trash2,
+  ChevronDown,
   FileText,
-  Plus
+  Plus,
+  Folder as FolderIcon,
+  FolderOpen
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface FolderTreeProps {
   parentId?: string | null;
@@ -27,12 +20,19 @@ interface FolderTreeProps {
   selectedFolder?: string;
   expandedFolders: string[];
   onFolderSelect: (folderId: string) => void;
-  onCreateFolder: (parentId?: string) => void;
-  onEditFolder: (folder: Folder) => void;
-  onDeleteFolder: (folderId: string) => void;
   onToggleExpanded: (folderId: string) => void;
   onNoteSelect: (noteId: string) => void;
   onCreateNote: (folderId?: string) => void;
+}
+
+interface TreeItem {
+  type: 'folder' | 'note';
+  id: string;
+  name: string;
+  data: Folder | any; // Note type
+  children?: TreeItem[];
+  noteCount?: number;
+  color?: string;
 }
 
 export const FolderTree: React.FC<FolderTreeProps> = ({
@@ -41,9 +41,6 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   selectedFolder,
   expandedFolders,
   onFolderSelect,
-  onCreateFolder,
-  onEditFolder,
-  onDeleteFolder,
   onToggleExpanded,
   onNoteSelect,
   onCreateNote
@@ -51,163 +48,170 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   const { getFoldersByParent } = useFoldersStore();
   const { notes } = useNotesStore();
   
-  const folders = getFoldersByParent(parentId || undefined);
-  const folderNotes = notes.filter(note => note.folderId === parentId);
+  // Build tree structure combining folders and notes
+  const buildTreeItems = (parentId?: string): TreeItem[] => {
+    const items: TreeItem[] = [];
+    
+    // Get folders for this parent
+    const folders = getFoldersByParent(parentId);
+    
+    // Add folders first
+    folders.forEach(folder => {
+      const folderNotes = notes.filter(note => note.folderId === folder.id);
+      items.push({
+        type: 'folder',
+        id: folder.id,
+        name: folder.name,
+        data: folder,
+        noteCount: folderNotes.length,
+        color: folder.color,
+        children: buildTreeItems(folder.id)
+      });
+    });
+    
+    // Add notes for this parent
+    const parentNotes = notes.filter(note => note.folderId === parentId);
+    parentNotes.forEach(note => {
+      items.push({
+        type: 'note',
+        id: note.id,
+        name: note.title,
+        data: note
+      });
+    });
+    
+    return items;
+  };
   
-  if (folders.length === 0 && folderNotes.length === 0) {
+  const treeItems = buildTreeItems(parentId || undefined);
+  
+  // Debug: Log folder tree data
+  React.useEffect(() => {
+    if (level === 0) { // Only log for root level to avoid spam
+      console.log('FolderTree - parentId:', parentId);
+      console.log('FolderTree - All folders from store:', getFoldersByParent());
+      console.log('FolderTree - Root folders:', getFoldersByParent(undefined));
+      console.log('FolderTree - All notes:', notes);
+      console.log('FolderTree - treeItems:', treeItems);
+    }
+  }, [treeItems, parentId, level, getFoldersByParent, notes]);
+  
+  if (treeItems.length === 0) {
     return null;
   }
 
-  return (
-    <div className={cn("space-y-1", level > 0 && "ml-4")}>
-      {folders.map((folder) => {
-        const hasSubfolders = getFoldersByParent(folder.id).length > 0;
-        const hasNotes = notes.filter(note => note.folderId === folder.id).length > 0;
-        const hasChildren = hasSubfolders || hasNotes;
-        const isExpanded = expandedFolders.includes(folder.id);
-        const isSelected = selectedFolder === folder.id;
+  const renderTreeItem = (item: TreeItem, itemLevel: number) => {
+    const isFolder = item.type === 'folder';
+    const hasChildren = isFolder && item.children && item.children.length > 0;
+    const isExpanded = isFolder && expandedFolders.includes(item.id);
+    const isSelected = isFolder && selectedFolder === item.id;
+    const indentLevel = itemLevel * 12; // 12px per level for tighter spacing
 
-        return (
-          <div key={folder.id}>
-            {/* Folder Item */}
-            <div className="flex items-center group">
-              <div className="flex items-center flex-1 min-w-0">
-                {hasChildren ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onToggleExpanded(folder.id)}
-                    className="h-6 w-6 p-0 hover:bg-gray-200 dark:hover:bg-gray-700 flex-shrink-0"
-                  >
-                    <ChevronRight 
-                      className={cn(
-                        "w-3 h-3 transition-transform duration-200",
-                        isExpanded && "rotate-90"
-                      )}
-                    />
-                  </Button>
-                ) : (
-                  <div className="w-6" />
-                )}
-                
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "flex-1 justify-between h-8 px-2 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 min-w-0",
-                    isSelected && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100"
-                  )}
-                  onClick={() => onFolderSelect(folder.id)}
-                >
-                  <div className="flex items-center min-w-0 flex-1">
-                    <div className={cn("w-2 h-2 rounded-full mr-2 flex-shrink-0", folder.color)} />
-                    <span className="text-sm truncate">{folder.name}</span>
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-600 dark:text-gray-400 flex-shrink-0 ml-2">
-                    {folder.noteCount || 0}
-                  </Badge>
-                </Button>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onCreateNote(folder.id)}
-                  className="h-6 w-6 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  title={`Create note in ${folder.name}`}
-                >
-                  <Plus className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onCreateFolder(folder.id)}
-                  className="h-6 w-6 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  title={`Create subfolder in ${folder.name}`}
-                >
-                  <FolderPlus className="w-3 h-3" />
-                </Button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    >
-                      <MoreVertical className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => onEditFolder(folder)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Folder
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onDeleteFolder(folder.id)}
-                      className="text-red-600 dark:text-red-400"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete Folder
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            {/* Children - Subfolders and Notes */}
-            {hasChildren && isExpanded && (
-              <div className="ml-6">
-                {/* Notes in this folder */}
-                {notes.filter(note => note.folderId === folder.id).map((note) => (
-                  <div key={note.id} className="flex items-center group py-1">
-                    <div className="w-6" />
-                    <Button
-                      variant="ghost"
-                      className="flex-1 justify-start h-7 px-2 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-600 dark:text-gray-400 min-w-0"
-                      onClick={() => onNoteSelect(note.id)}
-                    >
-                      <FileText className="w-3 h-3 mr-2 flex-shrink-0" />
-                      <span className="text-sm truncate">{note.title}</span>
-                    </Button>
-                  </div>
-                ))}
-                
-                {/* Subfolders */}
-                <FolderTree
-                  parentId={folder.id}
-                  level={level + 1}
-                  selectedFolder={selectedFolder}
-                  expandedFolders={expandedFolders}
-                  onFolderSelect={onFolderSelect}
-                  onCreateFolder={onCreateFolder}
-                  onEditFolder={onEditFolder}
-                  onDeleteFolder={onDeleteFolder}
-                  onToggleExpanded={onToggleExpanded}
-                  onNoteSelect={onNoteSelect}
-                  onCreateNote={onCreateNote}
-                />
-              </div>
+    return (
+      <div key={item.id}>
+        {/* Tree Item */}
+        <div 
+          className={cn(
+            "flex items-center group hover:bg-gray-50 dark:hover:bg-gray-800/50 py-1 px-1 rounded-sm cursor-pointer",
+            isSelected && "bg-blue-50 dark:bg-blue-900/20"
+          )}
+          style={{ paddingLeft: `${4 + indentLevel}px` }}
+        >
+          {/* Expand/Collapse Button */}
+          {isFolder && hasChildren ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpanded(item.id);
+              }}
+              className="h-4 w-4 p-0 hover:bg-gray-200 dark:hover:bg-gray-700 mr-1 flex-shrink-0"
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
+            </Button>
+          ) : (
+            <div className="w-4 mr-1" /> // Spacer for alignment
+          )}
+          
+          {/* Icon */}
+          <div className="mr-2 flex-shrink-0">
+            {isFolder ? (
+              isExpanded ? (
+                <FolderOpen className="w-4 h-4 text-blue-500" />
+              ) : (
+                <FolderIcon className="w-4 h-4 text-blue-500" />
+              )
+            ) : (
+              <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             )}
           </div>
-        );
-      })}
-      
-      {/* Root level notes (notes without a folder) */}
-      {parentId === undefined && folderNotes.map((note) => (
-        <div key={note.id} className="flex items-center group py-1">
-          <div className="w-6" />
-          <Button
-            variant="ghost"
-            className="flex-1 justify-start h-7 px-2 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-600 dark:text-gray-400 min-w-0"
-            onClick={() => onNoteSelect(note.id)}
+          
+          {/* Name */}
+          <div
+            className={cn(
+              "flex-1 min-w-0 text-sm select-none",
+              isFolder ? "font-medium text-gray-800 dark:text-gray-200" : "text-gray-600 dark:text-gray-400"
+            )}
+            onClick={() => {
+              if (isFolder) {
+                onFolderSelect(item.id);
+              } else {
+                onNoteSelect(item.id);
+              }
+            }}
           >
-            <FileText className="w-3 h-3 mr-2 flex-shrink-0" />
-            <span className="text-sm truncate">{note.title}</span>
-          </Button>
+            <span className="truncate block">
+              {isFolder ? item.name : `${item.name}.md`}
+            </span>
+          </div>
+          
+          {/* Note Count Badge for Folders */}
+          {isFolder && item.noteCount !== undefined && item.noteCount > 0 && (
+            <Badge 
+              variant="secondary" 
+              className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 ml-2 h-5 px-2"
+            >
+              {item.noteCount}
+            </Badge>
+          )}
+          
+          {/* Action Buttons for Folders - Only Create Note */}
+          {isFolder && (
+            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateNote(item.id);
+                }}
+                className="h-6 w-6 p-0 hover:bg-gray-200 dark:hover:bg-gray-700"
+                title={`Create note in ${item.name}`}
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
         </div>
-      ))}
+
+        {/* Children */}
+        {isFolder && hasChildren && isExpanded && item.children && (
+          <div>
+            {item.children.map(child => renderTreeItem(child, itemLevel + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-0">
+      {treeItems.map(item => renderTreeItem(item, level))}
     </div>
   );
 }; 

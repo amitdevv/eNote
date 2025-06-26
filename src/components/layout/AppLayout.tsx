@@ -6,8 +6,8 @@ import { NoteCard } from '@/components/notes/NoteCard';
 import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
-import { useFoldersStore } from '@/stores/foldersStore';
-import { FileText, Plus } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { FileText, Plus, Loader2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
 
@@ -21,10 +21,14 @@ export const AppLayout: React.FC = () => {
     sortBy, 
     setSortBy,
     filterBy, 
-    setFilterBy
+    setFilterBy,
+    fetchNotes,
+    loading: notesLoading
   } = useNotesStore();
   
-  const { folders, updateFolderNoteCounts, getFolderById } = useFoldersStore();
+  // No folders - simplified notes app
+
+  const { user } = useAuth();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,12 +37,11 @@ export const AppLayout: React.FC = () => {
   // Get URL search parameters for navigation
   const searchParams = new URLSearchParams(location.search);
   const workspaceParam = searchParams.get('workspace');
-  const folderParam = searchParams.get('folder');
   
-  const [selectedWorkspace, setSelectedWorkspace] = useState('all');
   const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation type state
@@ -48,84 +51,115 @@ export const AppLayout: React.FC = () => {
   // Check if we're in editor mode
   const isEditorMode = location.pathname.startsWith('/editor');
 
+  // Expose debugging functions globally (temporary) - after state declarations
+  React.useEffect(() => {
+    (window as any).debugNotes = () => {
+      console.log('=== DEBUG INFO ===');
+      console.log('Notes count:', notes.length);
+      console.log('Current navigation:', { navType, selectedFolder });
+      console.log('==================');
+    };
+    return () => {
+      delete (window as any).debugNotes;
+    };
+  }, [notes, navType, selectedFolder]);
+
+  // Fetch data when component mounts or user changes
+  useEffect(() => {
+    const loadData = async () => {
+      if (user && !initialDataLoaded) {
+        console.log('AppLayout - Starting data fetch for user:', user.email);
+        try {
+          await fetchNotes();
+          console.log('AppLayout - Notes fetched:', notes.length);
+          setInitialDataLoaded(true);
+        } catch (error) {
+          console.error('Error loading initial data:', error);
+        }
+      } else if (!user) {
+        console.log('AppLayout - No user, skipping data fetch');
+      } else if (initialDataLoaded) {
+        console.log('AppLayout - Data already loaded, skipping fetch');
+      }
+    };
+
+    loadData();
+  }, [user, fetchNotes, initialDataLoaded]);
+
+  // Debug: Log current data state
+  useEffect(() => {
+    console.log('AppLayout - Current notes count:', notes.length);
+    console.log('AppLayout - Notes loading:', notesLoading);
+    console.log('AppLayout - Initial data loaded:', initialDataLoaded);
+  }, [notes, notesLoading, initialDataLoaded]);
+
+  // Reset initial data loaded when user changes
+  useEffect(() => {
+    setInitialDataLoaded(false);
+  }, [user]);
+
   // Enhanced search functionality
   const searchResults = searchQuery.trim() ? searchNotes(notes, searchQuery) : [];
 
-  // Update folder note counts when notes change
+  // Simplified navigation - no folders
   useEffect(() => {
-    const folderNoteCounts: Record<string, number> = {};
-    
-    notes.forEach(note => {
-      if (note.folderId) {
-        folderNoteCounts[note.folderId] = (folderNoteCounts[note.folderId] || 0) + 1;
-      }
-    });
-    
-    updateFolderNoteCounts(folderNoteCounts);
-  }, [notes, updateFolderNoteCounts]);
-
-  // Handle URL parameters for navigation
-  useEffect(() => {
-    if (folderParam) {
-      // Navigate to specific folder
-      const folder = getFolderById(folderParam);
-      if (folder) {
-        setNavType('folder');
-        setSelectedFolder(folderParam);
-        setSelectedWorkspace(folder.workspace);
-        setNavValue(folder.workspace);
-      }
-    } else if (workspaceParam) {
-      // Navigate to specific workspace
-      setNavType('workspace');
+    if (workspaceParam) {
+      setNavType('special');
       setNavValue(workspaceParam);
-      setSelectedWorkspace(workspaceParam);
+      setSelectedFolder('');
+    } else {
+      setNavType('special');
+      setNavValue('all');
       setSelectedFolder('');
     }
-  }, [folderParam, workspaceParam, getFolderById]);
+  }, [workspaceParam]);
+
+  // Predefined tags for filtering - unified system
+  const predefinedTags = ['project', 'coding', 'college', 'personal', 'ideas', 'done', 'ongoing', 'future'];
 
   // Filter and sort notes for normal view
   const getFilteredNotes = () => {
     let filtered = notes;
 
-    // Apply navigation-based filtering
-    if (navType === 'folder') {
-      // Filter by selected folder
-      filtered = filtered.filter(note => note.folderId === selectedFolder);
-    } else if (navType === 'special') {
-      switch (navValue) {
-        case 'all':
-          // Show all notes - no filtering needed
-          break;
-        case 'today':
-          // Show notes updated today
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          filtered = filtered.filter(note => note.updatedAt >= today);
-          break;
-        case 'starred':
-          filtered = filtered.filter(note => note.starred);
-          break;
-      }
+    // Apply navigation-based filtering - simplified
+    switch (navValue) {
+      case 'all':
+        // Show all notes - no filtering needed
+        break;
+      case 'today':
+        // Show notes updated today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        filtered = filtered.filter(note => note.updatedAt >= today);
+        break;
+      case 'starred':
+        filtered = filtered.filter(note => note.starred);
+        break;
+      default:
+        // Check if it's a tag filter
+        if (predefinedTags.includes(navValue)) {
+          filtered = filtered.filter(note => 
+            note.tags && note.tags.includes(navValue)
+          );
+        }
+        break;
     }
 
-    // Apply additional status filter from header
-    if (filterBy !== 'all') {
-      const statusMap = {
-        'ideas': 'idea',
-        'drafts': 'draft', 
-        'review': 'review',
-        'done': 'done'
-      };
-      filtered = filtered.filter(note => note.status === statusMap[filterBy]);
+    // Apply additional filter from header
+    if (filterBy === 'starred') {
+      filtered = filtered.filter(note => note.starred);
     }
 
     const sortedNotes = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'alphabetical':
           return a.title.localeCompare(b.title);
-        case 'status':
-          return a.status.localeCompare(b.status);
+        case 'priority':
+          // Sort by priority (high, medium, low, none)
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          const aPriority = priorityOrder[a.priority || 'low'] || 0;
+          const bPriority = priorityOrder[b.priority || 'low'] || 0;
+          return bPriority - aPriority;
         case 'recent':
         default:
           return b.updatedAt.getTime() - a.updatedAt.getTime();
@@ -146,9 +180,14 @@ export const AppLayout: React.FC = () => {
       all: notes.length,
       today: notes.filter(note => note.updatedAt >= today).length,
       starred: notes.filter(note => note.starred).length,
-      todo: 0, // Legacy - no todo notes anymore
-      markdown: notes.filter(note => note.type === 'markdown').length,
-      code: 0, // Legacy - no code notes anymore
+      project: notes.filter(note => note.tags && note.tags.includes('project')).length,
+      coding: notes.filter(note => note.tags && note.tags.includes('coding')).length,
+      college: notes.filter(note => note.tags && note.tags.includes('college')).length,
+      personal: notes.filter(note => note.tags && note.tags.includes('personal')).length,
+      ideas: notes.filter(note => note.tags && note.tags.includes('ideas')).length,
+      done: notes.filter(note => note.tags && note.tags.includes('done')).length,
+      ongoing: notes.filter(note => note.tags && note.tags.includes('ongoing')).length,
+      future: notes.filter(note => note.tags && note.tags.includes('future')).length,
     };
   };
 
@@ -170,45 +209,18 @@ export const AppLayout: React.FC = () => {
     if (['all', 'today', 'starred'].includes(workspace)) {
       setNavType('special');
       setNavValue(workspace);
-      setSelectedWorkspace('all');
+    } else if (predefinedTags.includes(workspace)) {
+      setNavType('special');
+      setNavValue(workspace);
     } else {
       setNavType('special');
       setNavValue('all');
-      setSelectedWorkspace('all');
-    }
-  };
-
-  const handleFolderSelect = (folderId: string) => {
-    // Navigate to notes view when folder is selected
-    if (location.pathname.startsWith('/editor')) {
-      navigate('/notes');
-    }
-
-    setNavType('folder');
-    setSelectedFolder(folderId);
-    
-    // Set workspace based on folder's workspace
-    const folder = getFolderById(folderId);
-    if (folder) {
-      setSelectedWorkspace(folder.workspace);
-      setNavValue(folder.workspace);
     }
   };
 
   const handleNewNote = () => {
-    // Build URL with current context for auto-assigning folder
-    let url = '/editor';
-    const params = new URLSearchParams();
-    
-    if (navType === 'folder' && selectedFolder) {
-      params.set('folderId', selectedFolder);
-    }
-    
-    if (params.toString()) {
-      url += '?' + params.toString();
-    }
-    
-    navigate(url);
+    console.log('handleNewNote - Creating new note');
+    navigate('/editor');
   };
 
   const handleEditNote = (noteId: string) => {
@@ -231,6 +243,18 @@ export const AppLayout: React.FC = () => {
   });
 
   const renderMainContent = () => {
+    // Show loading state while initial data is being fetched
+    if (!initialDataLoaded && notesLoading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-500 dark:text-gray-400">Loading your notes...</p>
+          </div>
+        </div>
+      );
+    }
+
     if (isEditorMode) {
       return <EditorPage />;
     }
@@ -275,14 +299,12 @@ export const AppLayout: React.FC = () => {
                 <FileText className="w-8 h-8 text-gray-400 dark:text-gray-600" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                {navType === 'folder' 
-                  ? `No notes in "${getFolderById(selectedFolder)?.name || 'Unknown Folder'}"` 
-                  : navType === 'special' && navValue !== 'all' 
+                {navValue !== 'all' 
                   ? `No ${navValue} notes` 
                   : "No notes yet"}
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6">
-                {navType === 'folder' || (navType === 'special' && navValue !== 'all')
+                {navValue !== 'all'
                   ? `You don't have any notes in this section yet.`
                   : "Get started by creating your first note. Use markdown to format your content, add tags, and organize your thoughts."}
               </p>
@@ -294,13 +316,12 @@ export const AppLayout: React.FC = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Create your first note
                 </button>
-                {(navType === 'folder' || (navType === 'special' && navValue !== 'all')) && (
+                {navValue !== 'all' && (
                   <div className="text-sm">
                     <button
                       onClick={() => {
                         setNavType('special');
                         setNavValue('all');
-                        setSelectedWorkspace('all');
                         setSelectedFolder('');
                       }}
                       className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -325,9 +346,6 @@ export const AppLayout: React.FC = () => {
         onNewNote={handleNewNote}
         noteCount={filteredNotes.length}
         sidebarCounts={getSidebarCounts()}
-        onFolderSelect={handleFolderSelect}
-        selectedFolder={selectedFolder}
-        onNoteSelect={handleEditNote}
       />
       
       <div className="flex-1 flex flex-col">
@@ -344,6 +362,7 @@ export const AppLayout: React.FC = () => {
           noteId={noteId}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          currentWorkspace={navValue}
         />
         
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full max-w-full">

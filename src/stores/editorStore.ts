@@ -8,22 +8,17 @@ interface EditorStore {
   // Editor state
   title: string;
   content: string;
-  status: Note['status'];
-  folderId: string;
   tags: string[];
   fontFamily: string;
   
   // UI state
   isDirty: boolean;
   lastSaved: Date | null;
-  autoSaveTimer: NodeJS.Timeout | null;
   
   // Actions
   setCurrentNote: (note: Note | null) => void;
   setTitle: (title: string) => void;
   setContent: (content: string) => void;
-  setStatus: (status: Note['status']) => void;
-  setFolderId: (folderId: string) => void;
   setTags: (tags: string[]) => void;
   setFontFamily: (fontFamily: string) => void;
   addTag: (tag: string) => void;
@@ -33,20 +28,16 @@ interface EditorStore {
   resetEditor: () => void;
   markDirty: () => void;
   markClean: () => void;
-  setAutoSaveTimer: (timer: NodeJS.Timeout | null) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
   currentNoteId: null,
   title: '',
   content: '',
-  status: 'idea',
-  folderId: '',
   tags: [],
   fontFamily: 'Inter',
   isDirty: false,
   lastSaved: null,
-  autoSaveTimer: null,
 
   setCurrentNote: (note) => {
     if (note) {
@@ -54,9 +45,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         currentNoteId: note.id,
         title: note.title,
         content: note.content,
-        status: note.status,
-        folderId: note.folderId || '',
-        tags: note.tags,
+        tags: note.tags || [],
         fontFamily: note.fontFamily || 'Inter',
         isDirty: false,
         lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
@@ -67,8 +56,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         currentNoteId: null,
         title: '',
         content: '',
-        status: 'idea',
-        folderId: '',
         tags: [],
         fontFamily: 'Inter',
         isDirty: false,
@@ -85,14 +72,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ content, isDirty: true });
   },
 
-  setStatus: (status) => {
-    set({ status, isDirty: true });
-  },
-
-  setFolderId: (folderId) => {
-    set({ folderId, isDirty: true });
-  },
-
   setTags: (tags) => {
     set({ tags, isDirty: true });
   },
@@ -104,9 +83,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   addTag: (tag) => {
     const state = get();
     const trimmedTag = tag.trim();
+    
     if (trimmedTag && !state.tags.includes(trimmedTag)) {
+      const newTags = [...state.tags, trimmedTag];
       set({ 
-        tags: [...state.tags, trimmedTag], 
+        tags: newTags, 
         isDirty: true 
       });
     }
@@ -114,40 +95,27 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   removeTag: (tagToRemove) => {
     const state = get();
+    const newTags = state.tags.filter(tag => tag !== tagToRemove);
+    
     set({ 
-      tags: state.tags.filter(tag => tag !== tagToRemove), 
+      tags: newTags, 
       isDirty: true 
     });
   },
 
   resetEditor: () => {
-    const state = get();
-    if (state.autoSaveTimer) {
-      clearTimeout(state.autoSaveTimer);
-    }
     set({
       currentNoteId: null,
       title: '',
       content: '',
-      status: 'idea',
-      folderId: '',
       tags: [],
       fontFamily: 'Inter',
       isDirty: false,
       lastSaved: null,
-      autoSaveTimer: null,
     });
   },
 
   markDirty: () => set({ isDirty: true }),
   
   markClean: () => set({ isDirty: false, lastSaved: new Date() }),
-
-  setAutoSaveTimer: (timer) => {
-    const state = get();
-    if (state.autoSaveTimer) {
-      clearTimeout(state.autoSaveTimer);
-    }
-    set({ autoSaveTimer: timer });
-  },
 })); 

@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   MoreHorizontal, Edit3, Trash2, Star,
-  Lightbulb, Search, ClipboardList, Eye, CheckCircle, Download, FileText
+  Lightbulb, ClipboardList, Eye, CheckCircle, Download, FileText,
+  Rocket, Code, GraduationCap, User
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { 
@@ -14,6 +15,7 @@ import {
   exportNoteAsPDF,
   exportNoteAsText
 } from '@/utils/export';
+
 
 interface NoteCardProps {
   note: Note;
@@ -23,13 +25,18 @@ interface NoteCardProps {
   viewMode?: 'grid' | 'list';
 }
 
-const statusConfig = {
-  idea: { label: 'Idea', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800', icon: Lightbulb, iconColor: 'text-blue-600 dark:text-blue-400' },
-  research: { label: 'Research', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800', icon: Search, iconColor: 'text-purple-600 dark:text-purple-400' },
-  outline: { label: 'Outline', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800', icon: ClipboardList, iconColor: 'text-orange-600 dark:text-orange-400' },
-  draft: { label: 'Draft', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800', icon: Edit3, iconColor: 'text-yellow-600 dark:text-yellow-400' },
-  review: { label: 'Review', color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', icon: Eye, iconColor: 'text-indigo-600 dark:text-indigo-400' },
-  done: { label: 'Done', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800', icon: CheckCircle, iconColor: 'text-green-600 dark:text-green-400' },
+// Unified tag configuration
+const tagConfig = {
+  // Category tags
+  project: { icon: Rocket, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
+  coding: { icon: Code, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-900/20' },
+  college: { icon: GraduationCap, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+  personal: { icon: User, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-50 dark:bg-orange-900/20' },
+  ideas: { icon: Lightbulb, color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20' },
+  // Status tags
+  done: { icon: CheckCircle, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+  ongoing: { icon: ClipboardList, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-50 dark:bg-orange-900/20' },
+  future: { icon: Eye, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20' },
 };
 
 // Helper function to convert HTML content to plain text
@@ -73,7 +80,44 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onToggleStarred,
   viewMode = 'grid'
 }) => {
-  const statusInfo = statusConfig[note.status];
+  
+  // Debug: Log note tags
+  console.log('NoteCard rendering for note:', note.title, 'with tags:', note.tags, 'type:', typeof note.tags);
+  
+  // Helper to render a tag with icon if it's a predefined tag
+  const renderTag = (tag: string) => {
+    console.log('Rendering tag:', tag, 'type:', typeof tag);
+    const tagInfo = tagConfig[tag as keyof typeof tagConfig];
+    
+    if (tagInfo) {
+      const IconComponent = tagInfo.icon;
+      return (
+        <Badge 
+          key={tag} 
+          variant="secondary" 
+          className={cn(
+            "text-xs flex items-center gap-1 border-0",
+            tagInfo.bgColor,
+            tagInfo.color
+          )}
+        >
+          <IconComponent className="w-3 h-3" />
+          {tag}
+        </Badge>
+      );
+    }
+    
+    // Regular tag without icon
+    return (
+      <Badge 
+        key={tag} 
+        variant="secondary" 
+        className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+      >
+        {tag}
+      </Badge>
+    );
+  };
 
   const renderContent = () => {
     const plainTextContent = htmlToPlainText(note.content);
@@ -97,6 +141,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   };
 
   if (viewMode === 'list') {
+    // Debug: Check tags in list view
+    console.log('List view - note.tags:', note.tags, 'Array.isArray:', Array.isArray(note.tags));
+    
     return (
       <Card 
         className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
@@ -104,24 +151,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            {/* Left side - Title and content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base leading-tight truncate">
                   {note.title}
                 </h3>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Badge 
-                    variant="outline" 
-                    className={cn("text-xs font-medium border", statusInfo.color)}
-                  >
-                    <statusInfo.icon className={cn("w-3 h-3 mr-1", statusInfo.iconColor)} />
-                    {statusInfo.label}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700">
-                    {note.workspace}
-                  </Badge>
-                </div>
               </div>
               <div style={{ fontFamily: note.fontFamily || 'Inter' }}>
                 <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -138,21 +172,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               </div>
             </div>
             
-            {/* Right side - Tags, date, and actions */}
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="flex flex-wrap gap-1">
-                {note.tags.slice(0, 2).map((tag) => (
-                  <Badge 
-                    key={tag} 
-                    variant="secondary" 
-                    className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-                {note.tags.length > 2 && (
+                {(note.tags && Array.isArray(note.tags) ? note.tags : []).slice(0, 2).map((tag) => renderTag(tag))}
+                {(note.tags && Array.isArray(note.tags) ? note.tags : []).length > 2 && (
                   <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                    +{note.tags.length - 2}
+                    +{(note.tags && Array.isArray(note.tags) ? note.tags : []).length - 2}
                   </Badge>
                 )}
               </div>
@@ -252,6 +277,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   }
 
   // Grid view (default)
+  // Debug: Check tags in grid view
+  console.log('Grid view - note.tags:', note.tags, 'Array.isArray:', Array.isArray(note.tags));
+  
   return (
     <Card 
       className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
@@ -263,18 +291,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-lg leading-tight mb-2">
               {note.title}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge 
-                variant="outline" 
-                className={cn("text-xs font-medium border", statusInfo.color)}
-              >
-                <statusInfo.icon className={cn("w-3 h-3 mr-1.5", statusInfo.iconColor)} />
-                {statusInfo.label}
-              </Badge>
-              <Badge variant="outline" className="text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700">
-                {note.workspace}
-              </Badge>
-            </div>
           </div>
           
           <div className="flex-shrink-0">
@@ -364,18 +380,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         
         <div className="flex items-center justify-between mt-4">
           <div className="flex flex-wrap gap-1">
-            {note.tags.slice(0, 3).map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="secondary" 
-                className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {note.tags.length > 3 && (
+            {(note.tags && Array.isArray(note.tags) ? note.tags : []).slice(0, 3).map((tag) => renderTag(tag))}
+            {(note.tags && Array.isArray(note.tags) ? note.tags : []).length > 3 && (
               <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                +{note.tags.length - 3}
+                +{(note.tags && Array.isArray(note.tags) ? note.tags : []).length - 3}
               </Badge>
             )}
           </div>

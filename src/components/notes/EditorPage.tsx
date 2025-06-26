@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEditorStore } from '@/stores/editorStore';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -14,11 +14,8 @@ export const EditorPage: React.FC = () => {
   const navigate = useNavigate();
   const { noteId } = useParams();
   const { getNoteById } = useNotesStore();
-  const location = useLocation();
   
-  // Get URL parameters for initial folder assignment
-  const searchParams = new URLSearchParams(location.search);
-  const initialFolderId = searchParams.get('folderId');
+  // Simplified - no folder assignments needed
   
   const { 
     title, 
@@ -27,16 +24,12 @@ export const EditorPage: React.FC = () => {
     currentNoteId,
     setCurrentNote,
     setTitle,
-    setContent,
-    setFolderId,
-    resetEditor
+    setContent
   } = useEditorStore();
   
-  const { manualSave } = useAutoSave();
+  useAutoSave();
 
-  useKeyboardShortcuts({
-    onSave: () => manualSave()
-  });
+  useKeyboardShortcuts();
 
   // Get current note from store
   const currentNote = currentNoteId ? (getNoteById(currentNoteId) || null) : null;
@@ -54,14 +47,10 @@ export const EditorPage: React.FC = () => {
     } else {
       // Reset for new note with optional initial context
       setCurrentNote(null);
-      
-      // Set initial context from URL parameters
-      if (initialFolderId) {
-        // Set initial folder for new note
-        setFolderId(initialFolderId);
-      }
     }
-  }, [noteId, getNoteById, navigate, setCurrentNote, initialFolderId, setFolderId]);
+  }, [noteId, getNoteById, navigate, setCurrentNote]);
+
+  // No folder context needed - simplified
 
   const isNewNote = !noteId || !currentNote;
 

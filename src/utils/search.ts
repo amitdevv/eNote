@@ -1,8 +1,16 @@
 import { Note } from '@/types/note';
 
+export interface SearchMatch {
+  type: 'title' | 'content' | 'tag';
+  text: string;
+  startIndex: number;
+  endIndex: number;
+}
+
 export interface SearchResult {
   note: Note;
   score: number;
+  matches: SearchMatch[];
 }
 
 // Strip HTML tags from content for searching
@@ -10,88 +18,74 @@ const stripHtml = (html: string): string => {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 };
 
-
-
 // Search notes with scoring
 export const searchNotes = (notes: Note[], query: string): SearchResult[] => {
   if (!query.trim()) return [];
-
-  const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+  
+  const searchTerm = query.toLowerCase();
   const results: SearchResult[] = [];
-
+  
   notes.forEach(note => {
-    let score = 0;
-    let hasMatch = false;
-
-    // Search in title
-    const titleText = note.title.toLowerCase();
-    searchTerms.forEach(term => {
-      if (titleText.includes(term)) {
-        score += 10; // Higher score for title matches
-        hasMatch = true;
-      }
-    });
-
-    // Search in content
-    const contentText = note.type === 'todo' && note.todos 
-      ? note.todos.map(todo => todo.text).join(' ')
-      : stripHtml(note.content);
+    const titleLower = note.title.toLowerCase();
+    const contentLower = note.content.toLowerCase();
+    const tagsLower = note.tags.map(tag => tag.toLowerCase()).join(' ');
     
-    const contentLower = contentText.toLowerCase();
-    searchTerms.forEach(term => {
-      if (contentLower.includes(term)) {
-        score += 5; // Medium score for content matches
-        hasMatch = true;
-      }
-    });
-
-    // Search in tags
-    note.tags.forEach(tag => {
-      const tagLower = tag.toLowerCase();
-      searchTerms.forEach(term => {
-        if (tagLower.includes(term)) {
-          score += 3; // Lower score for tag matches
-          hasMatch = true;
-        }
+    let score = 0;
+    const matches: SearchMatch[] = [];
+    
+    // Title matches (highest weight)
+    if (titleLower.includes(searchTerm)) {
+      score += 10;
+      const index = titleLower.indexOf(searchTerm);
+      matches.push({
+        type: 'title',
+        text: note.title,
+        startIndex: index,
+        endIndex: index + searchTerm.length
       });
-    });
-
-    // Search in workspace
-    const workspaceLower = note.workspace.toLowerCase();
-    searchTerms.forEach(term => {
-      if (workspaceLower.includes(term)) {
-        score += 2; // Lower score for workspace matches
-        hasMatch = true;
-      }
-    });
-
-    // Search in status
-    const statusLower = note.status.toLowerCase();
-    searchTerms.forEach(term => {
-      if (statusLower.includes(term)) {
-        score += 1; // Lowest score for status matches
-        hasMatch = true;
-      }
-    });
-
-    // Boost score for exact phrase matches
-    const fullQuery = query.toLowerCase();
-    if (titleText.includes(fullQuery)) score += 20;
-    if (contentLower.includes(fullQuery)) score += 15;
-
-    // Boost score for recent notes
-    const daysSinceUpdate = (Date.now() - note.updatedAt.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceUpdate < 7) score += 5;
-    if (daysSinceUpdate < 1) score += 10;
-
-    if (hasMatch) {
+    }
+    
+    // Content matches
+    if (contentLower.includes(searchTerm)) {
+      score += 5;
+      const index = contentLower.indexOf(searchTerm);
+      const start = Math.max(0, index - 50);
+      const end = Math.min(note.content.length, index + searchTerm.length + 50);
+      const excerpt = note.content.substring(start, end);
+      
+      matches.push({
+        type: 'content',
+        text: excerpt,
+        startIndex: index - start,
+        endIndex: index - start + searchTerm.length
+      });
+    }
+    
+    // Tag matches
+    if (tagsLower.includes(searchTerm)) {
+      score += 3;
+      const matchingTags = note.tags.filter(tag => 
+        tag.toLowerCase().includes(searchTerm)
+      );
+      matchingTags.forEach(tag => {
+        matches.push({
+          type: 'tag',
+          text: tag,
+          startIndex: 0,
+          endIndex: tag.length
+        });
+      });
+    }
+    
+    if (score > 0) {
       results.push({
         note,
-        score
+        score,
+        matches
       });
     }
   });
-
+  
   // Sort by score (highest first)
   return results.sort((a, b) => b.score - a.score);
 };
@@ -119,67 +113,44 @@ export const getSearchSuggestions = (notes: Note[], query: string): string[] => 
     });
   });
 
-  // Suggest from workspaces
-  notes.forEach(note => {
-    if (note.workspace.toLowerCase().includes(queryLower)) {
-      suggestions.add(note.workspace);
-    }
-  });
-
   return Array.from(suggestions).slice(0, 5);
 };
 
 // Advanced search with filters
 export interface SearchFilters {
-  workspace?: string;
-  status?: Note['status'];
-  type?: Note['type'];
   tags?: string[];
-  dateFrom?: Date;
-  dateTo?: Date;
-  hasAttachments?: boolean;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  starred?: boolean;
 }
 
-export const searchNotesWithFilters = (
+export const advancedSearch = (
   notes: Note[], 
   query: string, 
   filters: SearchFilters = {}
 ): SearchResult[] => {
   let filteredNotes = notes;
-
-  // Apply filters first
-  if (filters.workspace) {
-    filteredNotes = filteredNotes.filter(note => 
-      note.workspace.toLowerCase() === filters.workspace!.toLowerCase()
-    );
-  }
-
-  if (filters.status) {
-    filteredNotes = filteredNotes.filter(note => note.status === filters.status);
-  }
-
-  if (filters.type) {
-    filteredNotes = filteredNotes.filter(note => note.type === filters.type);
-  }
-
+  
+  // Apply filters
   if (filters.tags && filters.tags.length > 0) {
-    filteredNotes = filteredNotes.filter(note =>
-      filters.tags!.some(filterTag =>
-        note.tags.some(noteTag => 
-          noteTag.toLowerCase().includes(filterTag.toLowerCase())
-        )
-      )
+    filteredNotes = filteredNotes.filter(note => 
+      filters.tags!.some(tag => note.tags.includes(tag))
     );
   }
-
-  if (filters.dateFrom) {
-    filteredNotes = filteredNotes.filter(note => note.updatedAt >= filters.dateFrom!);
+  
+  if (filters.dateRange) {
+    filteredNotes = filteredNotes.filter(note => {
+      const noteDate = new Date(note.updatedAt);
+      return noteDate >= filters.dateRange!.start && noteDate <= filters.dateRange!.end;
+    });
   }
-
-  if (filters.dateTo) {
-    filteredNotes = filteredNotes.filter(note => note.updatedAt <= filters.dateTo!);
+  
+  if (filters.starred !== undefined) {
+    filteredNotes = filteredNotes.filter(note => note.starred === filters.starred);
   }
-
-  // Then search within filtered results
+  
+  // Perform search on filtered notes
   return searchNotes(filteredNotes, query);
 }; 

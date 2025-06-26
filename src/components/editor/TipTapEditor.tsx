@@ -121,11 +121,11 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         'data-placeholder': placeholder,
         spellcheck: 'false',
       },
-      handlePaste: (view, event, slice) => {
+      handlePaste: () => {
         // Handle pasted content to ensure it respects word wrapping
         return false; // Let TipTap handle the paste normally
       },
-      handleTextInput: (view, from, to, text) => {
+      handleTextInput: () => {
         // Allow normal text input behavior
         return false;
       },

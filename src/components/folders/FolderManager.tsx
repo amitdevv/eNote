@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Folder } from '@/types/note';
 import { useFoldersStore } from '@/stores/foldersStore';
-import { X, FolderIcon } from 'lucide-react';
+import { FolderIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FolderManagerProps {

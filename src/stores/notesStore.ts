@@ -1,158 +1,227 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';  
 import { Note } from '@/types/note';
-import { sampleNotes } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface NotesStore {
   notes: Note[];
   searchQuery: string;
-  sortBy: 'recent' | 'alphabetical' | 'status';
-  filterBy: 'all' | 'ideas' | 'drafts' | 'review' | 'done';
+  sortBy: 'recent' | 'alphabetical' | 'priority';
+  filterBy: 'all' | 'starred';
+  loading: boolean;
   
   // Actions
-  setNotes: (notes: Note[]) => void;
-  addNote: (note: Partial<Note>) => string;
-  updateNote: (id: string, updates: Partial<Note>) => void;
-  deleteNote: (id: string) => void;
-  toggleStarred: (id: string) => void;
+  fetchNotes: () => Promise<void>;
+  addNote: (note: Partial<Note>) => Promise<string | null>;
+  updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  toggleStarred: (id: string) => Promise<void>;
   getNoteById: (id: string) => Note | undefined;
   
   // UI State
   setSearchQuery: (query: string) => void;
-  setSortBy: (sort: 'recent' | 'alphabetical' | 'status') => void;
-  setFilterBy: (filter: 'all' | 'ideas' | 'drafts' | 'review' | 'done') => void;
+  setSortBy: (sort: 'recent' | 'alphabetical' | 'priority') => void;
+  setFilterBy: (filter: 'all' | 'starred') => void;
 }
 
-// Helper function to ensure dates are Date objects
-const ensureDatesAreObjects = (notes: Note[]): Note[] => {
-  return notes.map(note => ({
-    ...note,
-    type: (note.type as any) === 'text' ? 'markdown' : note.type,
-    createdAt: note.createdAt instanceof Date ? note.createdAt : new Date(note.createdAt),
-    updatedAt: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
-  }));
-};
+// Helper function to convert database note to app note
+const dbNoteToNote = (dbNote: any): Note => ({
+  id: dbNote.id,
+  title: dbNote.title,
+  content: dbNote.content,
+  type: 'markdown', // Always markdown in the new schema
+  folderId: dbNote.folder_id,
+  createdAt: new Date(dbNote.created_at),
+  updatedAt: new Date(dbNote.updated_at),
+  tags: dbNote.tags || [],
+  starred: dbNote.starred || false,
+  priority: dbNote.priority,
+  fontFamily: dbNote.font_family || 'Inter',
+});
 
-// Check for data version to force migration if needed
-const DATA_VERSION = '2.0';
+// Helper function to convert app note to database note
+const noteToDbNote = (note: Partial<Note>, userId: string) => ({
+  title: note.title || 'Untitled',
+  content: note.content || '',
+  type: 'markdown',
+  folder_id: note.folderId || null,
+  tags: note.tags || [],
+  starred: note.starred || false,
+  priority: note.priority || null,
+  font_family: note.fontFamily || 'Inter',
+  user_id: userId,
+});
 
-export const useNotesStore = create<NotesStore>()(
-  persist(
-    (set, get) => ({
-      notes: sampleNotes,
-      searchQuery: '',
-      sortBy: 'recent',
-      filterBy: 'all',
+// No auto-folder creation - users can only create notes in predefined folders
 
-      setNotes: (notes) => set({ notes: ensureDatesAreObjects(notes) }),
+export const useNotesStore = create<NotesStore>((set, get) => ({
+  notes: [],
+  searchQuery: '',
+  sortBy: 'recent',
+  filterBy: 'all',
+  loading: false,
 
-      addNote: (noteData) => {
-        const newNote: Note = {
-          id: Date.now().toString(),
-          title: noteData.title || 'Untitled',
-          content: noteData.content || '',
-          type: 'markdown',
-          status: noteData.status || 'idea',
-          folderId: noteData.folderId,
-          tags: noteData.tags || [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          fontFamily: noteData.fontFamily || 'Inter',
-          ...noteData
-        };
-        
-        set(state => ({ 
-          notes: [newNote, ...state.notes] 
-        }));
-        
-        return newNote.id;
-      },
+  fetchNotes: async () => {
+    set({ loading: true });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        set({ notes: [], loading: false });
+        return;
+      }
 
-      updateNote: (id, updates) => {
-        set(state => ({
-          notes: state.notes.map(note => 
-            note.id === id 
-              ? { ...note, ...updates, updatedAt: new Date() } 
-              : note
-          )
-        }));
-      },
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
 
-      deleteNote: (id) => {
-        set(state => ({
-          notes: state.notes.filter(note => note.id !== id)
-        }));
-      },
+      if (error) {
+        console.error('Error fetching notes:', error);
+        toast.error('Failed to fetch notes');
+        set({ loading: false });
+        return;
+      }
 
-      toggleStarred: (id) => {
-        set(state => ({
-          notes: state.notes.map(note => 
-            note.id === id 
-              ? { ...note, starred: !note.starred, updatedAt: new Date() } 
-              : note
-          )
-        }));
-      },
-
-      getNoteById: (id) => {
-        return get().notes.find(note => note.id === id);
-      },
-
-      setSearchQuery: (query) => set({ searchQuery: query }),
-      setSortBy: (sort) => set({ sortBy: sort }),
-      setFilterBy: (filter) => set({ filterBy: filter }),
-    }),
-    {
-      name: 'notes-storage',
-      version: 1,
-      partialize: (state) => ({ 
-        notes: state.notes,
-        sortBy: state.sortBy,
-        filterBy: state.filterBy
-      }),
-      // Add custom serialization/deserialization for dates
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name);
-          if (!str) return null;
-          try {
-            const data = JSON.parse(str);
-            
-            // Check for version mismatch or corrupted data
-            const storedVersion = localStorage.getItem('notes-storage-version');
-            if (storedVersion !== DATA_VERSION) {
-              console.log('Data version mismatch, clearing storage for fresh start');
-              localStorage.removeItem(name);
-              localStorage.setItem('notes-storage-version', DATA_VERSION);
-              return null;
-            }
-            
-            // Convert date strings back to Date objects
-            if (data.state?.notes) {
-              try {
-                data.state.notes = ensureDatesAreObjects(data.state.notes);
-              } catch (error) {
-                console.error('Error converting dates, clearing storage:', error);
-                localStorage.removeItem(name);
-                return null;
-              }
-            }
-            return data;
-          } catch (error) {
-            console.error('Error parsing stored notes, clearing storage:', error);
-            localStorage.removeItem(name);
-            return null;
-          }
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value));
-          localStorage.setItem('notes-storage-version', DATA_VERSION);
-        },
-        removeItem: (name) => {
-          localStorage.removeItem(name);
-          localStorage.removeItem('notes-storage-version');
-        },
-      },
+      const notes = data.map(dbNoteToNote);
+      set({ notes, loading: false });
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      toast.error('Failed to fetch notes');
+      set({ loading: false });
     }
-  )
-); 
+  },
+
+  addNote: async (noteData) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('You must be logged in to create notes');
+        return null;
+      }
+
+      const dbNote = noteToDbNote(noteData, user.id);
+      
+      const { data, error } = await supabase
+        .from('notes')
+        .insert([dbNote])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating note:', error);
+        toast.error('Failed to create note');
+        return null;
+      }
+
+      const newNote = dbNoteToNote(data);
+      set(state => ({ 
+        notes: [newNote, ...state.notes] 
+      }));
+      
+      toast.success('Note created successfully');
+      return newNote.id;
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast.error('Failed to create note');
+      return null;
+    }
+  },
+
+  updateNote: async (id, updates) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('You must be logged in to update notes');
+        return;
+      }
+
+      const dbUpdates: any = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.content !== undefined) dbUpdates.content = updates.content;
+      if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
+      if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+      if (updates.starred !== undefined) dbUpdates.starred = updates.starred;
+      if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
+      if (updates.fontFamily !== undefined) dbUpdates.font_family = updates.fontFamily;
+      
+      dbUpdates.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('notes')
+        .update(dbUpdates)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating note:', error);
+        toast.error('Failed to update note');
+        return;
+      }
+
+      set(state => ({
+        notes: state.notes.map(note => 
+          note.id === id 
+            ? { ...note, ...updates, updatedAt: new Date() } 
+            : note
+        )
+      }));
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast.error('Failed to update note');
+    }
+  },
+
+  deleteNote: async (id) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to delete notes');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting note:', error);
+        toast.error('Failed to delete note');
+        return;
+      }
+
+      set(state => ({
+        notes: state.notes.filter(note => note.id !== id)
+      }));
+      
+      toast.success('Note deleted successfully');
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast.error('Failed to delete note');
+    }
+  },
+
+  toggleStarred: async (id) => {
+    try {
+      const note = get().notes.find(n => n.id === id);
+      if (!note) return;
+
+      await get().updateNote(id, { starred: !note.starred });
+    } catch (error) {
+      console.error('Error toggling starred:', error);
+      toast.error('Failed to update note');
+    }
+  },
+
+  getNoteById: (id) => {
+    return get().notes.find(note => note.id === id);
+  },
+
+  setSearchQuery: (query) => set({ searchQuery: query }),
+  setSortBy: (sort) => set({ sortBy: sort }),
+  setFilterBy: (filter) => set({ filterBy: filter }),
+})); 

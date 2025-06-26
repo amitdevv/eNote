@@ -1,17 +1,20 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { Folder } from '@/types/note';
-import { sampleFolders } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface FoldersStore {
   folders: Folder[];
   expandedFolders: Set<string>;
+  loading: boolean;
   
   // Actions
-  setFolders: (folders: Folder[]) => void;
-  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => string;
-  updateFolder: (id: string, updates: Partial<Folder>) => void;
-  deleteFolder: (id: string) => void;
+  fetchFolders: () => Promise<void>;
+  createDefaultFolders: () => Promise<void>;
+  cleanupDuplicateFolders: () => Promise<void>;
+  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
+  updateFolder: (id: string, updates: Partial<Folder>) => Promise<void>;
+  deleteFolder: (id: string) => Promise<void>;
   getFolderById: (id: string) => Folder | undefined;
   getFoldersByParent: (parentId?: string) => Folder[];
   getFolderPath: (folderId: string) => Folder[];
@@ -23,204 +26,420 @@ interface FoldersStore {
   isExpanded: (folderId: string) => boolean;
 }
 
-// Helper function to ensure dates are Date objects
-const ensureDatesAreObjects = (folders: Folder[]): Folder[] => {
-  return folders.map(folder => ({
-    ...folder,
-    createdAt: folder.createdAt instanceof Date ? folder.createdAt : new Date(folder.createdAt),
-    updatedAt: folder.updatedAt instanceof Date ? folder.updatedAt : new Date(folder.updatedAt),
-  }));
-};
-
-// Check for data version to force migration if needed
-const DATA_VERSION = '2.0';
-
-// Default folder colors
-const defaultColors = [
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-purple-500',
-  'bg-orange-500',
-  'bg-pink-500',
-  'bg-indigo-500',
-  'bg-red-500',
-  'bg-teal-500',
+// Predefined folders that every user should have
+const DEFAULT_FOLDERS = [
+  { name: 'Personal', color: 'bg-blue-500' },
+  { name: 'College', color: 'bg-green-500' },
+  { name: 'Coding', color: 'bg-purple-500' },
+  { name: 'Projects', color: 'bg-orange-500' },
 ];
 
-export const useFoldersStore = create<FoldersStore>()(
-  persist(
-    (set, get) => ({
-      folders: sampleFolders,
-      expandedFolders: new Set(),
+// Helper function to convert database folder to app folder
+const dbFolderToFolder = (dbFolder: any): Folder => ({
+  id: dbFolder.id,
+  name: dbFolder.name,
+  color: dbFolder.color,
+  parentId: dbFolder.parent_id,
+  createdAt: new Date(dbFolder.created_at),
+  updatedAt: new Date(dbFolder.updated_at),
+});
 
-      setFolders: (folders) => set({ folders: ensureDatesAreObjects(folders) }),
+// Helper function to convert app folder to database folder
+const folderToDbFolder = (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>, userId: string) => ({
+  name: folder.name,
+  color: folder.color,
+  parent_id: folder.parentId || null,
+  user_id: userId,
+});
 
-      addFolder: (folderData) => {
-        console.log('Store addFolder called with:', folderData);
-        const newFolder: Folder = {
-          id: Date.now().toString(),
-          name: folderData.name,
-          parentId: folderData.parentId,
-          color: folderData.color || 'bg-blue-500',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+export const useFoldersStore = create<FoldersStore>((set, get) => ({
+  folders: [],
+  expandedFolders: new Set(),
+  loading: false,
+
+  createDefaultFolders: async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user found for creating default folders');
+        return;
+      }
+
+      console.log('Creating default folders for user:', user.email);
+
+      // Check if any of the default folders already exist to prevent duplicates
+      const { data: existingFolders, error: checkError } = await supabase
+        .from('folders')
+        .select('name')
+        .eq('user_id', user.id)
+        .in('name', DEFAULT_FOLDERS.map(f => f.name));
+
+      if (checkError) {
+        console.error('Error checking existing folders:', checkError);
+        return;
+      }
+
+      if (existingFolders && existingFolders.length > 0) {
+        console.log('Some default folders already exist, skipping creation:', existingFolders);
+        return;
+      }
+
+      // Create default folders in a single transaction
+      const foldersToCreate = DEFAULT_FOLDERS.map(folder => ({
+        name: folder.name,
+        color: folder.color,
+        parent_id: null,
+        user_id: user.id,
+      }));
+
+      const { data, error } = await supabase
+        .from('folders')
+        .insert(foldersToCreate)
+        .select();
+
+      if (error) {
+        console.error('Error creating default folders:', error);
+        return;
+      }
+
+      console.log('Default folders created successfully:', data.length, 'folders');
+      
+      // Update local state
+      const newFolders = data.map(dbFolderToFolder);
+      set({
+        folders: newFolders,
+        loading: false
+      });
+
+    } catch (error) {
+      console.error('Error in createDefaultFolders:', error);
+    }
+  },
+
+  cleanupDuplicateFolders: async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user found for cleanup');
+        return;
+      }
+
+      console.log('Starting cleanup of duplicate folders...');
+
+      // Get all folders for this user
+      const { data: allFolders, error: fetchError } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (fetchError) {
+        console.error('Error fetching folders for cleanup:', fetchError);
+        return;
+      }
+
+      if (!allFolders || allFolders.length === 0) {
+        console.log('No folders to cleanup');
+        return;
+      }
+
+      // Group folders by name
+      const folderGroups: Record<string, any[]> = {};
+      allFolders.forEach(folder => {
+        if (!folderGroups[folder.name]) {
+          folderGroups[folder.name] = [];
+        }
+        folderGroups[folder.name].push(folder);
+      });
+
+      // Find duplicates and keep only the first one of each
+      const foldersToDelete: string[] = [];
+      const foldersToKeep: any[] = [];
+
+      Object.entries(folderGroups).forEach(([name, folders]) => {
+        if (folders.length > 1) {
+          console.log(`Found ${folders.length} duplicates of "${name}"`);
+          // Keep the first one (oldest), delete the rest
+          foldersToKeep.push(folders[0]);
+          foldersToDelete.push(...folders.slice(1).map(f => f.id));
+        } else {
+          foldersToKeep.push(folders[0]);
+        }
+      });
+
+      if (foldersToDelete.length > 0) {
+        console.log(`Deleting ${foldersToDelete.length} duplicate folders...`);
         
-        console.log('Creating new folder:', newFolder);
+        // Delete duplicate folders
+        const { error: deleteError } = await supabase
+          .from('folders')
+          .delete()
+          .in('id', foldersToDelete);
+
+        if (deleteError) {
+          console.error('Error deleting duplicate folders:', deleteError);
+          toast.error('Failed to cleanup duplicate folders');
+          return;
+        }
+
+        console.log('Successfully deleted duplicate folders');
+        toast.success(`Cleaned up ${foldersToDelete.length} duplicate folders`);
         
-        set(state => {
-          console.log('Current folders before adding:', state.folders.length);
-          const newState = { folders: [...state.folders, newFolder] };
-          console.log('New folders count:', newState.folders.length);
-          return newState;
-        });
+        // Update local state with cleaned data
+        const cleanedFolders = foldersToKeep.map(dbFolderToFolder);
+        set({ folders: cleanedFolders });
+      } else {
+        console.log('No duplicate folders found');
+        toast.success('No duplicates found - folders are already clean');
+      }
+
+    } catch (error) {
+      console.error('Error in cleanupDuplicateFolders:', error);
+      toast.error('Failed to cleanup folders');
+    }
+  },
+
+  fetchFolders: async () => {
+    set({ loading: true });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        set({ folders: [], loading: false });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching folders:', error);
+        toast.error('Failed to fetch folders');
+        set({ loading: false });
+        return;
+      }
+
+      const folders = data.map(dbFolderToFolder);
+      
+      // If no folders exist, create default ones
+      if (folders.length === 0) {
+        console.log('No folders found, attempting to create default folders');
+        await get().createDefaultFolders();
+        // createDefaultFolders already updated the state if successful
+      } else {
+        set({ folders, loading: false });
+      }
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+      toast.error('Failed to fetch folders');
+      set({ loading: false });
+    }
+  },
+
+  addFolder: async (folderData) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to create folders');
+        return null;
+      }
+
+      const dbFolder = folderToDbFolder(folderData, user.id);
+      
+      const { data, error } = await supabase
+        .from('folders')
+        .insert([dbFolder])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding folder:', error);
+        toast.error('Failed to create folder');
+        return null;
+      }
+
+      const newFolder = dbFolderToFolder(data);
+      set(state => ({
+        folders: [...state.folders, newFolder]
+      }));
+      
+      toast.success('Folder created successfully');
+      return newFolder.id;
+    } catch (error) {
+      console.error('Error adding folder:', error);
+      toast.error('Failed to create folder');
+      return null;
+    }
+  },
+
+  updateFolder: async (id, updates) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to update folders');
+        return;
+      }
+
+      const dbUpdates: any = {};
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.color !== undefined) dbUpdates.color = updates.color;
+      if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
+      
+      dbUpdates.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('folders')
+        .update(dbUpdates)
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating folder:', error);
+        toast.error('Failed to update folder');
+        return;
+      }
+
+      set(state => ({
+        folders: state.folders.map(folder => 
+          folder.id === id 
+            ? { ...folder, ...updates, updatedAt: new Date() } 
+            : folder
+        )
+      }));
+      
+      toast.success('Folder updated successfully');
+    } catch (error) {
+      console.error('Error updating folder:', error);
+      toast.error('Failed to update folder');
+    }
+  },
+
+  deleteFolder: async (id) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to delete folders');
+        return;
+      }
+
+      // First, update all notes in this folder to have no folder
+      await supabase
+        .from('notes')
+        .update({ folder_id: null })
+        .eq('folder_id', id)
+        .eq('user_id', user.id);
+
+      // Then recursively delete all child folders and their notes
+      const deleteRecursively = async (folderId: string) => {
+        const childFolders = get().folders.filter(f => f.parentId === folderId);
         
-        return newFolder.id;
-      },
-
-      updateFolder: (id, updates) => {
-        set(state => ({
-          folders: state.folders.map(folder => 
-            folder.id === id 
-              ? { ...folder, ...updates, updatedAt: new Date() } 
-              : folder
-          )
-        }));
-      },
-
-      deleteFolder: (id) => {
-        const deleteRecursively = (folderId: string, folders: Folder[]): Folder[] => {
-          const childFolders = folders.filter(f => f.parentId === folderId);
-          let remainingFolders = folders.filter(f => f.id !== folderId);
-          
-          childFolders.forEach(child => {
-            remainingFolders = deleteRecursively(child.id, remainingFolders);
-          });
-          
-          return remainingFolders;
-        };
-
-        set(state => ({
-          folders: deleteRecursively(id, state.folders),
-          expandedFolders: new Set([...state.expandedFolders].filter(fId => fId !== id))
-        }));
-      },
-
-      getFolderById: (id) => {
-        return get().folders.find(folder => folder.id === id);
-      },
-
-      getFoldersByParent: (parentId) => {
-        return get().folders.filter(folder => folder.parentId === parentId);
-      },
-
-      getFolderPath: (folderId) => {
-        const folders = get().folders;
-        const path: Folder[] = [];
-        let currentId: string | undefined = folderId;
-        
-        while (currentId) {
-          const folder = folders.find(f => f.id === currentId);
-          if (folder) {
-            path.unshift(folder);
-            currentId = folder.parentId;
-          } else {
-            break;
-          }
+        // Delete all child folders recursively
+        for (const child of childFolders) {
+          await deleteRecursively(child.id);
         }
         
-        return path;
-      },
-
-      updateFolderNoteCounts: (noteCounts) => {
-        set(state => ({
-          folders: state.folders.map(folder => ({
-            ...folder,
-            noteCount: noteCounts[folder.id] || 0
-          }))
-        }));
-      },
-
-      canDeleteFolder: (folderId) => {
-        const state = get();
-        const hasChildren = state.folders.some(f => f.parentId === folderId);
-        const noteCount = state.folders.find(f => f.id === folderId)?.noteCount || 0;
+        // Update notes in this folder to have no folder
+        await supabase
+          .from('notes')
+          .update({ folder_id: null })
+          .eq('folder_id', folderId)
+          .eq('user_id', user.id);
         
-        // Can delete if no children and no notes, or user confirms
-        return !hasChildren || noteCount === 0;
-      },
+        // Delete the folder
+        await supabase
+          .from('folders')
+          .delete()
+          .eq('id', folderId)
+          .eq('user_id', user.id);
+      };
 
-      toggleFolderExpanded: (folderId) => {
-        set(state => {
-          const newExpandedFolders = new Set(state.expandedFolders);
-          if (newExpandedFolders.has(folderId)) {
-            newExpandedFolders.delete(folderId);
-          } else {
-            newExpandedFolders.add(folderId);
-          }
-          return { expandedFolders: newExpandedFolders };
+      await deleteRecursively(id);
+
+      // Update local state
+      const deleteRecursivelyLocal = (folderId: string, folders: Folder[]): Folder[] => {
+        const childFolders = folders.filter(f => f.parentId === folderId);
+        let remainingFolders = folders.filter(f => f.id !== folderId);
+        
+        childFolders.forEach(child => {
+          remainingFolders = deleteRecursivelyLocal(child.id, remainingFolders);
         });
-      },
+        
+        return remainingFolders;
+      };
 
-      isExpanded: (folderId) => {
-        return get().expandedFolders.has(folderId);
-      },
-    }),
-    {
-      name: 'folders-storage',
-      version: 1,
-      partialize: (state) => ({ 
-        folders: state.folders,
-        expandedFolders: Array.from(state.expandedFolders)
-      }),
-      // Add custom serialization/deserialization for dates and Sets
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name);
-          if (!str) return null;
-          try {
-            const data = JSON.parse(str);
-            
-            // Check for version mismatch or corrupted data
-            const storedVersion = localStorage.getItem('folders-storage-version');
-            if (storedVersion !== DATA_VERSION) {
-              console.log('Folders data version mismatch, clearing storage for fresh start');
-              localStorage.removeItem(name);
-              localStorage.setItem('folders-storage-version', DATA_VERSION);
-              return null;
-            }
-            
-            // Convert date strings back to Date objects and arrays back to Sets
-            if (data.state?.folders) {
-              try {
-                data.state.folders = ensureDatesAreObjects(data.state.folders);
-              } catch (error) {
-                console.error('Error converting folder dates, clearing storage:', error);
-                localStorage.removeItem(name);
-                return null;
-              }
-            }
-            if (data.state?.expandedFolders && Array.isArray(data.state.expandedFolders)) {
-              data.state.expandedFolders = new Set(data.state.expandedFolders);
-            } else {
-              data.state.expandedFolders = new Set();
-            }
-            return data;
-          } catch (error) {
-            console.error('Error parsing stored folders, clearing storage:', error);
-            localStorage.removeItem(name);
-            return null;
-          }
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value));
-          localStorage.setItem('folders-storage-version', DATA_VERSION);
-        },
-        removeItem: (name) => {
-          localStorage.removeItem(name);
-          localStorage.removeItem('folders-storage-version');
-        },
-      },
+      set(state => ({
+        folders: deleteRecursivelyLocal(id, state.folders),
+        expandedFolders: new Set([...state.expandedFolders].filter(fId => fId !== id))
+      }));
+      
+      toast.success('Folder deleted successfully');
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+      toast.error('Failed to delete folder');
     }
-  )
-); 
+  },
+
+  getFolderById: (id) => {
+    return get().folders.find(folder => folder.id === id);
+  },
+
+  getFoldersByParent: (parentId) => {
+    // Handle null/undefined comparison for root folders
+    const targetParentId = parentId || null;
+    return get().folders.filter(folder => (folder.parentId || null) === targetParentId);
+  },
+
+  getFolderPath: (folderId) => {
+    const folders = get().folders;
+    const path: Folder[] = [];
+    let currentId: string | undefined = folderId;
+    
+    while (currentId) {
+      const folder = folders.find(f => f.id === currentId);
+      if (folder) {
+        path.unshift(folder);
+        currentId = folder.parentId;
+      } else {
+        break;
+      }
+    }
+    
+    return path;
+  },
+
+  updateFolderNoteCounts: (noteCounts) => {
+    set(state => ({
+      folders: state.folders.map(folder => ({
+        ...folder,
+        noteCount: noteCounts[folder.id] || 0
+      }))
+    }));
+  },
+
+  canDeleteFolder: (folderId) => {
+    const state = get();
+    const hasChildren = state.folders.some(f => f.parentId === folderId);
+    const noteCount = state.folders.find(f => f.id === folderId)?.noteCount || 0;
+    
+    // Can delete if no children and no notes, or user confirms
+    return !hasChildren || noteCount === 0;
+  },
+
+  toggleFolderExpanded: (folderId) => {
+    set(state => {
+      const newExpandedFolders = new Set(state.expandedFolders);
+      if (newExpandedFolders.has(folderId)) {
+        newExpandedFolders.delete(folderId);
+      } else {
+        newExpandedFolders.add(folderId);
+      }
+      return { expandedFolders: newExpandedFolders };
+    });
+  },
+
+  isExpanded: (folderId) => {
+    return get().expandedFolders.has(folderId);
+  },
+})); 

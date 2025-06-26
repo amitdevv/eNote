@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-import { ThemeToggle } from '@/components/ui/theme-toggle';
+
 import { 
   Select, 
   SelectContent, 
@@ -10,34 +10,41 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { 
   Plus, 
   Search,
   ArrowLeft,
   Hash,
-  Flag,
-  Folder,
-  Tag,
   X,
-  Download,
-  FileText as FileTextIcon,
   Lightbulb, 
   ClipboardList, 
-  Edit3, 
   Eye, 
   CheckCircle,
   Grid3X3,
-  List
+  List,
+  LogOut,
+  User,
+  Rocket,
+  Code,
+  GraduationCap,
+  Settings
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { Badge } from '@/components/ui/badge';
 import { useNotesStore } from '@/stores/notesStore';
 import { useEditorStore } from '@/stores/editorStore';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   exportNotesAsJSON, 
   exportAllNotesAsMarkdown,
-  exportNoteAsMarkdown,
   exportNoteAsPDF,
   exportNoteAsText
 } from '@/utils/export';
@@ -53,16 +60,17 @@ import { cn } from '@/lib/utils';
 interface HeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  sortBy: 'recent' | 'alphabetical' | 'status';
-  onSortChange: (sort: 'recent' | 'alphabetical' | 'status') => void;
-  filterBy: 'all' | 'ideas' | 'drafts' | 'review' | 'done';
-  onFilterChange: (filter: 'all' | 'ideas' | 'drafts' | 'review' | 'done') => void;
+  sortBy: 'recent' | 'alphabetical' | 'priority';
+  onSortChange: (sort: 'recent' | 'alphabetical' | 'priority') => void;
+  filterBy: 'all' | 'starred';
+  onFilterChange: (filter: 'all' | 'starred') => void;
   onNewNote: () => void;
   searchInputRef: React.RefObject<HTMLInputElement>;
   isEditorMode?: boolean;
   noteId?: string;
   viewMode?: 'grid' | 'list';
   onViewModeChange?: (mode: 'grid' | 'list') => void;
+  currentWorkspace?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -77,24 +85,37 @@ export const Header: React.FC<HeaderProps> = ({
   isEditorMode = false,
   noteId,
   viewMode = 'grid',
-  onViewModeChange
+  onViewModeChange,
+  currentWorkspace = 'all'
 }) => {
   const { notes, addNote, getNoteById } = useNotesStore();
   const { 
     title: editorTitle,
     content: editorContent,
-    status: editorStatus, 
     tags: editorTags, 
     fontFamily: editorFontFamily,
-    setStatus: setEditorStatus,
-    setTags: setEditorTags,
     setFontFamily: setEditorFontFamily,
     addTag: addEditorTag,
     removeTag: removeEditorTag
   } = useEditorStore();
   
+  const { user, signOut } = useAuth();
+  
   const [exportValue, setExportValue] = React.useState("export");
-  const [newTag, setNewTag] = React.useState('');
+  
+  // Unified tags system - 8 predefined tags only
+  const predefinedTags = [
+    // Category tags
+    { id: 'project', label: 'Project', icon: Rocket, color: 'text-blue-600 dark:text-blue-400' },
+    { id: 'coding', label: 'Coding', icon: Code, color: 'text-purple-600 dark:text-purple-400' },
+    { id: 'college', label: 'College', icon: GraduationCap, color: 'text-green-600 dark:text-green-400' },
+    { id: 'personal', label: 'Personal', icon: User, color: 'text-orange-600 dark:text-orange-400' },
+    { id: 'ideas', label: 'Ideas', icon: Lightbulb, color: 'text-yellow-600 dark:text-yellow-400' },
+    // Status tags
+    { id: 'done', label: 'Done', icon: CheckCircle, color: 'text-green-600 dark:text-green-400' },
+    { id: 'ongoing', label: 'Ongoing', icon: ClipboardList, color: 'text-orange-600 dark:text-orange-400' },
+    { id: 'future', label: 'Future', icon: Eye, color: 'text-indigo-600 dark:text-indigo-400' },
+  ];
   
   // Editor mode state
   const navigate = useNavigate();
@@ -104,21 +125,13 @@ export const Header: React.FC<HeaderProps> = ({
     navigate('/notes');
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim()) {
-      addEditorTag(newTag.trim());
-      setNewTag('');
+  const handlePredefinedTagClick = (tagId: string) => {
+    if (editorTags.includes(tagId)) {
+      removeEditorTag(tagId);
+    } else {
+      addEditorTag(tagId);
     }
   };
-
-  const statusOptions = [
-    { value: 'idea', label: 'Idea', icon: Lightbulb, color: 'text-blue-600 dark:text-blue-400' },
-    { value: 'research', label: 'Research', icon: Search, color: 'text-purple-600 dark:text-purple-400' },
-    { value: 'outline', label: 'Outline', icon: ClipboardList, color: 'text-orange-600 dark:text-orange-400' },
-    { value: 'draft', label: 'Draft', icon: Edit3, color: 'text-yellow-600 dark:text-yellow-400' },
-    { value: 'review', label: 'Review', icon: Eye, color: 'text-indigo-600 dark:text-indigo-400' },
-    { value: 'done', label: 'Done', icon: CheckCircle, color: 'text-green-600 dark:text-green-400' },
-  ];
 
   // Export functions
   const handleExportJSON = () => {
@@ -163,15 +176,12 @@ export const Header: React.FC<HeaderProps> = ({
   const sortOptions = [
     { value: 'recent', label: 'Recent' },
     { value: 'alphabetical', label: 'Alphabetical' },
-    { value: 'status', label: 'Status' },
+    { value: 'priority', label: 'Priority' },
   ];
 
   const filterOptions = [
     { value: 'all', label: 'All Notes' },
-    { value: 'ideas', label: 'Ideas' },
-    { value: 'drafts', label: 'Drafts' },
-    { value: 'review', label: 'Review' },
-    { value: 'done', label: 'Done' },
+    { value: 'starred', label: 'Starred' },
   ];
 
   if (isEditorMode) {
@@ -200,64 +210,69 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right Side - Editor Controls */}
           <div className="flex items-center gap-3">
-            {/* Status */}
-            <Select value={editorStatus} onValueChange={(value) => setEditorStatus(value as any)}>
-              <SelectTrigger className="w-28 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      <option.icon className={cn("w-3 h-3", option.color)} />
-                      {option.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Removed workspace selector - simplified structure */}
-
             {/* Font */}
             <FontSelector 
               currentFont={editorFontFamily} 
               onFontChange={setEditorFontFamily}
             />
 
-            {/* Tags */}
+            {/* Tags System - Select Multiple from 8 Predefined Tags */}
             <div className="flex items-center gap-2">
-              {editorTags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                  <button
-                    onClick={() => removeEditorTag(tag)}
-                    className="ml-1 hover:text-red-600"
-                  >
-                    <X className="w-2 h-2" />
-                  </button>
-                </Badge>
-              ))}
-              {editorTags.length > 2 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{editorTags.length - 2}
-                </Badge>
+              {/* Tags Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-40 h-8 text-xs justify-between">
+                    <div className="flex items-center gap-2">
+                      <Hash className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                      Add Tags
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {editorTags.length > 0 ? `(${editorTags.length})` : ''}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48">
+                  <div className="px-2 py-1 text-xs text-gray-500 border-b">
+                    Click to add/remove tags:
+                  </div>
+                  {predefinedTags.map((tag) => (
+                    <DropdownMenuItem 
+                      key={tag.id} 
+                      onClick={() => handlePredefinedTagClick(tag.id)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <tag.icon className={cn("w-3 h-3", tag.color)} />
+                        <span>{tag.label}</span>
+                        {editorTags.includes(tag.id) && (
+                          <CheckCircle className="w-3 h-3 text-green-500 ml-auto" />
+                        )}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Current Tags Display */}
+              {editorTags.length > 0 && (
+                <div className="flex items-center gap-1 max-w-sm overflow-x-auto">
+                  {editorTags.map((tag) => {
+                    const predefinedTag = predefinedTags.find(pt => pt.id === tag);
+                    return (
+                      <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-1 flex-shrink-0">
+                        {predefinedTag && <predefinedTag.icon className="w-2 h-2" />}
+                        {tag}
+                        <button
+                          onClick={() => removeEditorTag(tag)}
+                          className="ml-1 hover:text-red-600"
+                        >
+                          <X className="w-2 h-2" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
               )}
-              <div className="flex items-center gap-1">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Add tag..."
-                  className="w-20 h-8 text-xs"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-                />
-                <button
-                  onClick={handleAddTag}
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
             </div>
 
             {/* Export */}
@@ -285,6 +300,37 @@ export const Header: React.FC<HeaderProps> = ({
                 </SelectContent>
               </Select>
             )}
+
+            {/* User Profile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || user?.email} />
+                    <AvatarFallback>
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="flex flex-col items-start p-3">
+                  <div className="font-medium text-sm">
+                    {user?.user_metadata?.full_name || 'User'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {user?.email}
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => signOut()}
+                  className="text-red-600 dark:text-red-400"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -329,6 +375,37 @@ export const Header: React.FC<HeaderProps> = ({
             {filterOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Tags Filter Dropdown */}
+        <Select 
+          value={predefinedTags.some(tag => tag.id === currentWorkspace) ? currentWorkspace : "tags"} 
+          onValueChange={(value) => {
+            if (value !== "tags") {
+              // Navigate to tag filter
+              window.location.href = `/notes?workspace=${value}`;
+            }
+          }}
+        >
+          <SelectTrigger className="w-28 h-9 text-sm">
+            <SelectValue placeholder="Tags" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="tags">
+              <div className="flex items-center gap-2">
+                <Hash className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                All Tags
+              </div>
+            </SelectItem>
+            {predefinedTags.map((tag) => (
+              <SelectItem key={tag.id} value={tag.id}>
+                <div className="flex items-center gap-2">
+                  <tag.icon className={cn("w-3 h-3", tag.color)} />
+                  {tag.label}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
@@ -423,6 +500,43 @@ export const Header: React.FC<HeaderProps> = ({
             <Plus className="w-4 h-4 mr-2" />
             New Note
           </Button>
+
+          {/* User Profile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || user?.email} />
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem className="flex flex-col items-start p-3">
+                <div className="font-medium text-sm">
+                  {user?.user_metadata?.full_name || 'User'}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {user?.email}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate('/settings')}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => signOut()}
+                className="text-red-600 dark:text-red-400"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

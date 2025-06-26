@@ -3,7 +3,6 @@ export interface Note {
   title: string;
   content: string;
   type: 'markdown'; // Only markdown now
-  status: 'idea' | 'research' | 'outline' | 'draft' | 'review' | 'done';
   folderId?: string; // Optional folder assignment
   createdAt: Date;
   updatedAt: Date;

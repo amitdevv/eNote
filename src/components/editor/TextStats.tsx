@@ -1,6 +1,5 @@
 import React from 'react';
-import { getTextStats, TextStats as ITextStats } from '@/utils/textAnalysis';
-import { Badge } from '@/components/ui/badge';
+import { getTextStats } from '@/utils/textAnalysis';
 import { FileText, Clock } from 'lucide-react';
 
 interface TextStatsProps {

@@ -3,63 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
-  FileText,
-  Search,
-  Tag,
-  Folder,
-  Star,
-  ArrowRight,
-  CheckCircle,
-  Zap,
-  Shield
+  FileText
 } from 'lucide-react';
-
-// Import the landing page image
-import landingImage from '@/assets/images/landingpage.png';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-
-  const features = [
-    {
-      icon: FileText,
-      title: 'Rich Text Editing',
-      description: 'Write with Markdown, code syntax highlighting, and todo lists'
-    },
-    {
-      icon: Search,
-      title: 'Powerful Search',
-      description: 'Find your notes instantly with intelligent search and filtering'
-    },
-    {
-      icon: Tag,
-      title: 'Smart Organization',
-      description: 'Organize with tags, workspaces, and status tracking'
-    },
-    {
-      icon: Folder,
-      title: 'Multiple Workspaces',
-      description: 'Separate your personal, work, and project notes'
-    },
-    {
-      icon: Star,
-      title: 'Quick Access',
-      description: 'Star important notes for instant access'
-    },
-    {
-      icon: Zap,
-      title: 'Export & Import',
-      description: 'Export to PDF, Markdown, or JSON. Import your existing notes'
-    }
-  ];
-
-  const benefits = [
-    'Auto-save functionality',
-    'Keyboard shortcuts',
-    'Dark/Light theme',
-    'Font customization',
-    'Offline capable'
-  ];
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 transition-colors duration-200">

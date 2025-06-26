@@ -7,9 +7,17 @@ import {
   Search,
   Clock,
   Tag,
-  Folder
+  Rocket,
+  Code,
+  GraduationCap,
+  User,
+  Lightbulb,
+  CheckCircle,
+  ClipboardList,
+  Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -17,11 +25,59 @@ interface SearchResultsProps {
   query: string;
 }
 
+const tagConfig = {
+  // Category tags
+  project: { icon: Rocket, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
+  coding: { icon: Code, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-900/20' },
+  college: { icon: GraduationCap, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+  personal: { icon: User, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-50 dark:bg-orange-900/20' },
+  ideas: { icon: Lightbulb, color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20' },
+  // Status tags
+  done: { icon: CheckCircle, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+  ongoing: { icon: ClipboardList, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-50 dark:bg-orange-900/20' },
+  future: { icon: Eye, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20' },
+};
+
 export const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   onSelectNote,
   query
 }) => {
+  
+  // Helper to render a tag with icon if it's a predefined tag
+  const renderTag = (tag: string) => {
+    const tagInfo = tagConfig[tag as keyof typeof tagConfig];
+    
+    if (tagInfo) {
+      const IconComponent = tagInfo.icon;
+      return (
+        <Badge 
+          key={tag} 
+          variant="secondary" 
+          className={cn(
+            "text-xs flex items-center gap-1 border-0",
+            tagInfo.bgColor,
+            tagInfo.color
+          )}
+        >
+          <IconComponent className="w-3 h-3" />
+          {tag}
+        </Badge>
+      );
+    }
+    
+    // Regular tag without icon
+    return (
+      <Badge 
+        key={tag} 
+        variant="secondary" 
+        className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+      >
+        {tag}
+      </Badge>
+    );
+  };
+  
   if (results.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -68,17 +124,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       .trim();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'idea': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-      case 'research': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-      case 'outline': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
-      case 'draft': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
-      case 'review': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
-      case 'done': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
-      default: return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
-    }
-  };
+
 
   // Get content preview
   const getContentPreview = (note: any) => {
@@ -112,21 +158,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     
                     {/* Metadata */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge 
-                        variant="outline" 
-                        className={cn("text-xs font-medium border", getStatusColor(result.note.status))}
-                      >
-                        {result.note.status}
-                      </Badge>
-                      
-                      <Badge 
-                        variant="outline" 
-                        className="text-xs bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
-                      >
-                        <Folder className="w-3 h-3 mr-1" />
-                        {result.note.workspace}
-                      </Badge>
-
                       <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                         <Clock className="w-3 h-3" />
                         {result.note.updatedAt.toLocaleDateString()}
@@ -151,15 +182,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                   <div className="flex items-center gap-2 mt-3">
                     <Tag className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                     <div className="flex flex-wrap gap-1">
-                      {result.note.tags.map((tag: string) => (
-                        <Badge 
-                          key={tag} 
-                          variant="secondary" 
-                          className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
+                      {result.note.tags.map((tag: string) => renderTag(tag))}
                     </div>
                   </div>
                 )}
