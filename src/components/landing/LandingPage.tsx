@@ -70,7 +70,7 @@ export const LandingPage: React.FC = () => {
 
   const handleGitHubStar = () => {
     // Replace with your actual GitHub repository URL
-    window.open('https://github.com/yourusername/eNote', '_blank');
+    window.open('https://github.com/amitdevv/eNote', '_blank');
   };
 
   return (
