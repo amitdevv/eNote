@@ -7,7 +7,7 @@ import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Plus, Loader2 } from 'lucide-react';
+import { FileText, Plus, Loader2, X } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
 import { SettingsPage } from '@/components/settings/SettingsPage';
@@ -43,6 +43,7 @@ export const AppLayout: React.FC = () => {
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation type state
@@ -52,6 +53,37 @@ export const AppLayout: React.FC = () => {
   // Check if we're in editor mode or settings mode
   const isEditorMode = location.pathname.startsWith('/editor');
   const isSettingsMode = location.pathname === '/settings';
+
+  // Close mobile sidebar when route changes
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Handle mobile sidebar toggle
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  };
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById('mobile-sidebar');
+      const menuButton = document.getElementById('mobile-menu-button');
+      
+      if (isMobileSidebarOpen && 
+          sidebar && 
+          !sidebar.contains(event.target as Node) &&
+          menuButton &&
+          !menuButton.contains(event.target as Node)) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    if (isMobileSidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMobileSidebarOpen]);
 
   // Expose debugging functions globally (temporary) - after state declarations
   React.useEffect(() => {
@@ -228,11 +260,15 @@ export const AppLayout: React.FC = () => {
       setNavType('special');
       setNavValue('all');
     }
+
+    // Close mobile sidebar after selection
+    setIsMobileSidebarOpen(false);
   };
 
   const handleNewNote = () => {
     console.log('handleNewNote - Creating new note');
     navigate('/editor');
+    setIsMobileSidebarOpen(false);
   };
 
   const handleEditNote = (noteId: string) => {
@@ -290,7 +326,7 @@ export const AppLayout: React.FC = () => {
         {filteredNotes.length > 0 ? (
           <div className={
             viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
               : "space-y-4"
           }>
             {filteredNotes.map((note) => (
@@ -309,8 +345,8 @@ export const AppLayout: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
+          <div className="text-center py-12 sm:py-16">
+            <div className="max-w-md mx-auto px-4">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <FileText className="w-8 h-8 text-gray-400 dark:text-gray-600" />
               </div>
@@ -319,7 +355,7 @@ export const AppLayout: React.FC = () => {
                   ? `No ${navValue} notes` 
                   : "No notes yet"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm sm:text-base">
                 {navValue !== 'all'
                   ? `You don't have any notes in this section yet.`
                   : "Get started by creating your first note. Use markdown to format your content, add tags, and organize your thoughts."}
@@ -327,7 +363,7 @@ export const AppLayout: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={handleNewNote}
-                  className="inline-flex items-center px-6 py-3 bg-[#333333] hover:bg-[#404040] text-white rounded-lg font-medium transition-colors"
+                  className="inline-flex items-center px-6 py-3 bg-[#333333] hover:bg-[#404040] text-white rounded-lg font-medium transition-colors w-full sm:w-auto"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create your first note
@@ -355,18 +391,50 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-[#171717] transition-colors duration-200 overflow-hidden">
-      <div className="flex-shrink-0 sticky top-0 h-screen">
-      <Sidebar
-        selectedWorkspace={navValue}
-        onWorkspaceChange={handleWorkspaceChange}
-        onNewNote={handleNewNote}
-        noteCount={filteredNotes.length}
-        sidebarCounts={getSidebarCounts()}
-      />
+    <div className="flex h-screen bg-gray-50 dark:bg-[#171717] transition-colors duration-200 relative">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" />
+      )}
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar
+          selectedWorkspace={navValue}
+          onWorkspaceChange={handleWorkspaceChange}
+          onNewNote={handleNewNote}
+          noteCount={filteredNotes.length}
+          sidebarCounts={getSidebarCounts()}
+        />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div 
+        id="mobile-sidebar"
+        className={`fixed left-0 top-0 h-full z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex">
+          <Sidebar
+            selectedWorkspace={navValue}
+            onWorkspaceChange={handleWorkspaceChange}
+            onNewNote={handleNewNote}
+            noteCount={filteredNotes.length}
+            sidebarCounts={getSidebarCounts()}
+          />
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="absolute top-4 -right-10 w-8 h-8 bg-gray-900 bg-opacity-50 text-white rounded-r-lg flex items-center justify-center lg:hidden"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
         <Header
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
@@ -381,10 +449,12 @@ export const AppLayout: React.FC = () => {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           currentWorkspace={navValue}
+          onMobileMenuToggle={toggleMobileSidebar}
+          isMobileMenuOpen={isMobileSidebarOpen}
         />
         
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full max-w-full">
-          <div className={isEditorMode ? "w-full max-w-full h-full" : ""}>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full">
+          <div className={isEditorMode ? "w-full h-full" : ""}>
             {renderMainContent()}
           </div>
         </main>

@@ -96,13 +96,13 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           key={tag} 
           variant="secondary" 
           className={cn(
-            "text-xs flex items-center gap-1 border-0",
+            "text-xs flex items-center gap-1 border-0 px-2 py-1",
             tagInfo.bgColor,
             tagInfo.color
           )}
         >
-          <IconComponent className="w-3 h-3" />
-          {tag}
+          <IconComponent className="w-3 h-3 flex-shrink-0" />
+          <span className="truncate">{tag}</span>
         </Badge>
       );
     }
@@ -112,9 +112,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       <Badge 
         key={tag} 
         variant="secondary" 
-        className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+        className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1"
       >
-        {tag}
+        <span className="truncate">{tag}</span>
       </Badge>
     );
   };
@@ -146,37 +146,64 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     
     return (
       <Card 
-        className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
+        className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer hover:shadow-md active:scale-[0.995] touch-manipulation"
         onClick={onClick}
       >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base leading-tight truncate">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-tight line-clamp-2 flex-1">
                   {note.title}
                 </h3>
+                {/* Mobile-friendly star button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleStarred();
+                  }}
+                  className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors sm:hidden min-h-[32px] min-w-[32px] flex items-center justify-center"
+                  aria-label={note.starred ? 'Remove from starred' : 'Add to starred'}
+                >
+                  <Star className={cn(
+                    "w-4 h-4 transition-colors",
+                    note.starred 
+                      ? "fill-yellow-400 text-yellow-400" 
+                      : "text-gray-400 hover:text-yellow-400"
+                  )} />
+                </button>
               </div>
               <div style={{ fontFamily: note.fontFamily || 'Inter' }}>
-                <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                   {(() => {
                     const plainTextContent = htmlToPlainText(note.content);
                     const firstLine = plainTextContent.split('\n').find(line => line.trim() !== '') || 'No content';
                     return (
-                      <div className="truncate">
+                      <div className="line-clamp-2 sm:line-clamp-1">
                         {firstLine.trim() || '\u00A0'}
                       </div>
                     );
                   })()}
                 </div>
               </div>
+              
+              {/* Mobile: Tags below content */}
+              <div className="flex flex-wrap gap-1 mt-2 sm:hidden">
+                {(note.tags && Array.isArray(note.tags) ? note.tags : []).slice(0, 2).map((tag) => renderTag(tag))}
+                {(note.tags && Array.isArray(note.tags) ? note.tags : []).length > 2 && (
+                  <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1">
+                    +{(note.tags && Array.isArray(note.tags) ? note.tags : []).length - 2}
+                  </Badge>
+                )}
+              </div>
             </div>
             
-            <div className="flex items-center gap-4 flex-shrink-0">
+            {/* Desktop: Tags and controls on the right */}
+            <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
               <div className="flex flex-wrap gap-1">
                 {(note.tags && Array.isArray(note.tags) ? note.tags : []).slice(0, 2).map((tag) => renderTag(tag))}
                 {(note.tags && Array.isArray(note.tags) ? note.tags : []).length > 2 && (
-                  <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                  <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1">
                     +{(note.tags && Array.isArray(note.tags) ? note.tags : []).length - 2}
                   </Badge>
                 )}
@@ -191,8 +218,89 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                   });
                 })() : 'No date'}
               </span>
-              
-              <div className="flex-shrink-0">
+            </div>
+            
+            {/* Mobile: Date and menu at bottom */}
+            <div className="sm:hidden self-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-[#333333] min-h-[32px] min-w-[32px]"
+                  >
+                    <MoreHorizontal className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 z-50 bg-white dark:bg-[#333333] border-gray-200 dark:border-gray-700" sideOffset={5}>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClick();
+                    }} 
+                    className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit note
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleStarred();
+                    }} 
+                    className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <Star className={`w-4 h-4 mr-2 ${note.starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                    {note.starred ? 'Remove from starred' : 'Add to starred'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportNoteAsText(note);
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as Text
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportNoteAsMarkdown(note);
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export as Markdown
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportNoteAsPDF(note);
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
+                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[40px]"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete note
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Desktop: Menu button */}
+            <div className="hidden sm:block flex-shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
@@ -270,30 +378,62 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 </DropdownMenu>
               </div>
             </div>
+          
+          {/* Mobile: Date at bottom */}
+          <div className="sm:hidden mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {note.updatedAt ? (() => {
+                const date = note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt);
+                return date.toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                });
+              })() : 'No date'}
+            </span>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // Grid view (default)
+  // Grid view (default) - Mobile optimized
   // Debug: Check tags in grid view
   console.log('Grid view - note.tags:', note.tags, 'Array.isArray:', Array.isArray(note.tags));
   
   return (
     <Card 
-      className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer"
+      className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer hover:shadow-md active:scale-[0.98] touch-manipulation min-h-[200px] flex flex-col"
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0 pr-2">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-lg leading-tight mb-2">
+      <CardHeader className="pb-2 sm:pb-3 flex-shrink-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base sm:text-lg leading-tight line-clamp-2 mb-1 sm:mb-2">
               {note.title}
             </h3>
           </div>
           
-          <div className="flex-shrink-0">
+          {/* Mobile: Star button always visible */}
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStarred();
+              }}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors sm:hidden min-h-[32px] min-w-[32px] flex items-center justify-center"
+              aria-label={note.starred ? 'Remove from starred' : 'Add to starred'}
+            >
+              <Star className={cn(
+                "w-4 h-4 transition-colors",
+                note.starred 
+                  ? "fill-yellow-400 text-yellow-400" 
+                  : "text-gray-400 hover:text-yellow-400"
+              )} />
+            </button>
+            
+            {/* Desktop: Menu button with hover */}
+            <div className="hidden sm:block">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
@@ -369,31 +509,112 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
+
+            {/* Mobile: Menu button always visible */}
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-[#333333] min-h-[32px] min-w-[32px]"
+                  >
+                    <MoreHorizontal className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 z-50 bg-white dark:bg-[#333333] border-gray-200 dark:border-gray-700" sideOffset={5}>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClick();
+                    }} 
+                    className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit note
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleStarred();
+                    }} 
+                    className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <Star className={`w-4 h-4 mr-2 ${note.starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                    {note.starred ? 'Remove from starred' : 'Add to starred'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportNoteAsText(note);
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as Text
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportNoteAsMarkdown(note);
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export as Markdown
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exportNoteAsPDF(note);
+                    }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-700" />
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
+                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[40px]"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete note
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <div style={{ fontFamily: note.fontFamily || 'Inter' }}>
+      <CardContent className="pt-0 flex-1 flex flex-col">
+        <div style={{ fontFamily: note.fontFamily || 'Inter' }} className="flex-1">
           {renderContent()}
         </div>
         
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex flex-wrap gap-1">
-            {(note.tags && Array.isArray(note.tags) ? note.tags : []).slice(0, 3).map((tag) => renderTag(tag))}
-            {(note.tags && Array.isArray(note.tags) ? note.tags : []).length > 3 && (
-              <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                +{(note.tags && Array.isArray(note.tags) ? note.tags : []).length - 3}
+        <div className="flex items-center justify-between mt-3 sm:mt-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+            {(note.tags && Array.isArray(note.tags) ? note.tags : []).slice(0, 2).map((tag) => renderTag(tag))}
+            {(note.tags && Array.isArray(note.tags) ? note.tags : []).length > 2 && (
+              <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1">
+                +{(note.tags && Array.isArray(note.tags) ? note.tags : []).length - 2}
               </Badge>
             )}
           </div>
           
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2">
             {note.updatedAt ? (() => {
               const date = note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt);
               return date.toLocaleDateString('en-US', { 
                 month: 'short', 
-                day: 'numeric' 
+                day: 'numeric',
+                year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
               });
             })() : 'No date'}
           </span>

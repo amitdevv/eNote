@@ -57,7 +57,22 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        codeBlock: false,
+        codeBlock: false, // We use CodeBlockLowlight instead
+        bulletList: {
+          HTMLAttributes: {
+            class: 'prose-ul',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'prose-ol',
+          },
+        },
+        listItem: {
+          HTMLAttributes: {
+            class: 'prose-li',
+          },
+        },
         paragraph: {
           HTMLAttributes: {
             class: 'text-wrap break-words',
@@ -112,9 +127,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
           'prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800',
           'prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-600',
           'prose-hr:border-gray-300 dark:prose-hr:border-gray-600',
-          'prose-ul:text-gray-700 dark:prose-ul:text-gray-300',
-          'prose-ol:text-gray-700 dark:prose-ol:text-gray-300',
-          'prose-li:text-gray-700 dark:prose-li:text-gray-300',
+          'prose-ul:text-gray-700 dark:prose-ul:text-gray-300 prose-ul:list-disc prose-ul:pl-6',
+          'prose-ol:text-gray-700 dark:prose-ol:text-gray-300 prose-ol:list-decimal prose-ol:pl-6',
+          'prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-li:list-item',
           'min-h-[400px] w-full max-w-full box-border break-words text-wrap'
         ),
         style: `font-family: "${fontFamily}", sans-serif !important; font-display: swap; max-width: 100% !important; width: 100% !important; overflow-x: hidden !important; word-wrap: break-word !important; overflow-wrap: break-word !important;`,

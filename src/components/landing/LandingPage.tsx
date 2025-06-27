@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useTheme } from '@/contexts/ThemeContext';
 import { fetchRealUserCount, setupLiveUserCount, fetchUserCountWithUpdates } from '@/config/stats';
 import {
   FileText,
@@ -12,6 +13,7 @@ import {
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [userCount, setUserCount] = useState<number>(42); // Start with fallback
   const [loading, setLoading] = useState(true);
 
@@ -73,38 +75,66 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 transition-colors duration-200">
-      {/* Header */}
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      {/* Responsive Header */}
+      <header className="  transition-colors duration-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            {/* Logo - Responsive */}
             <div className="flex items-center">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white dark:text-black" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black" />
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">eNote</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">eNote</span>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
+            {/* Action Buttons - Mobile Optimized */}
+            <div className="flex items-center space-x-   sm:space-x-4">
+              <ThemeToggle size="sm" className="sm:size-default" />
               <Button
                 variant="outline"
                 onClick={() => navigate('/notes')}
-                className="text-gray-600 dark:text-gray-300  dark:bg-[#333333]"
+                size="sm"
+                className="text-gray-600 dark:text-gray-300 dark:bg-[#333333] px-3 sm:px-4 text-sm sm:text-base"
               >
-                Open App
+                <span className="hidden sm:inline">Open App</span>
+                <span className="sm:hidden">App</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Simplified Stats Bar - User Count + GitHub Star */}
-      <div className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-gray-800 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center space-x-8 text-sm">
-            {/* Real User Count from Database (with live updates in background) */}
+      {/* Responsive Stats Bar */}
+      <div className=" py-2 sm:py-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          {/* Mobile Layout (Stacked) */}
+          <div className="flex flex-col space-y-2 sm:hidden">
+            <div className="flex items-center justify-center space-x-2">
+              <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {loading ? '...' : userCount}
+                </span> 
+                <span className="ml-1">
+                  {userCount === 1 ? 'user' : 'users'}
+                </span>
+              </span>
+            </div>
+            
+            <button
+              onClick={handleGitHubStar}
+              className="flex items-center justify-center space-x-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group py-1"
+            >
+              <Star className="w-4 h-4 text-[#009541] group-hover:text-[#009541] transition-colors" />
+              <span className="font-medium text-sm">Star on GitHub</span>
+              <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </div>
+
+          {/* Desktop/Tablet Layout (Horizontal) */}
+          <div className="hidden sm:flex items-center justify-center space-x-6 md:space-x-8 text-sm">
             <div className="flex items-center space-x-2">
               <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
               <span className="text-gray-600 dark:text-gray-400">
@@ -117,15 +147,12 @@ export const LandingPage: React.FC = () => {
               </span>
             </div>
             
-            {/* Separator */}
-            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
             
-            {/* GitHub Star Call-to-Action */}
             <button
               onClick={handleGitHubStar}
               className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
             >
-              <Star className="w-4 h-4 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
+              <Star className="w-4 h-4 text-[#009541] group-hover:text-[#009541] transition-colors" />
               <span className="font-medium">Star on GitHub</span>
               <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
             </button>
@@ -133,44 +160,70 @@ export const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* Responsive Hero Section */}
+      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-5xl font-normal text-gray-900 dark:text-gray-100 leading-tight mb-6">
-                <span className="bg-gradient-to-r from-green-200 to-green-400 dark:bg-[#333333] px-2 py-1 rounded font-normal text-black dark:text-[#009541]">Organize</span> your{' '}
-                <span className="bg-gradient-to-r from-green-200 to-green-400 dark:bg-[#333333] px-2 py-1 rounded font-normal text-black dark:text-[#009541]">notes</span>{' '}
-                manage your{' '}
-                <span className="bg-gradient-to-r from-green-200 to-green-400 dark:bg-[#333333] px-2 py-1 rounded font-normal text-black dark:text-[#009541]">tasks</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+            {/* Text Content - Mobile First */}
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              {/* Responsive Heading */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-normal text-gray-900 dark:text-gray-100 leading-tight mb-4 sm:mb-6" style={{ fontFamily: 'Fira Code, monospace' }}>
+                Organize your <span className="text-[#009541]">notes</span> manage your <span className="text-[#009541]">tasks</span>
               </h1>
 
-              <p className="text-xl font-normal text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+              {/* Responsive Subtitle */}
+              <p className="text-lg sm:text-xl font-normal text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 A powerful note-taking app with rich text editing, smart organization,
                 and seamless synchronization across all your devices.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              {/* Mobile-Optimized CTA Button */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-6 sm:mb-8 justify-center lg:justify-start">
                 <Button
                   variant="outline"
                   onClick={() => navigate('/notes')}
-                  className=" text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333]"
+                  size="lg"
+                  className="w-full sm:w-auto text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] px-8 py-3 text-base font-medium min-h-[44px]"
                 >
-                  Open App
+                  Get Started Free
                 </Button>
+              </div>
+
+              {/* Mobile-friendly features list */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-500 dark:text-gray-400 max-w-lg mx-auto lg:mx-0">
+                <div className="flex items-center justify-center sm:justify-start space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                  <span>Free to use</span>
+                </div>
+                <div className="flex items-center justify-center sm:justify-start space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                  <span>Rich text editor</span>
+                </div>
+                <div className="flex items-center justify-center sm:justify-start space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>
+                  <span>Cloud sync</span>
+                </div>
               </div>
             </div>
 
-            <div className="relative">
-              <img
-                src="/assets/images/landingpage.png"
-                alt="eNote Dashboard"
-                className="w-full h-auto rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700"
-                onError={(e) => {
-                  // Fallback if image doesn't load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+            {/* Image - Mobile Optimized with Theme Support */}
+            <div className="relative order-1 lg:order-2">
+              <div className="mx-auto max-w-sm sm:max-w-md lg:max-w-none">
+                <img
+                  src={theme === 'dark' ? '/assets/images/darkmodelanding.png' : '/assets/images/lightmodelanding.png'}
+                  alt="eNote Dashboard"
+                  className="w-full h-auto shadow-md"
+                  onError={(e) => {
+                    // Fallback to the original image if theme-specific image doesn't load
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.src = '/assets/images/landingpage.png';
+                    target.onerror = () => {
+                      // Final fallback if original image also doesn't load
+                      target.style.display = 'none';
+                    };
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
