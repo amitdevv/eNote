@@ -57,3 +57,129 @@ Icon?
 # Development/personal images (add specific files if needed)
 # personal-*.png
 # dev-*.png
+
+# Build and compilation artifacts
+*.tsbuildinfo
+*.buildinfo
+*.map
+coverage/
+.nyc_output/
+lib-cov/
+
+# Development and documentation files
+docs/IMPROVEMENTS.md
+docs/TODO.md
+docs/NOTES.md
+docs/CHANGELOG.md
+docs/ROADMAP.md
+**/IMPROVEMENTS.md
+**/TODO.md
+**/NOTES.md
+**/ROADMAP.md
+improvement*.md
+todo*.md
+notes*.md
+roadmap*.md
+
+# Database and setup files (development only)
+cleanup-database.sql
+database-schema.sql
+SUPABASE_SETUP.md
+setup*.sql
+migration*.sql
+seed*.sql
+
+# Draft and backup files
+*.draft
+*.backup
+*.bak
+*.orig
+*.save
+*~
+*.swp
+*.swo
+
+# IDE and editor specific files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/c_cpp_properties.json
+.vscode/extensions.json
+*.code-workspace
+.history/
+.ionide/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vimrc.local
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# Testing and debugging
+test-results/
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.cache/
+.tox/
+
+# Temporary development files
+*.tmp
+*.temp
+temp/
+tmp/
+scratch/
+playground/
+experiments/
+
+# Local configuration files
+config.local.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Package manager files
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Runtime and logs
+*.pid
+*.seed
+*.pid.lock
+logs/
+pids/
+
+# Personal notes and drafts
+personal/
+private/
+draft*/
+wip*/
+work-in-progress/
+
+# Version control
+*.orig
+*.rej
