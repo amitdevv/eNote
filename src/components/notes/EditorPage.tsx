@@ -55,9 +55,9 @@ export const EditorPage: React.FC = () => {
   const isNewNote = !noteId || !currentNote;
 
   return (
-    <div className="relative h-full w-full max-w-full">
-      <Card className="h-full w-full max-w-full border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden">
-        <CardHeader className="pb-4">
+    <div className="relative h-full w-full max-w-full overflow-y-auto">
+      <Card className="min-h-full w-full max-w-full border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e]">
+        <CardHeader className="pb-4 sticky top-0 bg-white dark:bg-[#1e1e1e] z-10">
           {/* Breadcrumb Navigation */}
           <NoteBreadcrumb 
             note={currentNote} 
@@ -73,8 +73,8 @@ export const EditorPage: React.FC = () => {
           />
         </CardHeader>
         
-        <CardContent className="pt-0 h-full w-full max-w-full overflow-hidden" style={{ fontFamily }}>
-          <div className="h-full pb-16 w-full max-w-full overflow-hidden">
+        <CardContent className="pt-0 w-full max-w-full" style={{ fontFamily }}>
+          <div className="pb-16 w-full max-w-full">
             <TipTapEditor
               content={content}
               onChange={setContent}

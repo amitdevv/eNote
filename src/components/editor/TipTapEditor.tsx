@@ -215,10 +215,10 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 
     return (
     <div 
-      className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg overflow-hidden w-full max-w-full"
+      className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg w-full max-w-full"
       style={{ fontFamily }}
     >
-      <div className="w-full max-w-full overflow-hidden">
+      <div className="w-full max-w-full">
         <EditorContent 
           editor={editor} 
           style={{ fontFamily }}
