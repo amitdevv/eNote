@@ -59,13 +59,17 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       StarterKit.configure({
         codeBlock: false, // We use CodeBlockLowlight instead
         bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
           HTMLAttributes: {
-            class: 'prose-ul',
+            class: 'prose-ul list-disc',
           },
         },
         orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
           HTMLAttributes: {
-            class: 'prose-ol',
+            class: 'prose-ol list-decimal',
           },
         },
         listItem: {

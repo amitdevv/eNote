@@ -284,6 +284,61 @@
   cursor: pointer;
   width: 1rem;
   height: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 2px solid #d1d5db;
+  border-radius: 0.25rem;
+  background-color: transparent;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Light theme checkbox styling */
+.ProseMirror .task-item input[type="checkbox"]:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.ProseMirror .task-item input[type="checkbox"]:checked::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.ProseMirror .task-item input[type="checkbox"]:hover {
+  border-color: #10b981;
+}
+
+.ProseMirror .task-item input[type="checkbox"]:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Dark theme checkbox styling */
+.dark .ProseMirror .task-item input[type="checkbox"] {
+  border-color: #6b7280;
+  background-color: transparent;
+}
+
+.dark .ProseMirror .task-item input[type="checkbox"]:checked {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.dark .ProseMirror .task-item input[type="checkbox"]:hover {
+  border-color: #059669;
+}
+
+.dark .ProseMirror .task-item input[type="checkbox"]:focus {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
 }
 
 .ProseMirror .task-item[data-checked="true"] > div {
@@ -403,16 +458,29 @@
 .prose-ul {
   list-style-type: disc !important;
   padding-left: 1.5rem !important;
+  margin: 0.75rem 0 !important;
 }
 
 .prose-ol {
   list-style-type: decimal !important;
   padding-left: 1.5rem !important;
+  margin: 0.75rem 0 !important;
 }
 
 .prose-li {
   display: list-item !important;
   list-style-position: outside !important;
+  margin: 0.25rem 0 !important;
+  line-height: 1.5 !important;
+}
+
+/* Ensure Tailwind list classes work */
+.list-disc {
+  list-style-type: disc !important;
+}
+
+.list-decimal {
+  list-style-type: decimal !important;
 }
 
 /* Dark theme list marker colors */
@@ -497,8 +565,6 @@
 /* Force container constraints */
 .ProseMirror,
 .ProseMirror-content {
-  contain: layout !important;
-  overflow: hidden !important;
   max-width: 100% !important;
   width: 100% !important;
 }
