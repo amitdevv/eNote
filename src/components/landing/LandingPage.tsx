@@ -24,8 +24,6 @@ export const LandingPage: React.FC = () => {
 
     const initializeUserCount = async () => {
       try {
-        console.log('Loading initial user count...');
-        
         // Get initial count
         const initialCount = await fetchRealUserCount();
         setUserCount(initialCount);
@@ -34,17 +32,11 @@ export const LandingPage: React.FC = () => {
         // Set up real-time updates (if supported) - silent background updates
         try {
           unsubscribe = setupLiveUserCount((newCount) => {
-            console.log('Live user count update:', newCount);
             setUserCount(newCount);
           });
-          
-          console.log('Real-time user count updates enabled');
         } catch (realtimeError) {
-          console.log('Real-time updates not available, using periodic updates');
-          
           // Fallback to periodic updates every 2 minutes
           periodicCleanup = fetchUserCountWithUpdates((newCount) => {
-            console.log('Periodic user count update:', newCount);
             setUserCount(newCount);
           }, 2);
         }
@@ -59,7 +51,6 @@ export const LandingPage: React.FC = () => {
     // Cleanup on unmount
     return () => {
       if (unsubscribe) {
-        console.log('Cleaning up user count subscriptions');
         unsubscribe();
       }
       if (periodicCleanup) {
@@ -75,7 +66,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 transition-colors duration-200">
       {/* Responsive Header */}
-      <header className="bg-white dark:bg-[#1a1a1a] transition-colors duration-200 sticky top-0 z-50">
+      <header className=" transition-colors duration-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo - Responsive */}

@@ -10,7 +10,11 @@ import {
   Quote,
   Minus,
   Type,
-  FileText
+  FileText,
+  Video,
+  Globe,
+  Table,
+  Palette
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -103,7 +107,15 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
         icon: List,
         keywords: ['list', 'bullet', 'ul', 'unordered'],
         command: (editor) => {
-          editor.chain().focus().deleteRange(range).toggleBulletList().run();
+          editor.chain().focus().deleteRange(range).run();
+          
+          // If we're in a list, exit it first
+          if (editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList')) {
+            editor.chain().liftListItem('listItem').run();
+          }
+          
+          // Create new bullet list
+          editor.chain().toggleBulletList().run();
         },
         textCommand: (editor) => {
           editor.chain().focus().deleteRange(range).insertContent('• ').run();
@@ -115,7 +127,15 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
         icon: ListOrdered,
         keywords: ['list', 'numbered', 'ol', 'ordered'],
         command: (editor) => {
-          editor.chain().focus().deleteRange(range).toggleOrderedList().run();
+          editor.chain().focus().deleteRange(range).run();
+          
+          // If we're in a list, exit it first
+          if (editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList')) {
+            editor.chain().liftListItem('listItem').run();
+          }
+          
+          // Create new numbered list
+          editor.chain().toggleOrderedList().run();
         },
         textCommand: (editor) => {
           editor.chain().focus().deleteRange(range).insertContent('1. ').run();
@@ -129,7 +149,15 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
         command: (editor) => {
           try {
             if (editor.can().toggleTaskList?.()) {
-              editor.chain().focus().deleteRange(range).toggleTaskList().run();
+              editor.chain().focus().deleteRange(range).run();
+              
+              // If we're in a list, exit it first
+              if (editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList')) {
+                editor.chain().liftListItem('listItem').run();
+              }
+              
+              // Create new task list
+              editor.chain().toggleTaskList().run();
             } else {
               editor.chain().focus().deleteRange(range).insertContent('☐ ').run();
             }
@@ -175,6 +203,122 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
         },
         textCommand: (editor) => {
           editor.chain().focus().deleteRange(range).insertContent('```\n\n```').run();
+        },
+      },
+      {
+        title: 'YouTube Video',
+        description: 'Embed a YouTube video.',
+        icon: Video,
+        keywords: ['youtube', 'video', 'embed', 'media'],
+        command: (editor) => {
+          const url = prompt('Enter YouTube URL:');
+          if (url) {
+            try {
+              editor.chain().focus().deleteRange(range).setYoutubeVideo({ src: url }).run();
+            } catch {
+              // Fallback: insert as link
+              editor.chain().focus().deleteRange(range).insertContent(`\n[YouTube Video](${url})\n`).run();
+            }
+          }
+        },
+        textCommand: (editor) => {
+          const url = prompt('Enter YouTube URL:');
+          if (url) {
+            editor.chain().focus().deleteRange(range).insertContent(`\n[YouTube Video](${url})\n`).run();
+          }
+        },
+      },
+      {
+        title: 'Embed',
+        description: 'Embed content from any website.',
+        icon: Globe,
+        keywords: ['embed', 'iframe', 'vimeo', 'codepen', 'figma', 'twitter'],
+        command: (editor) => {
+          const url = prompt('Enter embed URL (iframe src):');
+          if (url) {
+            try {
+              editor.chain().focus().deleteRange(range).setIframe({ src: url }).run();
+            } catch {
+              // Fallback: insert as link
+              editor.chain().focus().deleteRange(range).insertContent(`\n[Embedded Content](${url})\n`).run();
+            }
+          }
+        },
+        textCommand: (editor) => {
+          const url = prompt('Enter embed URL:');
+          if (url) {
+            editor.chain().focus().deleteRange(range).insertContent(`\n[Embedded Content](${url})\n`).run();
+          }
+        },
+      },
+      {
+        title: 'Table',
+        description: 'Create a table to organize data.',
+        icon: Table,
+        keywords: ['table', 'grid', 'data', 'rows', 'columns'],
+        command: (editor) => {
+          try {
+            editor.chain()
+              .focus()
+              .deleteRange(range)
+              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+              .run();
+          } catch {
+            // Fallback: insert basic table markdown
+            editor.chain()
+              .focus()
+              .deleteRange(range)
+              .insertContent(`
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+`)
+              .run();
+          }
+        },
+        textCommand: (editor) => {
+          editor.chain()
+            .focus()
+            .deleteRange(range)
+            .insertContent(`
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+`)
+            .run();
+        },
+      },
+      {
+        title: 'Text Color',
+        description: 'Change text color for emphasis.',
+        icon: Palette,
+        keywords: ['color', 'highlight', 'text', 'red', 'blue', 'green'],
+        command: (editor) => {
+          const color = prompt('Enter color (e.g., red, #ff0000, rgb(255,0,0)):');
+          if (color) {
+            try {
+              editor.chain().focus().deleteRange(range).setColor(color).run();
+            } catch {
+              // Fallback: insert colored text markdown
+              editor.chain()
+                .focus()
+                .deleteRange(range)
+                .insertContent(`<span style="color: ${color}">colored text</span>`)
+                .run();
+            }
+          }
+        },
+        textCommand: (editor) => {
+          const color = prompt('Enter color (e.g., red, #ff0000):');
+          if (color) {
+            editor.chain()
+              .focus()
+              .deleteRange(range)
+              .insertContent(`<span style="color: ${color}">colored text</span>`)
+              .run();
+          }
         },
       },
       {
@@ -277,6 +421,14 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
             return 'Insert "> " for a quote.';
           case 'Code Block':
             return 'Insert code block markers.';
+          case 'YouTube Video':
+            return 'Paste YouTube URL to embed video.';
+          case 'Embed':
+            return 'Paste iframe URL to embed content.';
+          case 'Table':
+            return 'Insert a 3x3 table with headers.';
+          case 'Text Color':
+            return 'Enter color name or hex code.';
           case 'Divider':
             return 'Insert "---" as a divider.';
           default:

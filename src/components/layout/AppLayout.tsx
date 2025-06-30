@@ -7,7 +7,7 @@ import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Plus, Loader2, X } from 'lucide-react';
+import { FileText, Plus, Loader2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
 import { SettingsPage } from '@/components/settings/SettingsPage';
@@ -39,15 +39,13 @@ export const AppLayout: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const workspaceParam = searchParams.get('workspace');
   
-  const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Navigation type state
-  const [navType, setNavType] = useState<'workspace' | 'special' | 'type' | 'folder'>('workspace');
+  // Navigation state
   const [navValue, setNavValue] = useState('all');
 
   // Check if we're in editor mode or settings mode
@@ -85,47 +83,23 @@ export const AppLayout: React.FC = () => {
     }
   }, [isMobileSidebarOpen]);
 
-  // Expose debugging functions globally (temporary) - after state declarations
-  React.useEffect(() => {
-    (window as any).debugNotes = () => {
-      console.log('=== DEBUG INFO ===');
-      console.log('Notes count:', notes.length);
-      console.log('Current navigation:', { navType, selectedFolder });
-      console.log('==================');
-    };
-    return () => {
-      delete (window as any).debugNotes;
-    };
-  }, [notes, navType, selectedFolder]);
+
 
   // Fetch data when component mounts or user changes
   useEffect(() => {
     const loadData = async () => {
       if (user && !initialDataLoaded) {
-        console.log('AppLayout - Starting data fetch for user:', user.email);
         try {
           await fetchNotes();
-          console.log('AppLayout - Notes fetched:', notes.length);
           setInitialDataLoaded(true);
         } catch (error) {
           console.error('Error loading initial data:', error);
         }
-      } else if (!user) {
-        console.log('AppLayout - No user, skipping data fetch');
-      } else if (initialDataLoaded) {
-        console.log('AppLayout - Data already loaded, skipping fetch');
       }
     };
 
     loadData();
   }, [user, fetchNotes, initialDataLoaded]);
-
-  // Debug: Log current data state
-  useEffect(() => {
-    console.log('AppLayout - Current notes count:', notes.length);
-    console.log('AppLayout - Notes loading:', notesLoading);
-    console.log('AppLayout - Initial data loaded:', initialDataLoaded);
-  }, [notes, notesLoading, initialDataLoaded]);
 
   // Reset initial data loaded when user changes
   useEffect(() => {
@@ -138,17 +112,11 @@ export const AppLayout: React.FC = () => {
   // Simplified navigation - no folders
   useEffect(() => {
     if (isSettingsMode) {
-      setNavType('special');
       setNavValue('settings');
-      setSelectedFolder('');
     } else if (workspaceParam) {
-      setNavType('special');
       setNavValue(workspaceParam);
-      setSelectedFolder('');
     } else {
-      setNavType('special');
       setNavValue('all');
-      setSelectedFolder('');
     }
   }, [workspaceParam, isSettingsMode]);
 
@@ -246,18 +214,12 @@ export const AppLayout: React.FC = () => {
       navigate('/notes');
     }
 
-    // Clear folder selection when changing navigation
-    setSelectedFolder('');
-
-    // Determine navigation type and value
+    // Set navigation value
     if (['all', 'today', 'starred'].includes(workspace)) {
-      setNavType('special');
       setNavValue(workspace);
     } else if (predefinedTags.includes(workspace)) {
-      setNavType('special');
       setNavValue(workspace);
     } else {
-      setNavType('special');
       setNavValue('all');
     }
 
@@ -266,7 +228,6 @@ export const AppLayout: React.FC = () => {
   };
 
   const handleNewNote = () => {
-    console.log('handleNewNote - Creating new note');
     navigate('/editor');
     setIsMobileSidebarOpen(false);
   };
@@ -372,9 +333,7 @@ export const AppLayout: React.FC = () => {
                   <div className="text-sm">
                     <button
                       onClick={() => {
-                        setNavType('special');
                         setNavValue('all');
-                        setSelectedFolder('');
                       }}
                       className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
@@ -415,22 +374,13 @@ export const AppLayout: React.FC = () => {
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex">
-          <Sidebar
-            selectedWorkspace={navValue}
-            onWorkspaceChange={handleWorkspaceChange}
-            onNewNote={handleNewNote}
-            noteCount={filteredNotes.length}
-            sidebarCounts={getSidebarCounts()}
-          />
-          {/* Close button for mobile */}
-          <button
-            onClick={() => setIsMobileSidebarOpen(false)}
-            className="absolute top-4 -right-10 w-8 h-8 bg-gray-900 bg-opacity-50 text-white rounded-r-lg flex items-center justify-center lg:hidden"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <Sidebar
+          selectedWorkspace={navValue}
+          onWorkspaceChange={handleWorkspaceChange}
+          onNewNote={handleNewNote}
+          noteCount={filteredNotes.length}
+          sidebarCounts={getSidebarCounts()}
+        />
       </div>
       
       {/* Main Content Area */}
@@ -450,7 +400,6 @@ export const AppLayout: React.FC = () => {
           onViewModeChange={setViewMode}
           currentWorkspace={navValue}
           onMobileMenuToggle={toggleMobileSidebar}
-          isMobileMenuOpen={isMobileSidebarOpen}
         />
         
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full">

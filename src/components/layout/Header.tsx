@@ -32,7 +32,11 @@ import {
   Rocket,
   Code,
   GraduationCap,
-  Menu
+  Menu,
+  Grid3X3,
+  List,
+  Filter,
+  SortDesc
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { Badge } from '@/components/ui/badge';
@@ -61,25 +65,23 @@ interface HeaderProps {
   onViewModeChange: (mode: 'grid' | 'list') => void;
   currentWorkspace: string;
   onMobileMenuToggle?: () => void;
-  isMobileMenuOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  searchQuery: _searchQuery,
-  onSearchChange: _onSearchChange,
-  sortBy: _sortBy,
-  onSortChange: _onSortChange,
-  filterBy: _filterBy,
-  onFilterChange: _onFilterChange,
+  searchQuery,
+  onSearchChange,
+  sortBy,
+  onSortChange,
+  filterBy,
+  onFilterChange,
   onNewNote,
-  searchInputRef: _searchInputRef,
+  searchInputRef,
   isEditorMode,
   noteId,
-  viewMode: _viewMode,
-  onViewModeChange: _onViewModeChange,
+  viewMode,
+  onViewModeChange,
   currentWorkspace,
-  onMobileMenuToggle,
-  isMobileMenuOpen: _isMobileMenuOpen
+  onMobileMenuToggle
 }) => {
   const { getNoteById } = useNotesStore();
   const { 
@@ -93,6 +95,14 @@ export const Header: React.FC<HeaderProps> = ({
   } = useEditorStore();
   
   const { user, signOut } = useAuth();
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
+  
+  // Close mobile search when switching to editor mode
+  React.useEffect(() => {
+    if (isEditorMode) {
+      setIsMobileSearchOpen(false);
+    }
+  }, [isEditorMode]);
   
   // Unified tags system - 8 predefined tags only
   const predefinedTags = [
@@ -152,11 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right Side - Editor Controls */}
           <div className="flex items-center gap-3">
-            {/* Font */}
-            <FontSelector 
-              currentFont={editorFontFamily} 
-              onFontChange={setEditorFontFamily}
-            />
+           
 
             {/* Tags System - Select Multiple from 8 Predefined Tags */}
             <div className="flex items-center gap-2">
@@ -216,6 +222,11 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
             </div>
+             {/* Font */}
+             <FontSelector 
+              currentFont={editorFontFamily} 
+              onFontChange={setEditorFontFamily}
+            />
 
             {/* Export */}
             {currentNote && (
@@ -289,7 +300,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="mobile-menu-button"
               onClick={onMobileMenuToggle}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none"
               aria-label="Toggle menu"
             >
               <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -315,17 +326,72 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Center Section - Search (Hidden on small mobile) */}
         {!isEditorMode && (
           <div className="hidden sm:flex flex-1 max-w-md mx-4">
-            {/* Search functionality */}
-              </div>
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Right Section - Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3">
-          {/* Search toggle for mobile */}
+          {/* Mobile Search Toggle */}
           {!isEditorMode && (
-            <button className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-              <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <button 
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+              className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+            >
+              {isMobileSearchOpen ? (
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              ) : (
+                <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              )}
             </button>
+          )}
+
+          {/* Mobile View Mode Toggle */}
+          {!isEditorMode && (
+            <div className="sm:hidden flex items-center border border-gray-300 dark:border-gray-600 rounded-lg p-1">
+              <button
+                onClick={() => onViewModeChange('grid')}
+                className={cn(
+                  "p-1 rounded transition-colors focus:outline-none",
+                  viewMode === 'grid' 
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
+                    : "text-gray-500 dark:text-gray-400"
+                )}
+                title="Grid view"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onViewModeChange('list')}
+                className={cn(
+                  "p-1 rounded transition-colors focus:outline-none",
+                  viewMode === 'list' 
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
+                    : "text-gray-500 dark:text-gray-400"
+                )}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           )}
           
           {/* New Note Button - Always visible, different sizes */}
@@ -341,16 +407,89 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Additional controls for larger screens */}
           {!isEditorMode && (
             <div className="hidden md:flex items-center space-x-2">
-              {/* View mode toggle, filters, etc. */}
-                </div>
+              {/* View Mode Toggle */}
+              <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg p-1">
+                <button
+                  onClick={() => onViewModeChange('grid')}
+                  className={cn(
+                    "p-1.5 rounded transition-colors focus:outline-none",
+                    viewMode === 'grid' 
+                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  )}
+                  title="Grid view"
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onViewModeChange('list')}
+                  className={cn(
+                    "p-1.5 rounded transition-colors focus:outline-none",
+                    viewMode === 'list' 
+                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  )}
+                  title="List view"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Sort Dropdown */}
+              <Select value={sortBy} onValueChange={onSortChange}>
+                <SelectTrigger className="w-32 h-9">
+                  <div className="flex items-center gap-2">
+                    <SortDesc className="w-4 h-4" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Recent</SelectItem>
+                  <SelectItem value="alphabetical">A-Z</SelectItem>
+                  <SelectItem value="priority">Priority</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Filter Dropdown */}
+              <Select value={filterBy} onValueChange={onFilterChange}>
+                <SelectTrigger className="w-28 h-9">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="starred">Starred</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
       </div>
 
       {/* Mobile Search Bar (when toggled) */}
-      {!isEditorMode && (
+      {!isEditorMode && isMobileSearchOpen && (
         <div className="sm:hidden mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          {/* Mobile search implementation */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </header>

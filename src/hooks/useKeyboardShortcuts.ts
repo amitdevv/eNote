@@ -49,12 +49,20 @@ export const useKeyboardShortcuts = ({
       if (ctrlKey && event.key === '/') {
         event.preventDefault();
         // Could show a help modal in the future
-        console.log('Keyboard shortcuts help');
       }
 
-      // ESC - Go back to notes
+      // ESC - Go back to notes (only if not already handled by other components)
       if (event.key === 'Escape' && window.location.pathname.includes('/editor')) {
-        navigate('/notes');
+        // Check if the event was already handled/prevented
+        if (!event.defaultPrevented) {
+          // Additional check: don't navigate if user is in a specific context (like code block)
+          const activeElement = document.activeElement;
+          const isInCodeBlock = activeElement?.closest('pre') || activeElement?.closest('[data-type="codeBlock"]');
+          
+          if (!isInCodeBlock) {
+            navigate('/notes');
+          }
+        }
       }
     };
 

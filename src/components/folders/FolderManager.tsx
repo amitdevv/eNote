@@ -79,13 +79,7 @@ export const FolderManager: React.FC<FolderManagerProps> = ({
   }, [folder, isOpen, parentId]);
 
   const handleSave = () => {
-    console.log('FolderManager handleSave called');
-    console.log('name:', name);
-    console.log('selectedColor:', selectedColor);
-    console.log('selectedParentId:', selectedParentId);
-    
     if (!name.trim()) {
-      console.log('Name is empty, returning');
       return;
     }
 
@@ -95,7 +89,6 @@ export const FolderManager: React.FC<FolderManagerProps> = ({
       parentId: selectedParentId || undefined,
     };
 
-    console.log('Calling onSave with:', folderData);
     onSave(folderData);
     // Don't call onClose here - let the parent handle it
     setName('');

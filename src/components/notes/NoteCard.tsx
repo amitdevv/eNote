@@ -81,12 +81,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   viewMode = 'grid'
 }) => {
   
-  // Debug: Log note tags
-  console.log('NoteCard rendering for note:', note.title, 'with tags:', note.tags, 'type:', typeof note.tags);
-  
   // Helper to render a tag with icon if it's a predefined tag
   const renderTag = (tag: string) => {
-    console.log('Rendering tag:', tag, 'type:', typeof tag);
     const tagInfo = tagConfig[tag as keyof typeof tagConfig];
     
     if (tagInfo) {
@@ -141,8 +137,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   };
 
   if (viewMode === 'list') {
-    // Debug: Check tags in list view
-    console.log('List view - note.tags:', note.tags, 'Array.isArray:', Array.isArray(note.tags));
+
     
     return (
       <Card 
@@ -398,8 +393,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   }
 
   // Grid view (default) - Mobile optimized
-  // Debug: Check tags in grid view
-  console.log('Grid view - note.tags:', note.tags, 'Array.isArray:', Array.isArray(note.tags));
   
   return (
     <Card 

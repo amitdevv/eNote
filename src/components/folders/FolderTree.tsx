@@ -85,16 +85,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   
   const treeItems = buildTreeItems(parentId || undefined);
   
-  // Debug: Log folder tree data
-  React.useEffect(() => {
-    if (level === 0) { // Only log for root level to avoid spam
-      console.log('FolderTree - parentId:', parentId);
-      console.log('FolderTree - All folders from store:', getFoldersByParent());
-      console.log('FolderTree - Root folders:', getFoldersByParent(undefined));
-      console.log('FolderTree - All notes:', notes);
-      console.log('FolderTree - treeItems:', treeItems);
-    }
-  }, [treeItems, parentId, level, getFoldersByParent, notes]);
+
   
   if (treeItems.length === 0) {
     return null;
