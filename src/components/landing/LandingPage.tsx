@@ -69,14 +69,13 @@ export const LandingPage: React.FC = () => {
   }, []);
 
   const handleGitHubStar = () => {
-    // Replace with your actual GitHub repository URL
     window.open('https://github.com/amitdevv/eNote', '_blank');
   };
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 transition-colors duration-200">
       {/* Responsive Header */}
-      <header className="  transition-colors duration-200 sticky top-0 z-50">
+      <header className="bg-white dark:bg-[#1a1a1a] transition-colors duration-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo - Responsive */}
