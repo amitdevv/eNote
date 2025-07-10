@@ -167,6 +167,7 @@ export interface Database {
           starred: boolean;
           priority: string | null;
           font_family: string;
+          font_size: number;
           user_id: string;
         };
         Insert: {
@@ -182,6 +183,7 @@ export interface Database {
           starred?: boolean;
           priority?: string | null;
           font_family?: string;
+          font_size?: number;
           user_id: string;
         };
         Update: {
@@ -197,6 +199,7 @@ export interface Database {
           starred?: boolean;
           priority?: string | null;
           font_family?: string;
+          font_size?: number;
           user_id?: string;
         };
       };

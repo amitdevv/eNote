@@ -39,6 +39,7 @@ import {
   SortDesc
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
+import { FontSizeSelector } from '@/components/ui/font-size-selector';
 import { Badge } from '@/components/ui/badge';
 import { useNotesStore } from '@/stores/notesStore';
 import { useEditorStore } from '@/stores/editorStore';
@@ -89,7 +90,9 @@ export const Header: React.FC<HeaderProps> = ({
     content: editorContent,
     tags: editorTags, 
     fontFamily: editorFontFamily,
+    fontSize: editorFontSize,
     setFontFamily: setEditorFontFamily,
+    setFontSize: setEditorFontSize,
     addTag: addEditorTag,
     removeTag: removeEditorTag
   } = useEditorStore();
@@ -224,10 +227,15 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
             </div>
-             {/* Font */}
+             {/* Font Controls */}
              <FontSelector 
               currentFont={editorFontFamily} 
               onFontChange={setEditorFontFamily}
+            />
+            
+            <FontSizeSelector 
+              currentSize={editorFontSize} 
+              onSizeChange={setEditorFontSize}
             />
 
             {/* Export */}

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 interface SettingsStore {
   // App Settings
   defaultFont: string;
+  defaultFontSize: number;
   autoSave: boolean;
   autoSaveInterval: number; // in seconds
   confirmDelete: boolean;
@@ -17,6 +18,7 @@ interface SettingsStore {
   
   // Actions
   setDefaultFont: (font: string) => void;
+  setDefaultFontSize: (size: number) => void;
   setAutoSave: (enabled: boolean) => void;
   setAutoSaveInterval: (seconds: number) => void;
   setConfirmDelete: (enabled: boolean) => void;
@@ -34,6 +36,7 @@ interface SettingsStore {
 
 const defaultSettings = {
   defaultFont: 'Inter',
+  defaultFontSize: 16,
   autoSave: true,
   autoSaveInterval: 2,
   confirmDelete: true,
@@ -48,6 +51,7 @@ export const useSettingsStore = create<SettingsStore>()(
       ...defaultSettings,
 
       setDefaultFont: (font) => set({ defaultFont: font }),
+      setDefaultFontSize: (size) => set({ defaultFontSize: size }),
       setAutoSave: (enabled) => set({ autoSave: enabled }),
       setAutoSaveInterval: (seconds) => set({ autoSaveInterval: seconds }),
       setConfirmDelete: (enabled) => set({ confirmDelete: enabled }),

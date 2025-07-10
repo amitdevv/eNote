@@ -21,6 +21,7 @@ export const EditorPage: React.FC = () => {
     title, 
     content, 
     fontFamily,
+    fontSize,
     currentNoteId,
     setCurrentNote,
     setTitle,
@@ -73,13 +74,14 @@ export const EditorPage: React.FC = () => {
           />
         </CardHeader>
         
-        <CardContent className="pt-0 w-full max-w-full" style={{ fontFamily }}>
+        <CardContent className="pt-0 w-full max-w-full" style={{ fontFamily, fontSize: `${fontSize}px` }}>
           <div className="pb-16 w-full max-w-full">
             <TipTapEditor
               content={content}
               onChange={setContent}
               placeholder="use / to open the menu"
               fontFamily={fontFamily}
+              fontSize={fontSize}
             />
           </div>
         </CardContent>

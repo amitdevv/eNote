@@ -37,6 +37,7 @@ const dbNoteToNote = (dbNote: any): Note => ({
   starred: dbNote.starred || false,
   priority: dbNote.priority,
   fontFamily: dbNote.font_family || 'Inter',
+  fontSize: dbNote.font_size || 16,
 });
 
 // Helper function to convert app note to database note
@@ -49,6 +50,7 @@ const noteToDbNote = (note: Partial<Note>, userId: string) => ({
   starred: note.starred || false,
   priority: note.priority || null,
   font_family: note.fontFamily || 'Inter',
+  font_size: note.fontSize || 16,
   user_id: userId,
 });
 
@@ -146,6 +148,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       if (updates.starred !== undefined) dbUpdates.starred = updates.starred;
       if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
       if (updates.fontFamily !== undefined) dbUpdates.font_family = updates.fontFamily;
+      if (updates.fontSize !== undefined) dbUpdates.font_size = updates.fontSize;
       
       dbUpdates.updated_at = new Date().toISOString();
 

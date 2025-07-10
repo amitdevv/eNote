@@ -9,6 +9,7 @@ export const useAutoSave = () => {
     content, 
     tags, 
     fontFamily,
+    fontSize,
     markClean 
   } = useEditorStore();
   
@@ -26,6 +27,7 @@ export const useAutoSave = () => {
       content: content,
       tags: tags || [],
       fontFamily: fontFamily || 'Inter',
+      fontSize: fontSize || 16,
       type: 'markdown' as const
     };
 
@@ -42,7 +44,7 @@ export const useAutoSave = () => {
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [currentNoteId, title, content, tags, fontFamily, addNote, updateNote, markClean]);
+  }, [currentNoteId, title, content, tags, fontFamily, fontSize, addNote, updateNote, markClean]);
 
   // Auto-save with debounce
   useEffect(() => {
@@ -62,7 +64,7 @@ export const useAutoSave = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [title, content, tags, fontFamily, saveNote]);
+  }, [title, content, tags, fontFamily, fontSize, saveNote]);
 
   return {
     saveNote

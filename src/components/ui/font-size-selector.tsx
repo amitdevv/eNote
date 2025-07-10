@@ -1,0 +1,44 @@
+import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface FontSizeSelectorProps {
+  currentSize: number;
+  onSizeChange: (size: number) => void;
+}
+
+const fontSizes = [
+  { value: 12, label: '12px', description: 'Small' },
+  { value: 14, label: '14px', description: 'Default' },
+  { value: 16, label: '16px', description: 'Medium' },
+  { value: 18, label: '18px', description: 'Large' },
+  { value: 20, label: '20px', description: 'Extra Large' },
+  { value: 22, label: '22px', description: 'Huge' },
+  { value: 24, label: '24px', description: 'Massive' },
+];
+
+export const FontSizeSelector: React.FC<FontSizeSelectorProps> = ({ 
+  currentSize, 
+  onSizeChange 
+}) => {
+  return (
+    <Select value={currentSize.toString()} onValueChange={(value) => onSizeChange(Number(value))}>
+      <SelectTrigger className="w-28 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100">
+        <SelectValue placeholder="Size" />
+      </SelectTrigger>
+      <SelectContent className="bg-white dark:bg-[#333333]">
+        {fontSizes.map((size) => (
+          <SelectItem 
+            key={size.value} 
+            value={size.value.toString()}
+            className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1e1e1e]"
+          >
+            <div className="flex items-center justify-between w-full">
+              <span style={{ fontSize: `${Math.min(size.value, 16)}px` }}>{size.label}</span>
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{size.description}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}; 

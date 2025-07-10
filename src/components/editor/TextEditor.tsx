@@ -9,9 +9,10 @@ interface TextEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
+  fontSize?: number;
 }
 
-const TextEditor: React.FC<TextEditorProps> = ({ content, onChange, placeholder }) => {
+const TextEditor: React.FC<TextEditorProps> = ({ content, onChange, placeholder, fontSize = 16 }) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -51,7 +52,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, onChange, placeholder 
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[600px] px-4 py-4 text-gray-900 leading-relaxed',
-        style: 'font-family: inherit; font-size: inherit;',
+        style: `font-family: inherit; font-size: ${fontSize}px;`,
       },
     },
   });

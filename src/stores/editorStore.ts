@@ -10,6 +10,7 @@ interface EditorStore {
   content: string;
   tags: string[];
   fontFamily: string;
+  fontSize: number;
   
   // UI state
   isDirty: boolean;
@@ -21,6 +22,7 @@ interface EditorStore {
   setContent: (content: string) => void;
   setTags: (tags: string[]) => void;
   setFontFamily: (fontFamily: string) => void;
+  setFontSize: (fontSize: number) => void;
   addTag: (tag: string) => void;
   removeTag: (tag: string) => void;
   
@@ -36,6 +38,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   content: '',
   tags: [],
   fontFamily: 'Inter',
+  fontSize: 16,
   isDirty: false,
   lastSaved: null,
 
@@ -47,6 +50,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         content: note.content,
         tags: note.tags || [],
         fontFamily: note.fontFamily || 'Inter',
+        fontSize: note.fontSize || 16,
         isDirty: false,
         lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
       });
@@ -58,6 +62,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         content: '',
         tags: [],
         fontFamily: 'Inter',
+        fontSize: 16,
         isDirty: false,
         lastSaved: null,
       });
@@ -78,6 +83,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   setFontFamily: (fontFamily) => {
     set({ fontFamily, isDirty: true });
+  },
+
+  setFontSize: (fontSize) => {
+    set({ fontSize, isDirty: true });
   },
 
   addTag: (tag) => {
@@ -110,6 +119,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       content: '',
       tags: [],
       fontFamily: 'Inter',
+      fontSize: 16,
       isDirty: false,
       lastSaved: null,
     });

@@ -24,13 +24,15 @@ interface TipTapEditorProps {
   onChange: (content: string) => void;
   placeholder?: string;
   fontFamily?: string;
+  fontSize?: number;
 }
 
 const TipTapEditor: React.FC<TipTapEditorProps> = ({ 
   content, 
   onChange, 
   placeholder = "Start writing...",
-  fontFamily = "Inter"
+  fontFamily = "Inter",
+  fontSize = 16
 }) => {
   const editor = useEditor({
     extensions: [
@@ -101,7 +103,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     editorProps: {
       attributes: {
         class: 'tiptap-editor focus:outline-none min-h-[400px] p-4',
-        style: `font-family: "${fontFamily}", sans-serif;`,
+        style: `font-family: "${fontFamily}", sans-serif; font-size: ${fontSize}px;`,
         'data-placeholder': placeholder,
         spellcheck: 'false',
       },
@@ -215,17 +217,19 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }, [content, editor]);
 
-  // Update font family when it changes
+  // Update font family and size when they change
   useEffect(() => {
     if (editor && editor.view && editor.view.dom) {
       const editorElement = editor.view.dom as HTMLElement;
       editorElement.style.fontFamily = `"${fontFamily}", sans-serif`;
+      editorElement.style.fontSize = `${fontSize}px`;
       
       // Also apply to all child elements with high specificity
       const style = document.createElement('style');
       style.textContent = `
         .ProseMirror, .ProseMirror * {
           font-family: "${fontFamily}", sans-serif !important;
+          font-size: ${fontSize}px !important;
           font-display: swap !important;
         }
       `;
@@ -247,7 +251,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         }
       };
     }
-  }, [fontFamily, editor]);
+  }, [fontFamily, fontSize, editor]);
 
 
 
@@ -267,12 +271,12 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     return (
     <div 
       className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg w-full max-w-full"
-      style={{ fontFamily }}
+      style={{ fontFamily, fontSize: `${fontSize}px` }}
     >
       <div className="w-full max-w-full">
         <EditorContent 
           editor={editor} 
-          style={{ fontFamily }}
+          style={{ fontFamily, fontSize: `${fontSize}px` }}
           className="w-full max-w-full"
         />
       </div>

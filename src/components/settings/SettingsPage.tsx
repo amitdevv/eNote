@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { FontSelector } from '@/components/ui/font-selector';
+import { FontSizeSelector } from '@/components/ui/font-size-selector';
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -42,6 +43,7 @@ export const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
   const {
     defaultFont,
+    defaultFontSize,
     autoSave,
     autoSaveInterval,
     confirmDelete,
@@ -49,6 +51,7 @@ export const SettingsPage: React.FC = () => {
     compactMode,
     showPreview,
     setDefaultFont,
+    setDefaultFontSize,
     setAutoSave,
     setAutoSaveInterval,
     setConfirmDelete,
@@ -127,6 +130,22 @@ export const SettingsPage: React.FC = () => {
               <FontSelector 
                 currentFont={defaultFont} 
                 onFontChange={setDefaultFont}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Default Font Size */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Default Font Size</Label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Font size used for new notes
+                </p>
+              </div>
+              <FontSizeSelector 
+                currentSize={defaultFontSize} 
+                onSizeChange={setDefaultFontSize}
               />
             </div>
 

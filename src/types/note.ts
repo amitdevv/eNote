@@ -10,6 +10,7 @@ export interface Note {
   starred?: boolean; // For starred notes
   priority?: 'low' | 'medium' | 'high'; // For note priority
   fontFamily?: string; // Font family for note content
+  fontSize?: number; // Font size for note content
 }
 
 export interface Folder {
