@@ -43,6 +43,7 @@ export const AppLayout: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation state
@@ -82,6 +83,11 @@ export const AppLayout: React.FC = () => {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isMobileSidebarOpen]);
+
+  // Toggle sidebar collapse
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
 
 
 
@@ -363,6 +369,8 @@ export const AppLayout: React.FC = () => {
           onWorkspaceChange={handleWorkspaceChange}
           onNewNote={handleNewNote}
           noteCount={filteredNotes.length}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
           sidebarCounts={getSidebarCounts()}
         />
       </div>

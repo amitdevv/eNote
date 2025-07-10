@@ -430,7 +430,7 @@
 .ProseMirror li[data-type="taskItem"] {
   display: flex !important;
   align-items: flex-start;
-  margin: 0.25rem 0;
+  margin: 0.0625rem 0;
   padding-left: 0 !important;
   list-style: none !important;
 }
@@ -467,7 +467,7 @@
 .ProseMirror .task-item {
   display: flex !important;
   align-items: center !important;
-  margin: 0.25rem 0;
+  margin: 0.0625rem 0;
   padding-left: 0 !important;
   list-style: none !important;
   position: relative;

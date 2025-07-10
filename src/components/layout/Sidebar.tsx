@@ -18,7 +18,9 @@ import {
   Lightbulb,
   CheckCircle,
   ClipboardList,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 // Removed workspaces import - we'll show folders directly
 
@@ -27,6 +29,8 @@ interface SidebarProps {
   onWorkspaceChange: (workspace: string) => void;
   onNewNote: () => void;
   noteCount: number;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
   sidebarCounts?: {
     all: number;
     today: number;
@@ -40,7 +44,6 @@ interface SidebarProps {
     ongoing: number;
     future: number;
   };
-
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -48,6 +51,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onWorkspaceChange,
   onNewNote,
   noteCount,
+  isCollapsed = false,
+  onToggleCollapse,
   sidebarCounts
 }) => {
   const { theme, toggleTheme } = useTheme();
@@ -73,17 +78,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <>
-      <div className="w-64 h-screen bg-gray-50 dark:bg-[#1a1a1a] border-r border-gray-200 dark:border-gray-800 flex flex-col transition-colors duration-200">
-        {/* Header */}
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
+    <div className={cn(
+      "h-screen bg-gray-50 dark:bg-[#1a1a1a] border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 ease-in-out",
+      isCollapsed ? "w-16" : "w-64"
+    )}>
+      {/* Header */}
+      <div className={cn("p-4", isCollapsed && "p-2")}>
+        <div className={cn(
+          "flex items-center mb-4",
+          isCollapsed ? "justify-center" : "justify-between"
+        )}>
+          {!isCollapsed && (
             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Notes</h1>
+          )}
+          <div className={cn("flex items-center", isCollapsed ? "flex-col gap-2" : "gap-2")}>
             <Button
               onClick={toggleTheme}
               size="sm"
               variant="ghost"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className={cn(
+                "p-2 hover:bg-gray-100 dark:hover:bg-gray-800",
+                isCollapsed && "w-8 h-8"
+              )}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? (
                 <Sun className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -91,95 +108,152 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               )}
             </Button>
+            {onToggleCollapse && (
+              <Button
+                onClick={onToggleCollapse}
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  "p-2 hover:bg-gray-100 dark:hover:bg-gray-800",
+                  isCollapsed && "w-8 h-8"
+                )}
+                title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {isCollapsed ? (
+                  <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                )}
+              </Button>
+            )}
           </div>
-          
-          {/* New Note Button */}
-          <Button
-            onClick={onNewNote}
-            className="w-full bg-[#333333] hover:bg-[#404040] text-white mb-4"
-            size="sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Note
-          </Button>
         </div>
+        
+        {/* New Note Button */}
+        <Button
+          onClick={onNewNote}
+          className={cn(
+            "bg-[#333333] hover:bg-[#404040] text-white mb-4 transition-all duration-300",
+            isCollapsed 
+              ? "w-8 h-8 p-0 rounded-md" 
+              : "w-full"
+          )}
+          size="sm"
+          title={isCollapsed ? 'New Note' : undefined}
+        >
+          <Plus className="w-4 h-4" />
+          {!isCollapsed && <span className="ml-2">New Note</span>}
+        </Button>
+      </div>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-2">
-            {/* Quick Access Items */}
-            <div className="mb-6">
-              {sidebarItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-between h-9 px-3 mb-1 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300",
-                    selectedWorkspace === item.id && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
-                  )}
-                  onClick={() => onWorkspaceChange(item.id)}
-                >
-                  <div className="flex items-center">
-                    <item.icon className="w-4 h-4 mr-3" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-600 dark:text-gray-400">
-                    {item.count}
-                  </Badge>
-                </Button>
-              ))}
-            </div>
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto">
+        <div className={cn("p-2", isCollapsed && "px-1")}>
+          {/* Quick Access Items */}
+          <div className="mb-6">
+            {sidebarItems.map((item) => (
+              <Button
+                key={item.id}
+                variant="ghost"
+                className={cn(
+                  "mb-1 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300",
+                  isCollapsed 
+                    ? "w-8 h-8 p-0 mx-auto flex justify-center" 
+                    : "w-full justify-between h-9 px-3",
+                  selectedWorkspace === item.id && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
+                )}
+                onClick={() => onWorkspaceChange(item.id)}
+                title={isCollapsed ? item.label : undefined}
+              >
+                {isCollapsed ? (
+                  <item.icon className="w-4 h-4" />
+                ) : (
+                  <>
+                    <div className="flex items-center">
+                      <item.icon className="w-4 h-4 mr-3" />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-600 dark:text-gray-400">
+                      {item.count}
+                    </Badge>
+                  </>
+                )}
+              </Button>
+            ))}
+          </div>
 
-            {/* Tags Section */}
-            <div className="mb-4">
+          {/* Tags Section */}
+          <div className="mb-4">
+            {!isCollapsed && (
               <div className="flex items-center justify-between px-3 mb-2">
                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                   TAGS
                 </span>
               </div>
-              
-              <div className="space-y-1">
-                {predefinedTags.map((tag) => (
-                  <Button
-                    key={tag.id}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-between h-9 px-3 mb-1 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300",
-                      selectedWorkspace === tag.id && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
-                    )}
-                    onClick={() => onWorkspaceChange(tag.id)}
-                  >
-                    <div className="flex items-center">
-                      <tag.icon className={cn("w-4 h-4 mr-3", tag.color)} />
-                      <span className="text-sm font-medium">{tag.label}</span>
-                    </div>
-                    <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-600 dark:text-gray-400">
-                      {sidebarCounts?.[tag.id as keyof typeof sidebarCounts] || 0}
-                    </Badge>
-                  </Button>
-                ))}
-              </div>
+            )}
+            
+            <div className="space-y-1">
+              {predefinedTags.map((tag) => (
+                <Button
+                  key={tag.id}
+                  variant="ghost"
+                  className={cn(
+                    "mb-1 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300",
+                    isCollapsed 
+                      ? "w-8 h-8 p-0 mx-auto flex justify-center" 
+                      : "w-full justify-between h-9 px-3",
+                    selectedWorkspace === tag.id && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
+                  )}
+                  onClick={() => onWorkspaceChange(tag.id)}
+                  title={isCollapsed ? tag.label : undefined}
+                >
+                  {isCollapsed ? (
+                    <tag.icon className={cn("w-4 h-4", tag.color)} />
+                  ) : (
+                    <>
+                      <div className="flex items-center">
+                        <tag.icon className={cn("w-4 h-4 mr-3", tag.color)} />
+                        <span className="text-sm font-medium">{tag.label}</span>
+                      </div>
+                      <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-600 dark:text-gray-400">
+                        {sidebarCounts?.[tag.id as keyof typeof sidebarCounts] || 0}
+                      </Badge>
+                    </>
+                  )}
+                </Button>
+              ))}
             </div>
           </div>
         </div>
-
-        {/* Footer - Settings */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-          <Button 
-            variant="ghost" 
-            onClick={() => onWorkspaceChange('settings')}
-            className={cn(
-              "w-full justify-start h-9 px-3 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-200",
-              selectedWorkspace === 'settings' && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
-            )}
-          >
-            <Settings className="w-4 h-4 mr-3" />
-            <span className="text-sm">Settings</span>
-          </Button>
-        </div>
       </div>
 
-
-    </>
+      {/* Footer - Settings */}
+      <div className={cn(
+        "border-t border-gray-200 dark:border-gray-800",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
+        <Button 
+          variant="ghost" 
+          onClick={() => onWorkspaceChange('settings')}
+          className={cn(
+            "text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-200",
+            isCollapsed 
+              ? "w-8 h-8 p-0 mx-auto flex justify-center" 
+              : "w-full justify-start h-9 px-3",
+            selectedWorkspace === 'settings' && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
+          )}
+          title={isCollapsed ? 'Settings' : undefined}
+        >
+          {isCollapsed ? (
+            <Settings className="w-4 h-4" />
+          ) : (
+            <>
+              <Settings className="w-4 h-4 mr-3" />
+              <span className="text-sm">Settings</span>
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
   );
 };
