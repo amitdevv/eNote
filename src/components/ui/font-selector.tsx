@@ -13,6 +13,9 @@ const fonts = [
   { value: 'Open Sans', label: 'Open Sans', style: 'font-sans' },
   { value: 'Roboto', label: 'Roboto', style: 'font-sans' },
   { value: 'Lato', label: 'Lato', style: 'font-sans' },
+  { value: 'PT Sans', label: 'PT Sans', style: 'font-sans' },
+  { value: 'Kalam', label: 'Kalam', style: 'font-sans' },
+  { value: 'Inconsolata', label: 'Inconsolata', style: 'font-mono' },
 ];
 
 export const FontSelector: React.FC<FontSelectorProps> = ({ 
