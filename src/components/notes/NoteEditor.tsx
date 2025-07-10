@@ -91,7 +91,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             {tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                 {tag}
-                <button onClick={() => removeTag(tag)} className="ml-1">
+                <button type="button" onClick={() => removeTag(tag)} className="ml-1">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>

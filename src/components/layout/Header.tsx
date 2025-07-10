@@ -143,6 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Left Side - Back and Note Info */}
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={handleBackToNotes}
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
@@ -211,6 +212,7 @@ export const Header: React.FC<HeaderProps> = ({
                         {predefinedTag && <predefinedTag.icon className="w-2 h-2" />}
                         {tag}
                         <button
+                          type="button"
                           onClick={() => removeEditorTag(tag)}
                           className="ml-1 hover:text-red-600"
                         >
@@ -298,6 +300,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Mobile Menu Button */}
           {onMobileMenuToggle && (
             <button
+              type="button"
               id="mobile-menu-button"
               onClick={onMobileMenuToggle}
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none"
@@ -338,6 +341,7 @@ export const Header: React.FC<HeaderProps> = ({
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => onSearchChange('')}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                 >
@@ -353,6 +357,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Mobile Search Toggle */}
           {!isEditorMode && (
             <button 
+              type="button"
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none"
             >
@@ -368,6 +373,7 @@ export const Header: React.FC<HeaderProps> = ({
           {!isEditorMode && (
             <div className="sm:hidden flex items-center border border-gray-300 dark:border-gray-600 rounded-lg p-1">
               <button
+                type="button"
                 onClick={() => onViewModeChange('grid')}
                 className={cn(
                   "p-1 rounded transition-colors focus:outline-none",
@@ -380,6 +386,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <Grid3X3 className="w-4 h-4" />
               </button>
               <button
+                type="button"
                 onClick={() => onViewModeChange('list')}
                 className={cn(
                   "p-1 rounded transition-colors focus:outline-none",
@@ -410,6 +417,7 @@ export const Header: React.FC<HeaderProps> = ({
               {/* View Mode Toggle */}
               <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg p-1">
                 <button
+                  type="button"
                   onClick={() => onViewModeChange('grid')}
                   className={cn(
                     "p-1.5 rounded transition-colors focus:outline-none",
@@ -422,6 +430,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <Grid3X3 className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => onViewModeChange('list')}
                   className={cn(
                     "p-1.5 rounded transition-colors focus:outline-none",
@@ -483,6 +492,7 @@ export const Header: React.FC<HeaderProps> = ({
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => onSearchChange('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
               >
