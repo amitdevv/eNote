@@ -9,20 +9,31 @@ interface NotesStore {
   sortBy: 'recent' | 'alphabetical' | 'priority';
   filterBy: 'all' | 'starred';
   loading: boolean;
+  lastFetchedUserId: string | null;
+  lastFetchTime: number | null;
   
   // Actions
-  fetchNotes: () => Promise<void>;
-  addNote: (note: Partial<Note>) => Promise<string | null>;
-  updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
-  deleteNote: (id: string) => Promise<void>;
-  toggleStarred: (id: string) => Promise<void>;
+  fetchNotes: (userId: string, forceRefresh?: boolean) => Promise<void>;
+  addNote: (note: Partial<Note>, userId: string) => Promise<string | null>;
+  updateNote: (id: string, updates: Partial<Note>, userId: string) => Promise<void>;
+  deleteNote: (id: string, userId: string) => Promise<void>;
+  toggleStarred: (id: string, userId: string) => Promise<void>;
   getNoteById: (id: string) => Note | undefined;
+  
+  // Cache management
+  clearCache: () => void;
+  loadFromCache: (userId: string) => boolean;
+  saveToCache: (userId: string, notes: Note[]) => void;
   
   // UI State
   setSearchQuery: (query: string) => void;
   setSortBy: (sort: 'recent' | 'alphabetical' | 'priority') => void;
   setFilterBy: (filter: 'all' | 'starred') => void;
 }
+
+// Cache configuration
+const CACHE_EXPIRY_TIME = 5 * 60 * 1000; // 5 minutes
+const CACHE_KEY_PREFIX = 'enote-notes-cache';
 
 // Helper function to convert database note to app note
 const dbNoteToNote = (dbNote: any): Note => ({
@@ -54,7 +65,39 @@ const noteToDbNote = (note: Partial<Note>, userId: string) => ({
   user_id: userId,
 });
 
-// No auto-folder creation - users can only create notes in predefined folders
+// Cache utility functions
+const getCacheKey = (userId: string) => `${CACHE_KEY_PREFIX}-${userId}`;
+
+const loadNotesFromCache = (userId: string): { notes: Note[]; timestamp: number } | null => {
+  try {
+    const cached = localStorage.getItem(getCacheKey(userId));
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      // Convert date strings back to Date objects
+      const notes = parsed.notes.map((note: any) => ({
+        ...note,
+        createdAt: new Date(note.createdAt),
+        updatedAt: new Date(note.updatedAt),
+      }));
+      return { notes, timestamp: parsed.timestamp };
+    }
+  } catch (error) {
+    console.warn('Failed to load notes from cache:', error);
+  }
+  return null;
+};
+
+const saveNotesToCache = (userId: string, notes: Note[]) => {
+  try {
+    const cacheData = {
+      notes,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(getCacheKey(userId), JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Failed to save notes to cache:', error);
+  }
+};
 
 export const useNotesStore = create<NotesStore>((set, get) => ({
   notes: [],
@@ -62,20 +105,41 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   sortBy: 'recent',
   filterBy: 'all',
   loading: false,
+  lastFetchedUserId: null,
+  lastFetchTime: null,
 
-  fetchNotes: async () => {
-    set({ loading: true });
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        set({ notes: [], loading: false });
+  fetchNotes: async (userId: string, forceRefresh = false) => {
+    const state = get();
+    
+    // Check if we already have fresh data for this user
+    if (!forceRefresh && 
+        state.lastFetchedUserId === userId && 
+        state.lastFetchTime && 
+        Date.now() - state.lastFetchTime < CACHE_EXPIRY_TIME &&
+        state.notes.length > 0) {
+      return; // Skip fetch, data is still fresh
+    }
+
+    // Try to load from cache first (if not forcing refresh)
+    if (!forceRefresh) {
+      const cached = loadNotesFromCache(userId);
+      if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
+        set({ 
+          notes: cached.notes, 
+          lastFetchedUserId: userId,
+          lastFetchTime: cached.timestamp,
+          loading: false 
+        });
         return;
       }
+    }
 
+    set({ loading: true });
+    try {
       const { data, error } = await supabase
         .from('notes')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -86,7 +150,17 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       }
 
       const notes = data.map(dbNoteToNote);
-      set({ notes, loading: false });
+      const now = Date.now();
+      
+      set({ 
+        notes, 
+        loading: false,
+        lastFetchedUserId: userId,
+        lastFetchTime: now
+      });
+      
+      // Save to cache
+      saveNotesToCache(userId, notes);
     } catch (error) {
       console.error('Error fetching notes:', error);
       toast.error('Failed to fetch notes');
@@ -94,16 +168,9 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }
   },
 
-  addNote: async (noteData) => {
+  addNote: async (noteData, userId) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error('You must be logged in to create notes');
-        return null;
-      }
-
-      const dbNote = noteToDbNote(noteData, user.id);
+      const dbNote = noteToDbNote(noteData, userId);
       
       const { data, error } = await supabase
         .from('notes')
@@ -122,6 +189,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         notes: [newNote, ...state.notes] 
       }));
       
+      // Update cache
+      const state = get();
+      saveNotesToCache(userId, state.notes);
+      
       toast.success('Note created successfully');
       return newNote.id;
     } catch (error) {
@@ -131,15 +202,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }
   },
 
-  updateNote: async (id, updates) => {
+  updateNote: async (id, updates, userId) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error('You must be logged in to update notes');
-        return;
-      }
-
       const dbUpdates: any = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.content !== undefined) dbUpdates.content = updates.content;
@@ -156,7 +220,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         .from('notes')
         .update(dbUpdates)
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error updating note:', error);
@@ -171,25 +235,23 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
             : note
         )
       }));
+      
+      // Update cache
+      const state = get();
+      saveNotesToCache(userId, state.notes);
     } catch (error) {
       console.error('Error updating note:', error);
       toast.error('Failed to update note');
     }
   },
 
-  deleteNote: async (id) => {
+  deleteNote: async (id, userId) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('You must be logged in to delete notes');
-        return;
-      }
-
       const { error } = await supabase
         .from('notes')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Error deleting note:', error);
@@ -201,6 +263,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         notes: state.notes.filter(note => note.id !== id)
       }));
       
+      // Update cache
+      const state = get();
+      saveNotesToCache(userId, state.notes);
+      
       toast.success('Note deleted successfully');
     } catch (error) {
       console.error('Error deleting note:', error);
@@ -208,12 +274,12 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     }
   },
 
-  toggleStarred: async (id) => {
+  toggleStarred: async (id, userId) => {
     try {
       const note = get().notes.find(n => n.id === id);
       if (!note) return;
 
-      await get().updateNote(id, { starred: !note.starred });
+      await get().updateNote(id, { starred: !note.starred }, userId);
     } catch (error) {
       console.error('Error toggling starred:', error);
       toast.error('Failed to update note');
@@ -222,6 +288,41 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   getNoteById: (id) => {
     return get().notes.find(note => note.id === id);
+  },
+
+  // Cache management methods
+  clearCache: () => {
+    const state = get();
+    if (state.lastFetchedUserId) {
+      try {
+        localStorage.removeItem(getCacheKey(state.lastFetchedUserId));
+      } catch (error) {
+        console.warn('Failed to clear cache:', error);
+      }
+    }
+    set({ 
+      notes: [], 
+      lastFetchedUserId: null, 
+      lastFetchTime: null 
+    });
+  },
+
+  loadFromCache: (userId: string) => {
+    const cached = loadNotesFromCache(userId);
+    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
+      set({ 
+        notes: cached.notes, 
+        lastFetchedUserId: userId,
+        lastFetchTime: cached.timestamp,
+        loading: false 
+      });
+      return true;
+    }
+    return false;
+  },
+
+  saveToCache: (userId: string, notes: Note[]) => {
+    saveNotesToCache(userId, notes);
   },
 
   setSearchQuery: (query) => set({ searchQuery: query }),

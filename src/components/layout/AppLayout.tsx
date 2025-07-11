@@ -24,11 +24,11 @@ export const AppLayout: React.FC = () => {
     filterBy, 
     setFilterBy,
     fetchNotes,
-    loading: notesLoading
+    loading: notesLoading,
+    clearCache,
+    loadFromCache
   } = useNotesStore();
   
-  // No folders - simplified notes app
-
   const { user } = useAuth();
   
   const navigate = useNavigate();
@@ -89,28 +89,43 @@ export const AppLayout: React.FC = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-
-
-  // Fetch data when component mounts or user changes
+  // Optimized data loading with better caching
   useEffect(() => {
     const loadData = async () => {
-      if (user && !initialDataLoaded) {
-        try {
-          await fetchNotes();
+      if (!user?.id) {
+        setInitialDataLoaded(false);
+        return;
+      }
+
+      // Try to load from cache first for instant response
+      const cachedLoaded = loadFromCache(user.id);
+      if (cachedLoaded) {
+        setInitialDataLoaded(true);
+      }
+
+      // Always try to fetch fresh data, but don't show loading if we have cached data
+      try {
+        await fetchNotes(user.id, false); // false = don't force refresh if data is fresh
+        setInitialDataLoaded(true);
+      } catch (error) {
+        console.error('Error loading notes:', error);
+        // If we have cached data, continue using it
+        if (!cachedLoaded) {
           setInitialDataLoaded(true);
-        } catch (error) {
-          console.error('Error loading initial data:', error);
         }
       }
     };
 
     loadData();
-  }, [user, fetchNotes, initialDataLoaded]);
+  }, [user?.id, fetchNotes, loadFromCache]);
 
-  // Reset initial data loaded when user changes
+  // Clear cache and reset state when user changes
   useEffect(() => {
-    setInitialDataLoaded(false);
-  }, [user]);
+    if (!user) {
+      clearCache();
+      setInitialDataLoaded(false);
+    }
+  }, [user, clearCache]);
 
   // Enhanced search functionality
   const searchResults = searchQuery.trim() ? searchNotes(notes, searchQuery) : [];
@@ -243,13 +258,15 @@ export const AppLayout: React.FC = () => {
   };
 
   const handleDeleteNote = (noteId: string) => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      deleteNote(noteId);
+    if (window.confirm('Are you sure you want to delete this note?') && user?.id) {
+      deleteNote(noteId, user.id);
     }
   };
 
   const handleToggleStarred = (noteId: string) => {
-    toggleStarred(noteId);
+    if (user?.id) {
+      toggleStarred(noteId, user.id);
+    }
   };
 
   useKeyboardShortcuts({
@@ -258,8 +275,8 @@ export const AppLayout: React.FC = () => {
   });
 
   const renderMainContent = () => {
-    // Show loading state while initial data is being fetched
-    if (!initialDataLoaded && notesLoading) {
+    // Show loading state only if we don't have any data and we're loading
+    if (!initialDataLoaded && notesLoading && notes.length === 0) {
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">

@@ -7,146 +7,82 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'enote-auth-session',
+    storage: {
+      getItem: (key: string) => {
+        try {
+          return localStorage.getItem(key);
+        } catch (error) {
+          console.warn('Failed to get item from localStorage:', error);
+          return null;
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          localStorage.setItem(key, value);
+        } catch (error) {
+          console.warn('Failed to set item in localStorage:', error);
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.warn('Failed to remove item from localStorage:', error);
+        }
+      },
+    },
+  },
+});
 
-// Get TOTAL registered users count (all users who signed up)
+// Simplified user count functions
 export const getTotalRegisteredUsers = async (): Promise<number> => {
   try {
-    console.log('Fetching total registered users count...');
+    // Try using the database function first
+    const { data, error } = await supabase.rpc('get_total_user_count');
     
-    // Method 1: Try using the database function (if you've added it)
-    try {
-      const { data, error } = await supabase.rpc('get_total_user_count');
-      
-      if (!error && typeof data === 'number') {
-        console.log('✅ Total registered users from auth.users:', data);
-        return data;
-      }
-    } catch (funcError) {
-      console.log('Database function not available, trying alternative methods...');
+    if (!error && typeof data === 'number') {
+      return data;
     }
 
-    // Method 2: Try counting from user_profiles table (if exists)
-    try {
-      const { data: profileData, error: profileError } = await supabase.rpc('get_user_profiles_count');
-      
-      if (!profileError && typeof profileData === 'number') {
-        console.log('✅ Total users from profiles table:', profileData);
-        return profileData;
-      }
-    } catch (profileError) {
-      console.log('User profiles method not available...');
-    }
-
-    // Method 3: Count from user_profiles table directly
-    try {
-      const { count, error: directError } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      if (!directError && count !== null) {
-        console.log('✅ Total users from direct profiles count:', count);
-        return count;
-      }
-    } catch (directError) {
-      console.log('Direct profiles count not available...');
-    }
-
-    // Method 4: Fallback - estimate from notes + some buffer
-    const { data: notesData, error: notesError } = await supabase
+    // Fallback to counting from notes table
+    const { data: notesData } = await supabase
       .from('notes')
       .select('user_id');
     
-    if (!notesError && notesData) {
+    if (notesData) {
       const uniqueUsersWithNotes = new Set(notesData.map(note => note.user_id)).size;
-      console.log('⚠️ Using fallback method - users with notes:', uniqueUsersWithNotes);
-      
-      // Add 20% buffer to account for users who haven't created notes yet
-      const estimatedTotal = Math.ceil(uniqueUsersWithNotes * 1.2);
-      console.log(`📊 Estimated total users (with buffer): ${estimatedTotal}`);
-      
-      return Math.max(estimatedTotal, 3); // Minimum of 3 since you know you have 3
+      return Math.max(uniqueUsersWithNotes, 3);
     }
 
-    // Ultimate fallback
-    console.log('⚠️ All methods failed, using hardcoded fallback');
-    return 3; // Since you know you have 3 users
-    
+    return 3; // Default fallback
   } catch (error) {
     console.error('Error in getTotalRegisteredUsers:', error);
-    return 3; // Fallback to your known count
+    return 3;
   }
 };
 
-// Legacy function for backward compatibility
-export const getTotalUserCount = async (): Promise<number> => {
-  return await getTotalRegisteredUsers();
-};
-
-// Function to get real user count from database (UPDATED)
-export const getUserCount = async (): Promise<number> => {
-  return await getTotalRegisteredUsers();
-};
-
-// Get active users count (users who created notes)
 export const getActiveUserCount = async (): Promise<number> => {
   try {
-    const { data: notesData, error: notesError } = await supabase
+    const { data: notesData } = await supabase
       .from('notes')
       .select('user_id');
     
-    if (notesError) {
-      console.error('Error fetching active users:', notesError);
-      return 2; // Your known active count
+    if (notesData) {
+      const uniqueActiveUsers = new Set(notesData.map(note => note.user_id)).size;
+      return Math.max(uniqueActiveUsers, 1);
     }
-
-    const uniqueActiveUsers = new Set(notesData?.map(note => note.user_id) || []).size;
-    console.log('Active users (with notes):', uniqueActiveUsers);
     
-    return Math.max(uniqueActiveUsers, 1);
+    return 2;
   } catch (error) {
     console.error('Error in getActiveUserCount:', error);
     return 2;
   }
-};
-
-// Subscribe to real-time user count changes
-export const subscribeToUserCountChanges = (callback: (count: number) => void) => {
-  // Subscribe to user_profiles table if it exists, otherwise notes table
-  const subscription = supabase
-    .channel('user-count-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT', // Only listen to new users (INSERT events)
-        schema: 'public',
-        table: 'user_profiles'
-      },
-      async (payload) => {
-        console.log('New user registered!', payload);
-        const newCount = await getTotalRegisteredUsers();
-        callback(newCount);
-      }
-    )
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT', // Also listen to notes table for new users
-        schema: 'public',
-        table: 'notes'
-      },
-      async (payload) => {
-        console.log('New note created, checking for new user...', payload);
-        const newCount = await getTotalRegisteredUsers();
-        callback(newCount);
-      }
-    )
-    .subscribe();
-
-  // Return unsubscribe function
-  return () => {
-    supabase.removeChannel(subscription);
-  };
 };
 
 // Database types based on your current schema

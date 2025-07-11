@@ -1,7 +1,7 @@
-import { getTotalRegisteredUsers, subscribeToUserCountChanges } from '@/lib/supabase';
+import { getTotalRegisteredUsers } from '@/lib/supabase';
 
 // User Statistics Configuration
-// These numbers are now fetched from the real database with live updates!
+// These numbers are now fetched from the real database with periodic updates!
 
 export interface UserStats {
   totalUsers: number;
@@ -36,14 +36,27 @@ export const fetchRealUserCount = async (): Promise<number> => {
   }
 };
 
-// Set up live user count updates
+// Set up periodic user count updates (simplified - no real-time subscriptions)
 export const setupLiveUserCount = (callback: (count: number) => void) => {
-  console.log('Setting up live TOTAL user count updates...');
+  console.log('Setting up periodic user count updates...');
   
-  // Subscribe to real-time changes
-  const unsubscribe = subscribeToUserCountChanges(callback);
+  // Initial fetch
+  fetchRealUserCount().then(callback).catch(console.error);
   
-  return unsubscribe;
+  // Set up periodic updates every 5 minutes
+  const interval = setInterval(async () => {
+    try {
+      const count = await fetchRealUserCount();
+      callback(count);
+    } catch (error) {
+      console.error('Error in periodic user count update:', error);
+    }
+  }, 5 * 60 * 1000); // 5 minutes
+  
+  // Return cleanup function
+  return () => {
+    clearInterval(interval);
+  };
 };
 
 // Fetch user count with periodic updates
