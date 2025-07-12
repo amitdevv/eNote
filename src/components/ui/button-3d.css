@@ -1,0 +1,152 @@
+.frame-3d {
+    /* key dimensions */
+    --dimension: 200px;
+
+    /* Movement distances */
+    --hover-travel: 3px;
+    --press-travel: calc(var(--dimension) / 10);
+
+    /* Color customization */
+    --color: black;
+    --brightness: 1;
+    --blend-mode: color;
+
+    /* Transition settings */
+    --transition-duration: 0.4s;
+    --transition-easing: linear(0, 0.008 1.1%, 0.031 2.2%, 0.129 4.8%, 0.257 7.2%, 0.671 14.2%, 0.789 16.5%, 0.881 18.6%, 0.957 20.7%, 1.019 22.9%, 1.063 25.1%, 1.094 27.4%, 1.114 30.7%, 1.112 34.5%, 1.018 49.9%, 0.99 59.1%, 1);
+
+    /* Start animation settings */
+    --fade-duration: .3s;
+    --fade-delay: .3s;
+    --start-scale: .8;
+
+    /* Style */
+    position: relative;
+    width: var(--dimension);
+    height: var(--dimension);
+    cursor: pointer;
+    container-type: inline-size;
+    touch-action: manipulation;
+    overflow: hidden;
+
+    /* Start invisible and scaled down, then fade in and zoom in */
+    opacity: 0;
+    transform: scale(var(--start-scale));
+    animation: frameStartAnimation var(--fade-duration) ease-out var(--fade-delay) forwards;
+}
+
+.frame-3d:focus-visible {
+    outline: none;
+}
+
+.frame-3d,
+.frame-3d .frame-3d__key,
+.frame-3d .frame-3d__text {
+    -webkit-user-select: none; /* ios Safari */
+    user-select: none;
+}
+
+.frame-3d img {
+    /* Disable image dragging on MacOS Safari */
+    -webkit-user-drag: none;
+}
+
+.frame-3d .frame-3d__base {
+    width: 100%; 
+    height: 100%;
+}
+
+.frame-3d .frame-3d__key {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    filter: brightness(var(--brightness));
+    -webkit-appearance: none;
+
+    transition-property: all;
+    transition-duration: var(--transition-duration);
+    transition-timing-function: var(--transition-easing);
+}
+
+.frame-3d .frame-3d__cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; 
+    height: 100%;
+}
+
+.frame-3d:hover .frame-3d__key,
+.frame-3d:hover .frame-3d__text {
+    margin-top: var(--hover-travel);
+}
+
+.frame-3d:active .frame-3d__key,
+.frame-3d:active .frame-3d__text,
+/* :active to support Android browsers, we use JS and __active */
+.frame-3d--active .frame-3d__key,
+.frame-3d--active .frame-3d__text {
+    margin-top: var(--press-travel);
+}
+
+.frame-3d .frame-3d__text {
+    font-family: sans-serif;
+    color: white;
+    white-space: nowrap;
+
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    align-content: center;
+    translate: -50% -50%;
+    transform: rotateY(0deg) rotateX(52.3deg) rotateZ(29deg) translateY(-28%) translateX(-16%);
+    margin: 0;
+    padding: 0;
+
+    transition-property: all;
+    transition-timing-function: var(--transition-easing);
+    transition-duration: var(--transition-duration);
+}
+
+.frame-3d .frame-3d__text {
+    font-size: calc(var(--dimension) / 10);
+}
+
+@container (min-width: 0px) {
+    .frame-3d .frame-3d__text {
+        font-size: 10cqw;
+    }
+}
+
+/* Disabled state */
+.frame-3d--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.frame-3d--disabled:hover .frame-3d__key,
+.frame-3d--disabled:hover .frame-3d__text {
+    margin-top: 0;
+}
+
+.frame-3d--disabled:active .frame-3d__key,
+.frame-3d--disabled:active .frame-3d__text {
+    margin-top: 0;
+}
+
+/* Fade-in and zoom-in animation keyframes */
+@keyframes frameStartAnimation {
+    from {
+        opacity: 0;
+        transform: scale(var(--start-scale));
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+} 

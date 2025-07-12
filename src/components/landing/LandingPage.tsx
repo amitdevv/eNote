@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Button3D } from '@/components/ui/button-3d';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/contexts/ThemeContext';
 import { fetchRealUserCount, setupLiveUserCount, fetchUserCountWithUpdates } from '@/config/stats';
@@ -163,20 +164,19 @@ export const LandingPage: React.FC = () => {
 
               {/* Responsive Subtitle */}
               <p className="text-lg sm:text-xl font-normal text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                A powerful note-taking app with rich text editing, smart organization,
-                and seamless synchronization across all your devices.
-              </p>
+                Press the <span className="text-[#009541] font-normal">Start</span> button below to begin             </p>
 
               {/* Mobile-Optimized CTA Button */}
               <div className="flex flex-col sm:flex-row gap-4 mb-6 sm:mb-8 justify-center lg:justify-start">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/notes')}
-                  size="lg"
-                  className="w-full sm:w-auto text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] px-8 py-3 text-base font-medium min-h-[44px]"
-                >
-                  Get Started Free
-                </Button>
+                <div className="flex justify-center lg:justify-start">
+                  <Button3D
+                    onClick={() => navigate('/notes')}
+                    size="md"
+                    className="hover:scale-105 transition-transform duration-200"
+                  >
+                    Start
+                  </Button3D>
+                </div>
               </div>
 
               {/* Mobile-friendly features list */}

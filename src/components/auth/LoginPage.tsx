@@ -74,9 +74,6 @@ const LoginPage: React.FC = () => {
               </>
             )}
           </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            By signing in, you agree to our Terms of Service and Privacy Policy
-          </div>
         </CardContent>
       </Card>
     </div>
