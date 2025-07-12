@@ -427,7 +427,7 @@ export const AppLayout: React.FC = () => {
           onMobileMenuToggle={toggleMobileSidebar}
         />
         
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full">
+        <main className={`flex-1 overflow-y-auto bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
           <div className={isEditorMode ? "w-full h-full" : ""}>
             {renderMainContent()}
           </div>

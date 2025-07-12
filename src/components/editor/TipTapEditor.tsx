@@ -105,7 +105,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     content,
     editorProps: {
       attributes: {
-        class: 'tiptap-editor focus:outline-none min-h-[400px] p-4',
+        class: 'tiptap-editor focus:outline-none h-full min-h-screen p-6',
         style: `font-family: "${fontFamily}", sans-serif; font-size: ${fontSize}px;`,
         'data-placeholder': placeholder,
         spellcheck: 'false',
@@ -316,16 +316,14 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
 
     return (
     <div 
-      className="bg-white dark:bg-[#1e1e1e] transition-colors duration-200 rounded-lg w-full max-w-full"
+      className="bg-white dark:bg-[#171717] transition-colors duration-200 w-full h-full"
       style={{ fontFamily, fontSize: `${fontSize}px` }}
     >
-      <div className="w-full max-w-full">
-        <EditorContent 
-          editor={editor} 
-          style={{ fontFamily, fontSize: `${fontSize}px` }}
-          className="w-full max-w-full"
-        />
-      </div>
+      <EditorContent 
+        editor={editor} 
+        style={{ fontFamily, fontSize: `${fontSize}px` }}
+        className="w-full h-full"
+      />
     </div>
   );
 };

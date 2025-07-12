@@ -91,6 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
     tags: editorTags, 
     fontFamily: editorFontFamily,
     fontSize: editorFontSize,
+    setTitle: setEditorTitle,
     setFontFamily: setEditorFontFamily,
     setFontSize: setEditorFontSize,
     addTag: addEditorTag,
@@ -156,11 +157,14 @@ export const Header: React.FC<HeaderProps> = ({
             
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
             
-            <div className="flex items-center gap-2">
-              <Hash className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {currentNote ? 'Edit Note' : 'New Note'}
-              </span>
+            <div className="flex items-center">
+              <input
+                type="text"
+                value={editorTitle}
+                onChange={(e) => setEditorTitle(e.target.value)}
+                placeholder="Untitled Note"
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 border-none focus:outline-none focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 min-w-0 flex-1 px-3 py-1.5 rounded-md transition-colors duration-200"
+              />
             </div>
           </div>
 
