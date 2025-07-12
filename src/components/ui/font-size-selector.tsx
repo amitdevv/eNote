@@ -7,13 +7,13 @@ interface FontSizeSelectorProps {
 }
 
 const fontSizes = [
-  { value: 12, label: '12px', description: 'Small' },
-  { value: 14, label: '14px', description: 'Default' },
-  { value: 16, label: '16px', description: 'Medium' },
-  { value: 18, label: '18px', description: 'Large' },
-  { value: 20, label: '20px', description: 'Extra Large' },
-  { value: 22, label: '22px', description: 'Huge' },
-  { value: 24, label: '24px', description: 'Massive' },
+  { value: 12, label: '12px', description: 'sm' },
+  { value: 14, label: '14px', description: 'base' },
+  { value: 16, label: '16px', description: 'md' },
+  { value: 18, label: '18px', description: 'lg' },
+  { value: 20, label: '20px', description: 'xl' },
+  { value: 22, label: '22px', description: '2xl' },
+  { value: 24, label: '24px', description: '3xl' },
 ];
 
 export const FontSizeSelector: React.FC<FontSizeSelectorProps> = ({ 

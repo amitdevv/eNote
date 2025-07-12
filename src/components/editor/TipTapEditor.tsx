@@ -92,6 +92,9 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         HTMLAttributes: {
           class: 'task-item',
         },
+        onReadOnlyChecked: (_, checked) => {
+          return checked;
+        },
       }),
       Placeholder.configure({
         placeholder: placeholder || 'Start writing... Type "/" for commands',
@@ -148,6 +151,49 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             event.preventDefault();
             event.stopPropagation();
             editor.commands.exitCode();
+            return true;
+          }
+        }
+        
+        // Handle Backspace in task lists
+        if (event.key === 'Backspace' && editor?.isActive('taskItem')) {
+          const { selection } = editor.state;
+          const { $from } = selection;
+          const currentText = $from.parent.textContent;
+          
+          // If the task item is empty or cursor is at the beginning
+          if (!currentText.trim() || $from.parentOffset === 0) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Try to lift the task item (convert to paragraph)
+            const canLift = editor.can().liftListItem('taskItem');
+            if (canLift) {
+              editor.chain().liftListItem('taskItem').run();
+            } else {
+              // If can't lift, try to delete the task item
+              editor.chain().deleteCurrentNode().run();
+            }
+            return true;
+          }
+        }
+        
+        // Handle Enter in empty task items
+        if (event.key === 'Enter' && editor?.isActive('taskItem')) {
+          const { selection } = editor.state;
+          const { $from } = selection;
+          const currentText = $from.parent.textContent;
+          
+          // If the task item is empty, exit the task list
+          if (!currentText.trim()) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Exit the task list and create a new paragraph
+            editor.chain()
+              .liftListItem('taskItem')
+              .setParagraph()
+              .run();
             return true;
           }
         }

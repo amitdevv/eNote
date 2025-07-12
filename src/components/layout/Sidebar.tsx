@@ -147,7 +147,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         <div className={cn("p-2", isCollapsed && "px-1")}>
           {/* Quick Access Items */}
           <div className="mb-6">

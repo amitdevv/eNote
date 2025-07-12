@@ -5,10 +5,8 @@ import { useNotesStore } from '@/stores/notesStore';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import TipTapEditor from '@/components/editor/TipTapEditor';
-import { NoteBreadcrumb } from '@/components/notes/NoteBreadcrumb';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { TextStats } from '@/components/editor/TextStats';
 
 export const EditorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,19 +51,12 @@ export const EditorPage: React.FC = () => {
 
   // No folder context needed - simplified
 
-  const isNewNote = !noteId || !currentNote;
+  // const isNewNote = !noteId || !currentNote;
 
   return (
     <div className="relative h-full w-full max-w-full overflow-y-auto">
       <Card className="min-h-full w-full max-w-full border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e]">
-        <CardHeader className="pb-4 sticky top-0 bg-white dark:bg-[#1e1e1e] z-10">
-          {/* Breadcrumb Navigation */}
-          <NoteBreadcrumb 
-            note={currentNote} 
-            isNewNote={isNewNote}
-            currentTitle={title}
-          />
-          
+        <CardHeader className="pb-2 sticky top-0 bg-white dark:bg-[#1e1e1e] z-10">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -86,9 +77,6 @@ export const EditorPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      
-      {/* Text Statistics - positioned for visibility and PDF export */}
-      <TextStats content={content} title={title} />
     </div>
   );
 }; 
