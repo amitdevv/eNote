@@ -183,17 +183,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Tags Section */}
-          <div className="mb-4">
-            {!isCollapsed && (
-              <div className="flex items-center justify-between px-3 mb-2">
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                  TAGS
-                </span>
-              </div>
-            )}
+          {(() => {
+            const visibleTags = predefinedTags.filter((tag) => {
+              const count = sidebarCounts?.[tag.id as keyof typeof sidebarCounts] || 0;
+              return count > 0;
+            });
             
-            <div className="space-y-1">
-              {predefinedTags.map((tag) => (
+            if (visibleTags.length === 0) return null;
+            
+            return (
+              <div className="mb-4">
+                {!isCollapsed && (
+                  <div className="flex items-center justify-between px-3 mb-2">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      TAGS
+                    </span>
+                  </div>
+                )}
+                
+                <div className="space-y-1">
+                  {visibleTags.map((tag) => (
                 <Button
                   key={tag.id}
                   variant="ghost"
@@ -224,6 +233,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ))}
             </div>
           </div>
+            );
+          })()}
         </div>
       </div>
 

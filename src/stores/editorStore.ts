@@ -32,15 +32,21 @@ interface EditorStore {
   markClean: () => void;
 }
 
-export const useEditorStore = create<EditorStore>((set, get) => ({
-  currentNoteId: null,
-  title: '',
-  content: '',
-  tags: [],
-  fontFamily: 'Inter',
-  fontSize: 16,
-  isDirty: false,
-  lastSaved: null,
+export const useEditorStore = create<EditorStore>((set, get) => {
+  // Get default settings from localStorage for initial state
+  const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
+  const defaultFont = settingsStore.state?.defaultFont || 'Inter';
+  const defaultFontSize = settingsStore.state?.defaultFontSize || 16;
+
+  return {
+    currentNoteId: null,
+    title: '',
+    content: '',
+    tags: [],
+    fontFamily: defaultFont,
+    fontSize: defaultFontSize,
+    isDirty: false,
+    lastSaved: null,
 
   setCurrentNote: (note) => {
     if (note) {
@@ -55,14 +61,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
       });
     } else {
-      // New note
+      // New note - get default settings from localStorage
+      const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
+      const defaultFont = settingsStore.state?.defaultFont || 'Inter';
+      const defaultFontSize = settingsStore.state?.defaultFontSize || 16;
+      
       set({
         currentNoteId: null,
         title: '',
         content: '',
         tags: [],
-        fontFamily: 'Inter',
-        fontSize: 16,
+        fontFamily: defaultFont,
+        fontSize: defaultFontSize,
         isDirty: false,
         lastSaved: null,
       });
@@ -113,13 +123,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   resetEditor: () => {
+    // Get default settings from localStorage
+    const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
+    const defaultFont = settingsStore.state?.defaultFont || 'Inter';
+    const defaultFontSize = settingsStore.state?.defaultFontSize || 16;
+    
     set({
       currentNoteId: null,
       title: '',
       content: '',
       tags: [],
-      fontFamily: 'Inter',
-      fontSize: 16,
+      fontFamily: defaultFont,
+      fontSize: defaultFontSize,
       isDirty: false,
       lastSaved: null,
     });
@@ -128,4 +143,5 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   markDirty: () => set({ isDirty: true }),
   
   markClean: () => set({ isDirty: false, lastSaved: new Date() }),
-})); 
+  };
+}); 

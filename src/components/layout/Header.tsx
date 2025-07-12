@@ -315,7 +315,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               id="mobile-menu-button"
               onClick={onMobileMenuToggle}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
               aria-label="Toggle menu"
             >
               <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -349,7 +349,7 @@ export const Header: React.FC<HeaderProps> = ({
                 placeholder="Search notes..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
+                className="search-input w-full pl-10 pr-4 py-2 text-sm border-none rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
               />
               {searchQuery && (
                 <button
@@ -371,7 +371,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button 
               type="button"
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-              className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+              className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
             >
               {isMobileSearchOpen ? (
                 <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -388,7 +388,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onViewModeChange('grid')}
                 className={cn(
-                  "p-1 rounded transition-colors focus:outline-none",
+                  "p-1 rounded focus:outline-none",
                   viewMode === 'grid' 
                     ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
                     : "text-gray-500 dark:text-gray-400"
@@ -401,7 +401,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onViewModeChange('list')}
                 className={cn(
-                  "p-1 rounded transition-colors focus:outline-none",
+                  "p-1 rounded focus:outline-none",
                   viewMode === 'list' 
                     ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
                     : "text-gray-500 dark:text-gray-400"
@@ -432,7 +432,7 @@ export const Header: React.FC<HeaderProps> = ({
                   type="button"
                   onClick={() => onViewModeChange('grid')}
                   className={cn(
-                    "p-1.5 rounded transition-colors focus:outline-none",
+                    "p-1.5 rounded focus:outline-none",
                     viewMode === 'grid' 
                       ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -445,7 +445,7 @@ export const Header: React.FC<HeaderProps> = ({
                   type="button"
                   onClick={() => onViewModeChange('list')}
                   className={cn(
-                    "p-1.5 rounded transition-colors focus:outline-none",
+                    "p-1.5 rounded focus:outline-none",
                     viewMode === 'list' 
                       ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -499,7 +499,7 @@ export const Header: React.FC<HeaderProps> = ({
               placeholder="Search notes..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
+              className="search-input w-full pl-10 pr-4 py-2.5 text-sm border-none rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
               autoFocus
             />
             {searchQuery && (

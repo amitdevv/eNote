@@ -7,10 +7,20 @@ import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Plus, Loader2 } from 'lucide-react';
+import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
 import { SettingsPage } from '@/components/settings/SettingsPage';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const AppLayout: React.FC = () => {
   const { 
@@ -44,6 +54,8 @@ export const AppLayout: React.FC = () => {
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation state
@@ -258,9 +270,21 @@ export const AppLayout: React.FC = () => {
   };
 
   const handleDeleteNote = (noteId: string) => {
-    if (window.confirm('Are you sure you want to delete this note?') && user?.id) {
-      deleteNote(noteId, user.id);
+    setNoteToDelete(noteId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteNote = () => {
+    if (noteToDelete && user?.id) {
+      deleteNote(noteToDelete, user.id);
+      setDeleteDialogOpen(false);
+      setNoteToDelete(null);
     }
+  };
+
+  const cancelDeleteNote = () => {
+    setDeleteDialogOpen(false);
+    setNoteToDelete(null);
   };
 
   const handleToggleStarred = (noteId: string) => {
@@ -433,6 +457,32 @@ export const AppLayout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={cancelDeleteNote}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              Delete Note
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>"{noteToDelete ? notes.find(n => n.id === noteToDelete)?.title || 'this note' : 'this note'}"</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeleteNote}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteNote}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }; 
