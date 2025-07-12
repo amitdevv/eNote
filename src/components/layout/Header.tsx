@@ -41,7 +41,7 @@ import {
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { FontSizeSelector } from '@/components/ui/font-size-selector';
-import { Badge } from '@/components/ui/badge';
+
 import { useNotesStore } from '@/stores/notesStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -103,6 +103,17 @@ export const Header: React.FC<HeaderProps> = ({
   const { user, signOut } = useAuth();
   const { toggleFocusMode } = useFocusMode();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
+
+  // Calculate dynamic width for title input based on content
+  const getTitleInputWidth = () => {
+    const baseWidth = 120; // Minimum width in pixels
+    const charWidth = 8; // Approximate character width in pixels
+    const padding = 24; // Account for padding
+    const titleLength = editorTitle.length || 13; // Use placeholder length if empty
+    const calculatedWidth = Math.max(baseWidth, (titleLength * charWidth) + padding);
+    const maxWidth = 300; // Maximum width to prevent it from getting too wide
+    return Math.min(calculatedWidth, maxWidth);
+  };
   
   // Close mobile search when switching to editor mode
   React.useEffect(() => {
@@ -166,7 +177,8 @@ export const Header: React.FC<HeaderProps> = ({
                 value={editorTitle}
                 onChange={(e) => setEditorTitle(e.target.value)}
                 placeholder="Untitled Note"
-                className="text-sm font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 border-none focus:outline-none focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 min-w-0 flex-1 px-3 py-1.5 rounded-md transition-colors duration-200"
+                style={{ width: `${getTitleInputWidth()}px` }}
+                className="text-sm font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 border-none focus:outline-none focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-3 py-1.5 rounded-md transition-all duration-200"
               />
             </div>
           </div>
@@ -212,27 +224,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
               
-              {/* Current Tags Display */}
-              {editorTags.length > 0 && (
-                <div className="flex items-center gap-1 max-w-sm overflow-x-auto">
-                  {editorTags.map((tag) => {
-                    const predefinedTag = predefinedTags.find(pt => pt.id === tag);
-                    return (
-                      <Badge key={tag} variant="secondary" className="text-xs flex items-center gap-1 flex-shrink-0">
-                        {predefinedTag && <predefinedTag.icon className="w-2 h-2" />}
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeEditorTag(tag)}
-                          className="ml-1 hover:text-red-600"
-                        >
-                          <X className="w-2 h-2" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
+
             </div>
              {/* Font Controls */}
              <FontSelector 
