@@ -242,6 +242,8 @@ export const Header: React.FC<HeaderProps> = ({
               onSizeChange={setEditorFontSize}
             />
 
+
+
             {/* Export */}
             {currentNote && (
               <Select value="export" onValueChange={(value) => {

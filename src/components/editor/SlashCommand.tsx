@@ -13,10 +13,10 @@ import {
   FileText,
   Video,
   Globe,
-  Table,
-  Palette
+  Table
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { YouTubeDialog, EmbedDialog } from './MediaDialogs';
 
 interface SlashCommandItem {
   title: string;
@@ -40,6 +40,8 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
   ({ editor, range }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [query, setQuery] = useState('');
+    const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
+    const [embedDialogOpen, setEmbedDialogOpen] = useState(false);
 
     // Check if editor supports rich formatting by checking available commands
     const isRichTextEditor = (() => {
@@ -210,22 +212,11 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
         description: 'Embed a YouTube video.',
         icon: Video,
         keywords: ['youtube', 'video', 'embed', 'media'],
-        command: (editor) => {
-          const url = prompt('Enter YouTube URL:');
-          if (url) {
-            try {
-              editor.chain().focus().deleteRange(range).setYoutubeVideo({ src: url }).run();
-            } catch {
-              // Fallback: insert as link
-              editor.chain().focus().deleteRange(range).insertContent(`\n[YouTube Video](${url})\n`).run();
-            }
-          }
+        command: (_editor) => {
+          setYoutubeDialogOpen(true);
         },
-        textCommand: (editor) => {
-          const url = prompt('Enter YouTube URL:');
-          if (url) {
-            editor.chain().focus().deleteRange(range).insertContent(`\n[YouTube Video](${url})\n`).run();
-          }
+        textCommand: (_editor) => {
+          setYoutubeDialogOpen(true);
         },
       },
       {
@@ -233,22 +224,11 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
         description: 'Embed content from any website.',
         icon: Globe,
         keywords: ['embed', 'iframe', 'vimeo', 'codepen', 'figma', 'twitter'],
-        command: (editor) => {
-          const url = prompt('Enter embed URL (iframe src):');
-          if (url) {
-            try {
-              editor.chain().focus().deleteRange(range).setIframe({ src: url }).run();
-            } catch {
-              // Fallback: insert as link
-              editor.chain().focus().deleteRange(range).insertContent(`\n[Embedded Content](${url})\n`).run();
-            }
-          }
+        command: (_editor) => {
+          setEmbedDialogOpen(true);
         },
-        textCommand: (editor) => {
-          const url = prompt('Enter embed URL:');
-          if (url) {
-            editor.chain().focus().deleteRange(range).insertContent(`\n[Embedded Content](${url})\n`).run();
-          }
+        textCommand: (_editor) => {
+          setEmbedDialogOpen(true);
         },
       },
       {
@@ -290,37 +270,7 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
             .run();
         },
       },
-      {
-        title: 'Text Color',
-        description: 'Change text color for emphasis.',
-        icon: Palette,
-        keywords: ['color', 'highlight', 'text', 'red', 'blue', 'green'],
-        command: (editor) => {
-          const color = prompt('Enter color (e.g., red, #ff0000, rgb(255,0,0)):');
-          if (color) {
-            try {
-              editor.chain().focus().deleteRange(range).setColor(color).run();
-            } catch {
-              // Fallback: insert colored text markdown
-              editor.chain()
-                .focus()
-                .deleteRange(range)
-                .insertContent(`<span style="color: ${color}">colored text</span>`)
-                .run();
-            }
-          }
-        },
-        textCommand: (editor) => {
-          const color = prompt('Enter color (e.g., red, #ff0000):');
-          if (color) {
-            editor.chain()
-              .focus()
-              .deleteRange(range)
-              .insertContent(`<span style="color: ${color}">colored text</span>`)
-              .run();
-          }
-        },
-      },
+
       {
         title: 'Divider',
         description: 'Visually divide blocks.',
@@ -380,6 +330,25 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
       }
     };
 
+    const handleYouTubeConfirm = (url: string) => {
+      try {
+        editor.chain().focus().deleteRange(range).setYoutubeVideo({ src: url }).run();
+      } catch {
+        // Fallback: insert as link
+        editor.chain().focus().deleteRange(range).insertContent(`\n[YouTube Video](${url})\n`).run();
+      }
+    };
+
+    const handleEmbedConfirm = (url: string, displayText?: string, _openInNewTab?: boolean) => {
+      try {
+        editor.chain().focus().deleteRange(range).setIframe({ src: url }).run();
+      } catch {
+        // Fallback: insert as link
+        const linkText = displayText || url;
+        editor.chain().focus().deleteRange(range).insertContent(`\n[${linkText}](${url})\n`).run();
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       onKeyDown: (event: KeyboardEvent) => {
         if (event.key === 'ArrowUp') {
@@ -427,8 +396,6 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
             return 'Paste iframe URL to embed content.';
           case 'Table':
             return 'Insert a 3x3 table with headers.';
-          case 'Text Color':
-            return 'Enter color name or hex code.';
           case 'Divider':
             return 'Insert "---" as a divider.';
           default:
@@ -439,37 +406,53 @@ const SlashCommand = forwardRef<SlashCommandRef, SlashCommandProps>(
     };
 
     return (
-      <div className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#333333] p-1 shadow-lg">
-        <div className="mb-2 px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
-          {isRichTextEditor ? 'Rich text blocks' : 'Text formatting'}
-        </div>
-        {filteredItems.length > 0 ? (
-          filteredItems.map((item, index) => (
-            <button
-              key={index}
-              className={cn(
-                'flex w-full items-center space-x-3 rounded-md px-2 py-2 text-left text-sm transition-colors',
-                index === selectedIndex
-                  ? 'bg-gray-100 dark:bg-[#1e1e1e] text-gray-900 dark:text-gray-100'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1e1e1e]'
-              )}
-              onClick={() => selectItem(index)}
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#1e1e1e]">
-                <item.icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium">{item.title}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{getItemDescription(item)}</div>
-              </div>
-            </button>
-          ))
-        ) : (
-          <div className="px-2 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-            No results found
+      <>
+        <div className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#333333] p-1 shadow-lg">
+          <div className="mb-2 px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
+            {isRichTextEditor ? 'Rich text blocks' : 'Text formatting'}
           </div>
-        )}
-      </div>
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item, index) => (
+              <button
+                key={index}
+                className={cn(
+                  'flex w-full items-center space-x-3 rounded-md px-2 py-2 text-left text-sm transition-colors',
+                  index === selectedIndex
+                    ? 'bg-gray-100 dark:bg-[#1e1e1e] text-gray-900 dark:text-gray-100'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1e1e1e]'
+                )}
+                onClick={() => selectItem(index)}
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#1e1e1e]">
+                  <item.icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">{item.title}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{getItemDescription(item)}</div>
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="px-2 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+              No results found
+            </div>
+          )}
+        </div>
+
+        {/* YouTube Dialog */}
+        <YouTubeDialog
+          open={youtubeDialogOpen}
+          onOpenChange={setYoutubeDialogOpen}
+          onConfirm={handleYouTubeConfirm}
+        />
+
+        {/* Embed Dialog */}
+        <EmbedDialog
+          open={embedDialogOpen}
+          onOpenChange={setEmbedDialogOpen}
+          onConfirm={handleEmbedConfirm}
+        />
+      </>
     );
   }
 );

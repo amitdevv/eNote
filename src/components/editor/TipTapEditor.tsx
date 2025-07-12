@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
@@ -14,6 +14,9 @@ import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
 import { Iframe } from './IframeExtension';
 import { SlashCommandExtension } from './SlashCommandExtension';
+import { ColorPicker } from '@/components/ui/color-picker';
+import { Button } from '@/components/ui/button';
+import { Bold, Italic, Underline as UnderlineIcon } from 'lucide-react';
 import './tiptap.css';
 import { Link } from '@tiptap/extension-link';
 
@@ -270,13 +273,30 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       editorElement.style.fontFamily = `"${fontFamily}", sans-serif`;
       editorElement.style.fontSize = `${fontSize}px`;
       
-      // Also apply to all child elements with high specificity
+      // Apply font settings without interfering with text formatting
       const style = document.createElement('style');
       style.textContent = `
-        .ProseMirror, .ProseMirror * {
+        .ProseMirror {
           font-family: "${fontFamily}", sans-serif !important;
           font-size: ${fontSize}px !important;
           font-display: swap !important;
+        }
+        .ProseMirror p, .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6,
+        .ProseMirror li, .ProseMirror blockquote, .ProseMirror td, .ProseMirror th {
+          font-family: "${fontFamily}", sans-serif !important;
+          font-size: ${fontSize}px !important;
+        }
+        .ProseMirror em {
+          font-style: italic !important;
+        }
+        .ProseMirror strong {
+          font-weight: bold !important;
+        }
+        .ProseMirror u {
+          text-decoration: underline !important;
+        }
+        .ProseMirror code {
+          font-family: 'Monaco', 'Menlo', 'Consolas', monospace !important;
         }
       `;
       
@@ -324,6 +344,63 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         style={{ fontFamily, fontSize: `${fontSize}px` }}
         className="w-full h-full"
       />
+      
+      {/* Bubble Menu for text selection */}
+      {editor && (
+        <BubbleMenu
+          editor={editor}
+          tippyOptions={{ duration: 100 }}
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-1"
+        >
+          {/* Bold */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`h-8 w-8 p-0 ${editor.isActive('bold') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Bold"
+          >
+            <Bold className="w-4 h-4" />
+          </Button>
+
+          {/* Italic */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`h-8 w-8 p-0 ${editor.isActive('italic') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Italic"
+          >
+            <Italic className="w-4 h-4" />
+          </Button>
+
+          {/* Underline */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={`h-8 w-8 p-0 ${editor.isActive('underline') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Underline"
+          >
+            <UnderlineIcon className="w-4 h-4" />
+          </Button>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+          {/* Color Picker */}
+          <ColorPicker
+            currentColor={editor.getAttributes('textStyle').color || ''}
+            onColorChange={(color) => {
+              if (color) {
+                editor.chain().focus().setColor(color).run();
+              } else {
+                editor.chain().focus().unsetColor().run();
+              }
+            }}
+          />
+        </BubbleMenu>
+      )}
     </div>
   );
 };
