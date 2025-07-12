@@ -16,7 +16,7 @@ import { Iframe } from './IframeExtension';
 import { SlashCommandExtension } from './SlashCommandExtension';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, Underline as UnderlineIcon } from 'lucide-react';
+import { Bold, Underline as UnderlineIcon } from 'lucide-react';
 import './tiptap.css';
 import { Link } from '@tiptap/extension-link';
 
@@ -123,12 +123,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             return true;
           }
           
-          // Italic - Ctrl+I
-          if (event.key === 'i') {
-            event.preventDefault();
-            editor?.chain().focus().toggleItalic().run();
-            return true;
-          }
+
           
           // Underline - Ctrl+U
           if (event.key === 'u') {
@@ -273,30 +268,20 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       editorElement.style.fontFamily = `"${fontFamily}", sans-serif`;
       editorElement.style.fontSize = `${fontSize}px`;
       
-      // Apply font settings without interfering with text formatting
+      // Also apply to all child elements with high specificity
       const style = document.createElement('style');
       style.textContent = `
-        .ProseMirror {
+        .ProseMirror, .ProseMirror * {
           font-family: "${fontFamily}", sans-serif !important;
           font-size: ${fontSize}px !important;
           font-display: swap !important;
         }
-        .ProseMirror p, .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5, .ProseMirror h6,
-        .ProseMirror li, .ProseMirror blockquote, .ProseMirror td, .ProseMirror th {
-          font-family: "${fontFamily}", sans-serif !important;
-          font-size: ${fontSize}px !important;
-        }
-        .ProseMirror em {
-          font-style: italic !important;
-        }
+
         .ProseMirror strong {
           font-weight: bold !important;
         }
         .ProseMirror u {
           text-decoration: underline !important;
-        }
-        .ProseMirror code {
-          font-family: 'Monaco', 'Menlo', 'Consolas', monospace !important;
         }
       `;
       
@@ -363,16 +348,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             <Bold className="w-4 h-4" />
           </Button>
 
-          {/* Italic */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`h-8 w-8 p-0 ${editor.isActive('italic') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
-            title="Italic"
-          >
-            <Italic className="w-4 h-4" />
-          </Button>
+
 
           {/* Underline */}
           <Button

@@ -386,9 +386,7 @@
   color: inherit;
 }
 
-.tiptap-editor em {
-  font-style: italic;
-}
+
 
 .tiptap-editor u {
   text-decoration: underline;
