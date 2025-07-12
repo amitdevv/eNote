@@ -5,12 +5,14 @@ interface UseKeyboardShortcutsProps {
   onNewNote?: () => void;
   onSearch?: () => void;
   onSave?: () => void;
+  onFocusMode?: () => void;
 }
 
 export const useKeyboardShortcuts = ({ 
   onNewNote, 
   onSearch, 
-  onSave 
+  onSave, 
+  onFocusMode 
 }: UseKeyboardShortcutsProps = {}) => {
   const navigate = useNavigate();
 
@@ -45,6 +47,14 @@ export const useKeyboardShortcuts = ({
         }
       }
 
+      // Ctrl/Cmd + Shift + F - Focus Mode
+      if (ctrlKey && event.shiftKey && event.key === 'F') {
+        event.preventDefault();
+        if (onFocusMode) {
+          onFocusMode();
+        }
+      }
+
       // Ctrl/Cmd + / - Toggle help
       if (ctrlKey && event.key === '/') {
         event.preventDefault();
@@ -68,7 +78,7 @@ export const useKeyboardShortcuts = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, onNewNote, onSearch, onSave]);
+  }, [navigate, onNewNote, onSearch, onSave, onFocusMode]);
 };
 
 export default useKeyboardShortcuts; 

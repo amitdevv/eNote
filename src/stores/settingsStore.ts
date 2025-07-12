@@ -35,8 +35,8 @@ interface SettingsStore {
 }
 
 const defaultSettings = {
-  defaultFont: 'Inter',
-  defaultFontSize: 16,
+  defaultFont: 'Fira Code',
+  defaultFontSize: 22,
   autoSave: true,
   autoSaveInterval: 2,
   confirmDelete: true,

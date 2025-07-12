@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { FocusModeProvider } from '@/contexts/FocusModeContext';
 import { LandingPage } from '@/components/landing/LandingPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/components/auth/LoginPage';
@@ -88,7 +89,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <FocusModeProvider>
+          <AppContent />
+        </FocusModeProvider>
       </AuthProvider>
     </ThemeProvider>
   );

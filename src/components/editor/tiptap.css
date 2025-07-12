@@ -151,33 +151,7 @@
   opacity: 1;
 }
 
-/* List exit hint */
-.tiptap-editor ul[data-type="taskList"]:hover::after,
-.tiptap-editor ul:not([data-type="taskList"]):hover::after,
-.tiptap-editor ol:hover::after {
-  content: 'Press Shift+Enter to exit list';
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(0, 0, 0, 0.6);
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-family: sans-serif;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.dark .tiptap-editor ul[data-type="taskList"]:hover::after,
-.dark .tiptap-editor ul:not([data-type="taskList"]):hover::after,
-.dark .tiptap-editor ol:hover::after {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-}
-
+/* Lists */
 .tiptap-editor ul,
 .tiptap-editor ol {
   position: relative;

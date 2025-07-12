@@ -35,8 +35,8 @@ interface EditorStore {
 export const useEditorStore = create<EditorStore>((set, get) => {
   // Get default settings from localStorage for initial state
   const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
-  const defaultFont = settingsStore.state?.defaultFont || 'Inter';
-  const defaultFontSize = settingsStore.state?.defaultFontSize || 16;
+  const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
+  const defaultFontSize = settingsStore.state?.defaultFontSize || 22;
 
   return {
     currentNoteId: null,
@@ -55,16 +55,16 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         title: note.title,
         content: note.content,
         tags: note.tags || [],
-        fontFamily: note.fontFamily || 'Inter',
-        fontSize: note.fontSize || 16,
+        fontFamily: note.fontFamily || 'Fira Code',
+        fontSize: note.fontSize || 22,
         isDirty: false,
         lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
       });
     } else {
       // New note - get default settings from localStorage
       const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
-      const defaultFont = settingsStore.state?.defaultFont || 'Inter';
-      const defaultFontSize = settingsStore.state?.defaultFontSize || 16;
+      const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
+      const defaultFontSize = settingsStore.state?.defaultFontSize || 22;
       
       set({
         currentNoteId: null,
@@ -125,8 +125,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
   resetEditor: () => {
     // Get default settings from localStorage
     const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
-    const defaultFont = settingsStore.state?.defaultFont || 'Inter';
-    const defaultFontSize = settingsStore.state?.defaultFontSize || 16;
+    const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
+    const defaultFontSize = settingsStore.state?.defaultFontSize || 22;
     
     set({
       currentNoteId: null,

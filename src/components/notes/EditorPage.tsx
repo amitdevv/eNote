@@ -4,12 +4,15 @@ import { useEditorStore } from '@/stores/editorStore';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useFocusMode } from '@/contexts/FocusModeContext';
 import TipTapEditor from '@/components/editor/TipTapEditor';
+import FocusMode from '@/components/editor/FocusMode';
 
 export const EditorPage: React.FC = () => {
   const navigate = useNavigate();
   const { noteId } = useParams();
   const { getNoteById } = useNotesStore();
+  const { focusMode, toggleFocusMode, setFocusMode } = useFocusMode();
   
   // Simplified - no folder assignments needed
   
@@ -23,7 +26,12 @@ export const EditorPage: React.FC = () => {
   
   useAutoSave();
 
-  useKeyboardShortcuts();
+  useKeyboardShortcuts({
+    onNewNote: () => navigate('/editor'),
+    onSearch: () => {},
+    onSave: () => {},
+    onFocusMode: toggleFocusMode // Add focus mode toggle
+  });
 
   // Get current note from store
   // const currentNote = currentNoteId ? (getNoteById(currentNoteId) || null) : null;
@@ -49,14 +57,29 @@ export const EditorPage: React.FC = () => {
   // const isNewNote = !noteId || !currentNote;
 
   return (
-    <div className="h-full w-full" style={{ fontFamily, fontSize: `${fontSize}px` }}>
-      <TipTapEditor
+    <>
+      {/* Focus Mode Overlay */}
+      <FocusMode
         content={content}
         onChange={setContent}
-        placeholder="Start writing... use / to open the menu"
         fontFamily={fontFamily}
         fontSize={fontSize}
+        isActive={focusMode}
+        onExit={() => setFocusMode(false)}
       />
-    </div>
+      
+      {/* Regular Editor */}
+      {!focusMode && (
+        <div className="h-full w-full" style={{ fontFamily, fontSize: `${fontSize}px` }}>
+          <TipTapEditor
+            content={content}
+            onChange={setContent}
+            placeholder="Start writing... use / to open the menu"
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+          />
+        </div>
+      )}
+    </>
   );
 }; 

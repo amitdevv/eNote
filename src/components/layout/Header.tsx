@@ -36,7 +36,8 @@ import {
   Grid3X3,
   List,
   Filter,
-  SortDesc
+  SortDesc,
+  Focus
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { FontSizeSelector } from '@/components/ui/font-size-selector';
@@ -44,6 +45,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNotesStore } from '@/stores/notesStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFocusMode } from '@/contexts/FocusModeContext';
 import { 
   exportNoteAsPDF,
   exportNoteAsText
@@ -99,6 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
   } = useEditorStore();
   
   const { user, signOut } = useAuth();
+  const { toggleFocusMode } = useFocusMode();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
   
   // Close mobile search when switching to editor mode
@@ -152,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Notes
+              Back
             </button>
             
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
@@ -241,6 +244,18 @@ export const Header: React.FC<HeaderProps> = ({
               currentSize={editorFontSize} 
               onSizeChange={setEditorFontSize}
             />
+
+            {/* Focus Mode Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleFocusMode}
+              className="h-8 px-3 flex items-center gap-2 text-xs"
+              title="Enter Focus Mode (Ctrl+Shift+F)"
+            >
+              <Focus className="w-3 h-3" />
+              <span className="hidden sm:inline">Focus</span>
+            </Button>
 
 
 
