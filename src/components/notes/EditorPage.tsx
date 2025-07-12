@@ -20,7 +20,6 @@ export const EditorPage: React.FC = () => {
     content, 
     fontFamily,
     fontSize,
-    currentNoteId,
     setCurrentNote,
     setTitle,
     setContent
@@ -31,7 +30,7 @@ export const EditorPage: React.FC = () => {
   useKeyboardShortcuts();
 
   // Get current note from store
-  const currentNote = currentNoteId ? (getNoteById(currentNoteId) || null) : null;
+  // const currentNote = currentNoteId ? (getNoteById(currentNoteId) || null) : null;
 
   // Load note if editing existing note
   useEffect(() => {
