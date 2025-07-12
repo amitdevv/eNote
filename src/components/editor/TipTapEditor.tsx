@@ -108,7 +108,7 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
         class: 'tiptap-editor focus:outline-none h-full min-h-screen p-6',
         style: `font-family: "${fontFamily}", sans-serif; font-size: ${fontSize}px;`,
         'data-placeholder': placeholder,
-        spellcheck: 'false',
+        spellcheck: 'true',
       },
       handleKeyDown: (_, event) => {
         // Handle keyboard shortcuts for text formatting
