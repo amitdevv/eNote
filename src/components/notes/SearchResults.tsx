@@ -145,7 +145,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           return (
             <Card 
               key={result.note.id} 
-              className="transition-all duration-200 cursor-pointer border-none bg-gradient-to-br from-white to-gray-50 dark:from-[#1e1e1e] dark:to-[#2a2a2a]"
+              className="transition-all duration-200 cursor-pointer border-none bg-white dark:bg-[#1e1e1e]"
               onClick={() => onSelectNote(result.note.id)}
             >
               <CardHeader className="pb-3">

@@ -141,7 +141,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     
     return (
       <Card 
-        className="group transition-all duration-200 border-none bg-gradient-to-br from-white to-gray-50 dark:from-[#1e1e1e] dark:to-[#2a2a2a] cursor-pointer hover:shadow-md active:scale-[0.995] touch-manipulation"
+        className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer hover:shadow-md active:scale-[0.995] touch-manipulation"
         onClick={onClick}
       >
         <CardContent className="p-3 sm:p-4">
@@ -396,7 +396,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   
   return (
     <Card 
-      className="group transition-all duration-200 border-none bg-gradient-to-br from-white to-gray-50 dark:from-[#1e1e1e] dark:to-[#2a2a2a] cursor-pointer hover:shadow-md active:scale-[0.98] touch-manipulation min-h-[200px] flex flex-col"
+      className="group transition-all duration-200 border-none bg-white dark:bg-[#1e1e1e] cursor-pointer hover:shadow-md active:scale-[0.98] touch-manipulation min-h-[200px] flex flex-col"
       onClick={onClick}
     >
       <CardHeader className="pb-2 sm:pb-3 flex-shrink-0">
