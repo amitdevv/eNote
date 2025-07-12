@@ -1,62 +1,61 @@
-# 📝 eNote - Your Smart Note-Taking Companion
+# eNote - Smart Note-Taking App
 
-## 🌟 Project Overview
-eNote is a modern, feature-rich note-taking application built for the digital age. Whether you're a student, professional, or creative mind, eNote provides the perfect platform to capture, organize, and enhance your thoughts.
+## About
+eNote is a modern note-taking application I built for anyone who needs to organize their thoughts, code snippets, and ideas in one place. It's designed to be fast, clean, and actually useful for real work.
 
-## ✨ Key Features
-- 📱 **Modern UI/UX**: Clean, intuitive interface with both light and dark mode support
-- 📝 **Rich Text Editor**: Advanced editing capabilities with slash commands
-- 💻 **Code Snippets**: Built-in code editor with syntax highlighting
-- 📊 **Text Analysis**: Real-time statistics and insights about your notes
-- 📁 **Folder Organization**: Hierarchical folder structure for better organization
-- 🔍 **Smart Search**: Quick and efficient note search functionality
-- 💾 **Auto-Save**: Never lose your work with automatic saving
-- ⌨️ **Keyboard Shortcuts**: Boost your productivity with quick commands
-- 🎨 **Customization**: Personalize your experience with themes and settings
+## What it does
+- Clean interface with light and dark themes
+- Rich text editor with slash commands for quick formatting
+- Built-in code editor with syntax highlighting
+- Focus mode for distraction-free writing
+- Multiple font families to choose from
+- Real-time text statistics and word count
+- Folder organization system
+- Search through all your notes
+- Auto-save so you never lose work
+- Keyboard shortcuts for faster navigation
+- Customizable settings and themes
 
-## 🛠️ Technology Stack
-- **Frontend**: React + TypeScript
-- **Styling**: Tailwind CSS + Shadcn UI
-- **Editor**: TipTap
-- **State Management**: Custom stores
-- **Backend Integration**: Supabase
-- **Build Tool**: Vite
+## Built with
+- React and TypeScript for the frontend
+- Tailwind CSS for styling
+- TipTap as the text editor
+- Supabase for backend services
+- Vite for fast development
 
-## 🚀 Getting Started
+## Getting started
 
-1. Clone the repository:
+Clone the repo:
 ```bash
 git clone https://github.com/amitdevv/eNote.git
 ```
 
-2. Install dependencies:
+Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development server:
+Run the development server:
 ```bash
 npm run dev
 ```
 
-## 📱 Screenshots
+That's it. The app will be running at `http://localhost:5173`
+
+## Screenshots
+Light mode:
 ![Light Mode](public/assets/images/lightmodelanding.png)
+
+Dark mode:
 ![Dark Mode](public/assets/images/darkmodelanding.png)
 
-## 🎯 Project Goals
-- Create an intuitive note-taking experience
-- Provide powerful organization tools
-- Enable seamless code snippet management
-- Ensure responsive and fast performance
-- Support collaborative features
+## Why I built this
+I wanted a note-taking app that didn't feel bloated or slow. Most apps either lack features or are too complex. eNote tries to strike the right balance - powerful enough for serious work but simple enough to actually enjoy using.
 
-## 💡 Future Enhancements
+## What's next
+I'm planning to add:
 - Real-time collaboration
-- Mobile application
-- Export to multiple formats
-- AI-powered note suggestions
-- Advanced search filters
+- Maybe some AI features if they actually make sense
 
-
-## 📄 License
-MIT License - feel free to use and modify! 
+## License
+MIT License - use it however you want. 
