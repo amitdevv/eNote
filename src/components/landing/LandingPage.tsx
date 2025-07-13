@@ -6,7 +6,6 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/contexts/ThemeContext';
 import { fetchRealUserCount, setupLiveUserCount, fetchUserCountWithUpdates } from '@/config/stats';
 import {
-  FileText,
   Users,
   Star,
   ExternalLink
@@ -73,10 +72,12 @@ export const LandingPage: React.FC = () => {
             {/* Logo - Responsive */}
             <div className="flex items-center">
               <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black" />
-                </div>
-                <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">eNote</span>
+                <img 
+                  src="/favicon.svg" 
+                  alt="eNote Logo" 
+                  className="w-7 h-7 sm:w-8 sm:h-8"
+                />
+                <span className="text-lg sm:text-xl font-normal text-gray-900 dark:text-gray-100" style={{ fontFamily: 'Inconsolata, monospace' }}>eNote</span>
               </div>
             </div>
 

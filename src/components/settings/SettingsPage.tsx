@@ -103,7 +103,7 @@ export const SettingsPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
         </div>
         <p className="text-gray-500 dark:text-gray-400">
-          Customize your eNote experience
+          Customize your <span style={{ fontFamily: 'Inconsolata, monospace' }}>eNote</span> experience
         </p>
       </div>
 

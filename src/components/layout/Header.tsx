@@ -158,8 +158,10 @@ export const Header: React.FC<HeaderProps> = ({
     return (
       <header className="bg-white dark:bg-[#171717] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-colors duration-200">
         <div className="flex items-center justify-between">
-          {/* Left Side - Back and Note Info */}
+          {/* Left Side - Logo, Back and Note Info */}
           <div className="flex items-center gap-4">
+            
+            
             <button
               type="button"
               onClick={handleBackToNotes}
@@ -331,8 +333,13 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
           
-          {/* Title/Breadcrumb - Responsive */}
-          <div className="flex items-center">
+          {/* Logo and Title/Breadcrumb - Responsive */}
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/favicon.svg" 
+              alt="eNote Logo" 
+              className="w-6 h-6 sm:w-7 sm:h-7"
+            />
             <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
               {isEditorMode ? (
                 <span className="hidden sm:inline">

@@ -33,7 +33,16 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to eNote</CardTitle>
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/favicon.svg" 
+              alt="eNote Logo" 
+              className="w-12 h-12"
+            />
+          </div>
+          <CardTitle className="text-2xl font-bold">
+            Welcome to <span style={{ fontFamily: 'Inconsolata, monospace' }}>eNote</span>
+          </CardTitle>
           <CardDescription>
             Sign in to access your notes and start organizing your thoughts
           </CardDescription>
