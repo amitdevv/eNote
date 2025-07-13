@@ -36,7 +36,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
   // Get default settings from localStorage for initial state
   const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
   const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
-  const defaultFontSize = settingsStore.state?.defaultFontSize || 22;
+  const defaultFontSize = settingsStore.state?.defaultFontSize || 20;
 
   return {
     currentNoteId: null,
@@ -56,7 +56,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
         content: note.content,
         tags: note.tags || [],
         fontFamily: note.fontFamily || 'Fira Code',
-        fontSize: note.fontSize || 22,
+        fontSize: note.fontSize || 20,
         isDirty: false,
         lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
       });
@@ -64,7 +64,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       // New note - get default settings from localStorage
       const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
       const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
-      const defaultFontSize = settingsStore.state?.defaultFontSize || 22;
+      const defaultFontSize = settingsStore.state?.defaultFontSize || 20;
       
       set({
         currentNoteId: null,
@@ -126,7 +126,7 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     // Get default settings from localStorage
     const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
     const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
-    const defaultFontSize = settingsStore.state?.defaultFontSize || 22;
+    const defaultFontSize = settingsStore.state?.defaultFontSize || 20;
     
     set({
       currentNoteId: null,

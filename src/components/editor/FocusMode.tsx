@@ -18,7 +18,7 @@ const FocusMode: React.FC<FocusModeProps> = ({
   content,
   onChange,
   fontFamily = 'Fira Code',
-  fontSize = 22,
+  fontSize = 20,
   onExit,
   isActive
 }) => {
