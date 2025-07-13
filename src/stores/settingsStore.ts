@@ -36,9 +36,9 @@ interface SettingsStore {
 
 const defaultSettings = {
   defaultFont: 'Fira Code',
-  defaultFontSize: 22,
+  defaultFontSize: 20,
   autoSave: true,
-  autoSaveInterval: 2,
+  autoSaveInterval: 1,
   confirmDelete: true,
   showWordCount: true,
   compactMode: false,
