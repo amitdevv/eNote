@@ -11,11 +11,14 @@ const fonts = [
   { value: 'Fira Code', label: 'Fira Code', style: 'font-mono' },
   { value: 'Recursive', label: 'Recursive', style: 'font-sans' },
   { value: 'Open Sans', label: 'Open Sans', style: 'font-sans' },
-  { value: 'Roboto', label: 'Roboto', style: 'font-sans' },
   { value: 'Lato', label: 'Lato', style: 'font-sans' },
   { value: 'PT Sans', label: 'PT Sans', style: 'font-sans' },
   { value: 'Kalam', label: 'Kalam', style: 'font-sans' },
   { value: 'Inconsolata', label: 'Inconsolata', style: 'font-mono' },
+  { value: 'Patrick Hand', label: 'Patrick Hand', style: 'font-sans' },
+  { value: 'Handlee', label: 'Handlee', style: 'font-sans' },
+  { value: 'La Belle Aurore', label: 'La Belle Aurore', style: 'font-sans' },
+  { value: 'Special Elite', label: 'Special Elite', style: 'font-sans' },
 ];
 
 export const FontSelector: React.FC<FontSelectorProps> = ({ 
