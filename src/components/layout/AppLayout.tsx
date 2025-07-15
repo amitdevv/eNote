@@ -7,6 +7,8 @@ import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAIStore } from '@/stores/aiStore';
+import { AISidebar } from '@/components/ai/AISidebar';
 import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
@@ -40,6 +42,7 @@ export const AppLayout: React.FC = () => {
   } = useNotesStore();
   
   const { user } = useAuth();
+  const { isOpen: isAIOpen, closeSidebar: closeAISidebar } = useAIStore();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,6 +73,14 @@ export const AppLayout: React.FC = () => {
     setIsMobileSidebarOpen(false);
   }, [location.pathname]);
 
+  // Auto-collapse sidebar when AI sidebar opens (both mobile and desktop)
+  useEffect(() => {
+    if (isAIOpen) {
+      setIsMobileSidebarOpen(false);
+      setIsSidebarCollapsed(true);
+    }
+  }, [isAIOpen]);
+
   // Handle mobile sidebar toggle
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
@@ -99,6 +110,14 @@ export const AppLayout: React.FC = () => {
   // Toggle sidebar collapse
   const toggleSidebarCollapse = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  // Handle AI sidebar toggle
+  const handleAIToggle = () => {
+    // Close mobile sidebar when AI opens
+    if (!isAIOpen) {
+      setIsMobileSidebarOpen(false);
+    }
   };
 
   // Optimized data loading with better caching
@@ -449,6 +468,7 @@ export const AppLayout: React.FC = () => {
           onViewModeChange={setViewMode}
           currentWorkspace={navValue}
           onMobileMenuToggle={toggleMobileSidebar}
+          onAIToggle={handleAIToggle}
         />
         
         <main className={`flex-1 overflow-y-auto bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
@@ -483,6 +503,12 @@ export const AppLayout: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* AI Assistant Sidebar */}
+      <AISidebar
+        isOpen={isAIOpen}
+        onClose={closeAISidebar}
+      />
     </div>
   );
 }; 

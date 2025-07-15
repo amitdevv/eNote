@@ -20,8 +20,6 @@ import { Bold, Underline as UnderlineIcon } from 'lucide-react';
 import './tiptap.css';
 import { Link } from '@tiptap/extension-link';
 
-
-
 interface TipTapEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -37,6 +35,8 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
   fontFamily = "Inter",
   fontSize = 16
 }) => {
+  const [shouldShowBubbleMenu, setShouldShowBubbleMenu] = React.useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -122,8 +122,6 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
             editor?.chain().focus().toggleBold().run();
             return true;
           }
-          
-
           
           // Underline - Ctrl+U
           if (event.key === 'u') {
@@ -253,6 +251,14 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    onCreate: () => {
+      // Enable bubble menu after editor is created
+      setShouldShowBubbleMenu(true);
+    },
+    onDestroy: () => {
+      // Disable bubble menu when editor is destroyed
+      setShouldShowBubbleMenu(false);
+    },
   }, []);
 
   useEffect(() => {
@@ -304,8 +310,6 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }, [fontFamily, fontSize, editor]);
 
-
-
   if (!editor) {
     return (
       <div className="bg-white dark:bg-[#1e1e1e] rounded-lg p-4">
@@ -319,11 +323,12 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
     );
   }
 
-    return (
+  return (
     <div 
-      className="bg-white dark:bg-[#171717] transition-colors duration-200 w-full h-full"
+      className="bg-white dark:bg-[#171717] transition-colors duration-200 w-full h-full relative"
       style={{ fontFamily, fontSize: `${fontSize}px` }}
     >
+      {/* Editor Mode */}
       <EditorContent 
         editor={editor} 
         style={{ fontFamily, fontSize: `${fontSize}px` }}
@@ -331,10 +336,15 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       />
       
       {/* Bubble Menu for text selection */}
-      {editor && (
+      {editor && shouldShowBubbleMenu && (
         <BubbleMenu
           editor={editor}
-          tippyOptions={{ duration: 100 }}
+          tippyOptions={{ 
+            duration: 100,
+            placement: 'top',
+            hideOnClick: false,
+            interactive: true
+          }}
           className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 flex items-center gap-1"
         >
           {/* Bold */}
@@ -347,8 +357,6 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
           >
             <Bold className="w-4 h-4" />
           </Button>
-
-
 
           {/* Underline */}
           <Button

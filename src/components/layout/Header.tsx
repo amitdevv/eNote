@@ -37,7 +37,8 @@ import {
   List,
   Filter,
   SortDesc,
-  Focus
+  Focus,
+  Sparkles
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { FontSizeSelector } from '@/components/ui/font-size-selector';
@@ -46,6 +47,7 @@ import { useNotesStore } from '@/stores/notesStore';
 import { useEditorStore } from '@/stores/editorStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFocusMode } from '@/contexts/FocusModeContext';
+import { useAIStore } from '@/stores/aiStore';
 import { 
   exportNoteAsPDF,
   exportNoteAsText
@@ -68,6 +70,7 @@ interface HeaderProps {
   onViewModeChange: (mode: 'grid' | 'list') => void;
   currentWorkspace: string;
   onMobileMenuToggle?: () => void;
+  onAIToggle?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -84,7 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
   viewMode,
   onViewModeChange,
   currentWorkspace,
-  onMobileMenuToggle
+  onMobileMenuToggle,
+  onAIToggle
 }) => {
   const { getNoteById } = useNotesStore();
   const { 
@@ -102,6 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
   
   const { user, signOut } = useAuth();
   const { toggleFocusMode } = useFocusMode();
+  const { isOpen: isAIOpen, toggleSidebar: toggleAI } = useAIStore();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
 
   // Calculate dynamic width for title input based on content
@@ -429,6 +434,29 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
           
+          {/* AI Assistant Button */}
+          <Button 
+            onClick={() => {
+              toggleAI();
+              onAIToggle?.();
+            }}
+            size="sm"
+            variant={isAIOpen ? "default" : "outline"}
+            className={cn(
+              "px-3 sm:px-4 py-2 text-sm font-medium min-h-[36px] sm:min-h-[40px] transition-all duration-200",
+              isAIOpen 
+                ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white" 
+                : "border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+            )}
+            title="AI Assistant"
+          >
+            <Sparkles className={cn(
+              "w-4 h-4 sm:mr-2",
+              isAIOpen ? "text-white" : "text-emerald-600 dark:text-emerald-400"
+            )} />
+            <span className="hidden sm:inline">AI</span>
+          </Button>
+
           {/* New Note Button - Always visible, different sizes */}
           <Button 
             onClick={onNewNote}
