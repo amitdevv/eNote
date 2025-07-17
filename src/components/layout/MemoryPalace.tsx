@@ -2,13 +2,13 @@
 
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { supabase } from '@/lib/supabase';
 import { toast, Toaster } from 'sonner';
-import { X, File,Circle,Dot } from 'lucide-react';
+import { X, File,Dot } from 'lucide-react';
 import { Button } from '../ui/button';
 // import { Navigate } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -45,14 +45,14 @@ export default function RoomCanvas() {
   const [activeHotspot, setActiveHotspot] = useState<number | null>(null);
   const [hotspotWithNotes, setHotspotWithNotes] = useState<number[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [currentUser, setcurrentUser]=useState<object | null>(null);
+  
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUserEmail(user?.email ?? null);
-      user?.user_metadata.avatar_url
-      setcurrentUser(user);
+      
+      
     };
     getUser();
   }, []);
