@@ -20,8 +20,10 @@ import {
   ClipboardList,
   Eye,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Camera
 } from 'lucide-react';
+import { useImageToTextStore } from '@/stores/imageToTextStore';
 // Removed workspaces import - we'll show folders directly
 
 interface SidebarProps {
@@ -56,6 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   sidebarCounts
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const { openModal: openImageToText } = useImageToTextStore();
 
   // Unified tags system - replaces both status and tags
   const predefinedTags = [
@@ -75,6 +78,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { icon: FileText, label: 'All Notes', count: sidebarCounts?.all || noteCount, id: 'all' },
     { icon: Calendar, label: 'Today', count: sidebarCounts?.today || 0, id: 'today' },
     { icon: Star, label: 'Starred', count: sidebarCounts?.starred || 0, id: 'starred' },
+  ];
+
+  const toolsItems = [
+    { icon: Camera, label: 'Image to Text', id: 'image-to-text', action: openImageToText },
   ];
 
   return (
@@ -176,6 +183,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-600 dark:text-gray-400">
                       {item.count}
                     </Badge>
+                  </>
+                )}
+              </Button>
+            ))}
+          </div>
+
+          {/* Tools Items */}
+          <div className="mb-6">
+            {toolsItems.map((item) => (
+              <Button
+                key={item.id}
+                variant="ghost"
+                className={cn(
+                  "mb-1 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300",
+                  isCollapsed 
+                    ? "w-8 h-8 p-0 mx-auto flex justify-center" 
+                    : "w-full justify-between h-9 px-3",
+                  selectedWorkspace === item.id && "bg-gray-100 dark:bg-[#333333] text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-[#333333]"
+                )}
+                onClick={item.action}
+                title={isCollapsed ? item.label : undefined}
+              >
+                {isCollapsed ? (
+                  <item.icon className="w-4 h-4" />
+                ) : (
+                  <>
+                    <div className="flex items-center">
+                      <item.icon className="w-4 h-4 mr-3" />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </div>
                   </>
                 )}
               </Button>

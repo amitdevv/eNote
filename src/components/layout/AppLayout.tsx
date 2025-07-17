@@ -8,6 +8,8 @@ import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAIStore } from '@/stores/aiStore';
+import { ImageToTextModal } from '@/components/features/ImageToTextModal';
+import { useImageToTextStore } from '@/stores/imageToTextStore';
 import { AISidebar } from '@/components/ai/AISidebar';
 import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -43,6 +45,7 @@ export const AppLayout: React.FC = () => {
   
   const { user } = useAuth();
   const { isOpen: isAIOpen, closeSidebar: closeAISidebar } = useAIStore();
+  const { isOpen: isImageToTextOpen, closeModal: closeImageToText } = useImageToTextStore();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -497,6 +500,12 @@ export const AppLayout: React.FC = () => {
           variant="mobile"
         />
       </div>
+
+      {/* Image to Text Sidebar */}
+      <ImageToTextModal
+        isOpen={isImageToTextOpen}
+        onClose={closeImageToText}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={cancelDeleteNote}>
