@@ -160,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             navigate('/memory-palace')
         }}><Brain className='h-4 mr-1'/>Memory Palace</Button>
       
-        <Button className='w-full flex mt-4' onClick={() => onWorkspaceChange('canvas')} ><Brush className='h-4 mr-1'/>Open Canvas</Button>
+        <Button className='w-full flex mt-4' onClick={() => {onWorkspaceChange('canvas'); }} ><Brush className='h-4 mr-1'/>Open Canvas</Button>
       </div>
 
       {/* Navigation */}

@@ -77,14 +77,7 @@ const AppContent = () => {
             } 
           />
 
-          <Route 
-            path="/canvas" 
-            element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            } 
-          />
+          
 
           <Route 
             path="/memory-palace" 

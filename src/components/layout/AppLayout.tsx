@@ -71,7 +71,7 @@ export const AppLayout: React.FC = () => {
   // Check if we're in editor mode or settings mode
   const isEditorMode = location.pathname.startsWith('/editor');
   const isSettingsMode = location.pathname === '/settings';
-  const isCanvasMode=location.pathname==='/canvas'
+  const isCanvasMode = navValue === 'canvas';
 
   // Close mobile sidebar when route changes
   useEffect(() => {
@@ -171,7 +171,8 @@ export const AppLayout: React.FC = () => {
     if (isSettingsMode) {
       setNavValue('settings');
     }else if(isCanvasMode){
-      setNavValue('Canvas')
+      setNavValue('canvas');
+      return;
     }
      else if (workspaceParam) {
       setNavValue(workspaceParam);
@@ -269,10 +270,12 @@ export const AppLayout: React.FC = () => {
       return;
     }
 
-    if(workspace === 'canvas'){
-      navigate('/canvas')
-      return;
-    }
+    if (workspace === 'canvas') {
+  setNavValue('canvas');
+  return;
+}
+
+    
     
     // Navigate to notes view when other sidebar items are clicked
     if (location.pathname.startsWith('/editor') || location.pathname === '/settings') {
