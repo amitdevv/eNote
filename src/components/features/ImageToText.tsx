@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { createWorker } from 'tesseract.js';
 import confetti from 'canvas-confetti';
-import { cn } from '@/lib/utils';
 
 interface ImageToTextProps {
   isOpen: boolean;
