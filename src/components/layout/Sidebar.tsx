@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Star,
@@ -21,6 +22,8 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Brain,
+  Brush,
   Camera
 } from 'lucide-react';
 import { useImageToTextStore } from '@/stores/imageToTextStore';
@@ -59,6 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { theme, toggleTheme } = useTheme();
   const { openModal: openImageToText } = useImageToTextStore();
+  const navigate=useNavigate();
 
   // Unified tags system - replaces both status and tags
   const predefinedTags = [
@@ -90,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className={cn("p-4", isCollapsed && "p-2")}>
+      <div className={cn("p-4", isCollapsed && "p-2" )}>
         <div className={cn(
           "flex items-center mb-4",
           isCollapsed ? "justify-center" : "justify-between"
@@ -151,6 +155,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Plus className="w-4 h-4" />
           {!isCollapsed && <span className="ml-2">New Note</span>}
         </Button>
+
+        <Button className='w-full flex' onClick={()=>{
+            navigate('/memory-palace')
+        }}><Brain className='h-4 mr-1'/>Memory Palace</Button>
+      
+        <Button className='w-full flex mt-4' onClick={() => {onWorkspaceChange('canvas'); }} ><Brush className='h-4 mr-1'/>Open Canvas</Button>
       </div>
 
       {/* Navigation */}
@@ -280,6 +290,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         "border-t border-gray-200 dark:border-gray-800",
         isCollapsed ? "p-2" : "p-4"
       )}>
+      
         <Button 
           variant="ghost" 
           onClick={() => onWorkspaceChange('settings')}

@@ -15,6 +15,7 @@ import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
 import { SettingsPage } from '@/components/settings/SettingsPage';
+import { ExcelDraw } from '../notes/exceldraw';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,6 +71,7 @@ export const AppLayout: React.FC = () => {
   // Check if we're in editor mode or settings mode
   const isEditorMode = location.pathname.startsWith('/editor');
   const isSettingsMode = location.pathname === '/settings';
+  const isCanvasMode = navValue === 'canvas';
 
   // Close mobile sidebar when route changes
   useEffect(() => {
@@ -168,12 +170,16 @@ export const AppLayout: React.FC = () => {
   useEffect(() => {
     if (isSettingsMode) {
       setNavValue('settings');
-    } else if (workspaceParam) {
+    }else if(isCanvasMode){
+      setNavValue('canvas');
+      return;
+    }
+     else if (workspaceParam) {
       setNavValue(workspaceParam);
     } else {
       setNavValue('all');
     }
-  }, [workspaceParam, isSettingsMode]);
+  }, [workspaceParam, isSettingsMode,isCanvasMode]);
 
   // Predefined tags for filtering - unified system
   const predefinedTags = ['project', 'coding', 'college', 'personal', 'ideas', 'done', 'ongoing', 'future'];
@@ -263,6 +269,13 @@ export const AppLayout: React.FC = () => {
       navigate('/settings');
       return;
     }
+
+    if (workspace === 'canvas') {
+  setNavValue('canvas');
+  return;
+}
+
+    
     
     // Navigate to notes view when other sidebar items are clicked
     if (location.pathname.startsWith('/editor') || location.pathname === '/settings') {
@@ -270,7 +283,7 @@ export const AppLayout: React.FC = () => {
     }
 
     // Set navigation value
-    if (['all', 'today', 'starred'].includes(workspace)) {
+    if (['all', 'today', 'starred','open-canvas'].includes(workspace)) {
       setNavValue(workspace);
     } else if (predefinedTags.includes(workspace)) {
       setNavValue(workspace);
@@ -331,6 +344,10 @@ export const AppLayout: React.FC = () => {
           </div>
         </div>
       );
+    }
+
+    if(isCanvasMode){
+      return <ExcelDraw></ExcelDraw>
     }
 
     if (isSettingsMode) {
