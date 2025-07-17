@@ -78,6 +78,15 @@ const AppContent = () => {
           />
 
           <Route 
+            path="/canvas" 
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
             path="/memory-palace" 
             element={
               <ProtectedRoute>
@@ -85,6 +94,7 @@ const AppContent = () => {
               </ProtectedRoute>
             } 
           />
+
           
           {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" replace />} />

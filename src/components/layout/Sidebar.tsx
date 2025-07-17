@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Brain,
+  Brush,
   Camera
 } from 'lucide-react';
 import { useImageToTextStore } from '@/stores/imageToTextStore';
@@ -93,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className={cn("p-4", isCollapsed && "p-2")}>
+      <div className={cn("p-4", isCollapsed && "p-2" )}>
         <div className={cn(
           "flex items-center mb-4",
           isCollapsed ? "justify-center" : "justify-between"
@@ -154,9 +155,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Plus className="w-4 h-4" />
           {!isCollapsed && <span className="ml-2">New Note</span>}
         </Button>
+
         <Button className='w-full flex' onClick={()=>{
             navigate('/memory-palace')
         }}><Brain className='h-4 mr-1'/>Memory Palace</Button>
+      
+        <Button className='w-full flex mt-4' onClick={() => onWorkspaceChange('canvas')} ><Brush className='h-4 mr-1'/>Open Canvas</Button>
       </div>
 
       {/* Navigation */}
