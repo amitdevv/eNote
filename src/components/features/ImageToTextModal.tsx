@@ -164,9 +164,7 @@ export const ImageToTextModal: React.FC<ImageToTextModalProps> = ({
             <h2 className="text-lg font-semibold text-foreground">
               Image to Text Converter
             </h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              Extract text from your images using OCR technology
-            </p>
+            
           </div>
 
           {currentStep === "upload" && (
