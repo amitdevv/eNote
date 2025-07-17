@@ -184,3 +184,7 @@ input:focus, textarea:focus, select:focus {
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out;
 }
+
+#memopal{
+    font-family: 'Press Start 2P', monospace;
+}
