@@ -8,7 +8,6 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import TipTapEditor from '@/components/editor/TipTapEditor';
 import FocusMode from '@/components/editor/FocusMode';
-import { AISidebar } from '@/components/ai/AISidebar';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 
@@ -17,7 +16,7 @@ export const EditorPage: React.FC = () => {
   const { noteId } = useParams();
   const { getNoteById } = useNotesStore();
   const { focusMode, toggleFocusMode, setFocusMode } = useFocusMode();
-  const { isOpen: isAIOpen, toggleSidebar: toggleAI, closeSidebar: closeAI } = useAIStore();
+  const { isOpen: isAIOpen, toggleSidebar: toggleAI } = useAIStore();
   
   // Simplified - no folder assignments needed
   
@@ -78,7 +77,7 @@ export const EditorPage: React.FC = () => {
         <div className="relative h-full w-full flex">
           {/* Main Editor Area */}
           <div 
-            className={`transition-all duration-300 ${isAIOpen ? 'w-0 sm:w-[calc(100%-384px)]' : 'w-full'}`}
+            className="w-full transition-all duration-300"
             style={{ fontFamily, fontSize: `${fontSize}px` }}
           >
             <TipTapEditor
@@ -100,12 +99,6 @@ export const EditorPage: React.FC = () => {
               <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
             </Button>
           )}
-
-          {/* AI Sidebar */}
-          <AISidebar
-            isOpen={isAIOpen}
-            onClose={closeAI}
-          />
         </div>
       )}
     </>

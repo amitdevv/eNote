@@ -478,6 +478,26 @@ export const AppLayout: React.FC = () => {
         </main>
       </div>
 
+      {/* AI Assistant Sidebar - Now part of the flex layout */}
+      {isAIOpen && (
+        <div className="w-96 flex-shrink-0 hidden sm:block">
+          <AISidebar
+            isOpen={isAIOpen}
+            onClose={closeAISidebar}
+            variant="desktop"
+          />
+        </div>
+      )}
+
+      {/* Mobile AI Sidebar - Still fixed for mobile */}
+      <div className="sm:hidden">
+        <AISidebar
+          isOpen={isAIOpen}
+          onClose={closeAISidebar}
+          variant="mobile"
+        />
+      </div>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={cancelDeleteNote}>
         <AlertDialogContent>
@@ -503,12 +523,6 @@ export const AppLayout: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* AI Assistant Sidebar */}
-      <AISidebar
-        isOpen={isAIOpen}
-        onClose={closeAISidebar}
-      />
     </div>
   );
 }; 
