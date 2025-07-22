@@ -140,27 +140,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
         
-        {/* New Note Button */}
-        <Button
-          onClick={onNewNote}
-          className={cn(
-            "bg-[#333333] hover:bg-[#404040] text-white mb-4 transition-all duration-300",
-            isCollapsed 
-              ? "w-8 h-8 p-0 rounded-md" 
-              : "w-full"
-          )}
-          size="sm"
-          title={isCollapsed ? 'New Note' : undefined}
-        >
-          <Plus className="w-4 h-4" />
-          {!isCollapsed && <span className="ml-2">New Note</span>}
-        </Button>
-
-        <Button className='w-full flex' onClick={()=>{
-            navigate('/memory-palace')
-        }}><Brain className='h-4 mr-1'/>Memory Palace</Button>
-      
-        <Button className='w-full flex mt-4' onClick={() => {onWorkspaceChange('canvas'); }} ><Brush className='h-4 mr-1'/>Open Canvas</Button>
+        {/* New Note, Memory Palace, Open Canvas Buttons */}
+        <div className={cn("flex flex-col", "space-y-2")}> 
+          <Button
+            onClick={onNewNote}
+            className={cn(
+              "bg-[#333333] hover:bg-[#404040] text-white transition-all duration-300",
+              isCollapsed 
+                ? "w-8 h-8 p-0 rounded-md" 
+                : "w-full"
+            )}
+            size="sm"
+            title={isCollapsed ? 'New Note' : undefined}
+          >
+            <Plus className="w-4 h-4" />
+            {!isCollapsed && <span className="ml-2">New Note</span>}
+          </Button>
+          <Button
+            onClick={() => { navigate('/memory-palace'); }}
+            className={cn(
+              "bg-[#333333] hover:bg-[#404040] text-white transition-all duration-300",
+              isCollapsed 
+                ? "w-8 h-8 p-0 rounded-md" 
+                : "w-full"
+            )}
+            size="sm"
+            title={isCollapsed ? 'Memory Palace' : undefined}
+          >
+            <Brain className="w-4 h-4" />
+            {!isCollapsed && <span className="ml-2">Memory Palace</span>}
+          </Button>
+          <Button
+            onClick={() => { onWorkspaceChange('canvas'); }}
+            className={cn(
+              "bg-[#333333] hover:bg-[#404040] text-white transition-all duration-300",
+              isCollapsed 
+                ? "w-8 h-8 p-0 rounded-md" 
+                : "w-full"
+            )}
+            size="sm"
+            title={isCollapsed ? 'Open Canvas' : undefined}
+          >
+            <Brush className="w-4 h-4" />
+            {!isCollapsed && <span className="ml-2">Open Canvas</span>}
+          </Button>
+        </div>
       </div>
 
       {/* Navigation */}
