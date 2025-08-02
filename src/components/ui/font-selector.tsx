@@ -8,6 +8,7 @@ interface FontSelectorProps {
 
 const fonts = [
   { value: 'Inter', label: 'Inter', style: 'font-sans' },
+  { value: 'Manrope', label: 'Manrope', style: 'font-sans' },
   { value: 'Fira Code', label: 'Fira Code', style: 'font-mono' },
   { value: 'Recursive', label: 'Recursive', style: 'font-sans' },
   { value: 'Open Sans', label: 'Open Sans', style: 'font-sans' },
@@ -17,8 +18,7 @@ const fonts = [
   { value: 'Inconsolata', label: 'Inconsolata', style: 'font-mono' },
   { value: 'Patrick Hand', label: 'Patrick Hand', style: 'font-sans' },
   { value: 'Handlee', label: 'Handlee', style: 'font-sans' },
-  { value: 'La Belle Aurore', label: 'La Belle Aurore', style: 'font-sans' },
-  { value: 'Special Elite', label: 'Special Elite', style: 'font-sans' },
+  { value: 'Comfortaa', label: 'Comfortaa', style: 'font-sans' },
 ];
 
 export const FontSelector: React.FC<FontSelectorProps> = ({ 
