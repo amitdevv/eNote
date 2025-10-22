@@ -16,7 +16,18 @@ import { Iframe } from './IframeExtension';
 import { SlashCommandExtension } from './SlashCommandExtension';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Button } from '@/components/ui/button';
-import { Bold, Underline as UnderlineIcon } from 'lucide-react';
+import {
+  Bold,
+  Underline as UnderlineIcon,
+  Italic,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  Quote,
+  Code,
+  Link as LinkIcon
+} from 'lucide-react';
 import './tiptap.css';
 import { Link } from '@tiptap/extension-link';
 
@@ -328,6 +339,153 @@ const TipTapEditor: React.FC<TipTapEditorProps> = ({
       className="bg-white dark:bg-[#171717] transition-colors duration-200 w-full h-full relative"
       style={{ fontFamily, fontSize: `${fontSize}px` }}
     >
+      {/* Top Toolbar */}
+      <div className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-[#171717]/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
+        <div className="flex items-center gap-1 p-2">
+          {/* Bold */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`h-8 px-2 ${editor.isActive('bold') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Bold (Ctrl+B)"
+          >
+            <Bold className="w-4 h-4" />
+          </Button>
+
+          {/* Italic */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`h-8 px-2 ${editor.isActive('italic') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Italic (Ctrl+I)"
+          >
+            <Italic className="w-4 h-4" />
+          </Button>
+
+          {/* Underline */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={`h-8 px-2 ${editor.isActive('underline') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Underline (Ctrl+U)"
+          >
+            <UnderlineIcon className="w-4 h-4" />
+          </Button>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+          {/* Headings */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`h-8 px-2 ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Heading 1"
+          >
+            <Heading1 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`h-8 px-2 ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Heading 2"
+          >
+            <Heading2 className="w-4 h-4" />
+          </Button>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+          {/* Lists */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`h-8 px-2 ${editor.isActive('bulletList') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Bullet List"
+          >
+            <List className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`h-8 px-2 ${editor.isActive('orderedList') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Numbered List"
+          >
+            <ListOrdered className="w-4 h-4" />
+          </Button>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+          {/* Blockquote */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={`h-8 px-2 ${editor.isActive('blockquote') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Blockquote"
+          >
+            <Quote className="w-4 h-4" />
+          </Button>
+
+          {/* Code Block */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            className={`h-8 px-2 ${editor.isActive('codeBlock') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title="Code Block"
+          >
+            <Code className="w-4 h-4" />
+          </Button>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+          {/* Link */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (editor.isActive('link')) {
+                editor.chain().focus().unsetLink().run();
+                return;
+              }
+              const previousUrl = editor.getAttributes('link').href as string | undefined;
+              const url = window.prompt('Enter URL', previousUrl || 'https://');
+              if (url && url.trim()) {
+                editor.chain().focus().setLink({ href: url.trim() }).run();
+              }
+            }}
+            className={`h-8 px-2 ${editor.isActive('link') ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+            title={editor.isActive('link') ? 'Remove Link' : 'Insert Link'}
+          >
+            <LinkIcon className="w-4 h-4" />
+          </Button>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+          {/* Color Picker */}
+          <ColorPicker
+            currentColor={editor.getAttributes('textStyle').color || ''}
+            onColorChange={(color) => {
+              if (color) {
+                editor.chain().focus().setColor(color).run();
+              } else {
+                editor.chain().focus().unsetColor().run();
+              }
+            }}
+          />
+        </div>
+      </div>
       {/* Editor Mode */}
       <EditorContent 
         editor={editor} 

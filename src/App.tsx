@@ -7,7 +7,6 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/components/auth/LoginPage';
 import { Toaster } from '@/components/ui/toaster';
 import { Loader2 } from 'lucide-react';
-import RoomCanvas from './components/layout/MemoryPalace';
 import './App.css';
 
 // Protected route component
@@ -79,14 +78,6 @@ const AppContent = () => {
 
           
 
-          <Route 
-            path="/memory-palace" 
-            element={
-              <ProtectedRoute>
-                <RoomCanvas/>
-              </ProtectedRoute>
-            } 
-          />
 
           
           {/* Fallback route */}

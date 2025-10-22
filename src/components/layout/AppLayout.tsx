@@ -7,10 +7,8 @@ import { SearchResults } from '@/components/notes/SearchResults';
 import { EditorPage } from '@/components/notes/EditorPage';
 import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAIStore } from '@/stores/aiStore';
 import { ImageToTextModal } from '@/components/features/ImageToTextModal';
 import { useImageToTextStore } from '@/stores/imageToTextStore';
-import { AISidebar } from '@/components/ai/AISidebar';
 import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
@@ -45,7 +43,6 @@ export const AppLayout: React.FC = () => {
   } = useNotesStore();
   
   const { user } = useAuth();
-  const { isOpen: isAIOpen, closeSidebar: closeAISidebar } = useAIStore();
   const { isOpen: isImageToTextOpen, closeModal: closeImageToText } = useImageToTextStore();
   
   const navigate = useNavigate();
@@ -78,13 +75,6 @@ export const AppLayout: React.FC = () => {
     setIsMobileSidebarOpen(false);
   }, [location.pathname]);
 
-  // Auto-collapse sidebar when AI sidebar opens (both mobile and desktop)
-  useEffect(() => {
-    if (isAIOpen) {
-      setIsMobileSidebarOpen(false);
-      setIsSidebarCollapsed(true);
-    }
-  }, [isAIOpen]);
 
   // Handle mobile sidebar toggle
   const toggleMobileSidebar = () => {
@@ -117,13 +107,6 @@ export const AppLayout: React.FC = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  // Handle AI sidebar toggle
-  const handleAIToggle = () => {
-    // Close mobile sidebar when AI opens
-    if (!isAIOpen) {
-      setIsMobileSidebarOpen(false);
-    }
-  };
 
   // Optimized data loading with better caching
   useEffect(() => {
@@ -488,7 +471,6 @@ export const AppLayout: React.FC = () => {
           onViewModeChange={setViewMode}
           currentWorkspace={navValue}
           onMobileMenuToggle={toggleMobileSidebar}
-          onAIToggle={handleAIToggle}
         />
         
         <main className={`flex-1 overflow-y-auto bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
@@ -498,25 +480,6 @@ export const AppLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* AI Assistant Sidebar - Now part of the flex layout */}
-      {isAIOpen && (
-        <div className="w-96 flex-shrink-0 hidden sm:block">
-          <AISidebar
-            isOpen={isAIOpen}
-            onClose={closeAISidebar}
-            variant="desktop"
-          />
-        </div>
-      )}
-
-      {/* Mobile AI Sidebar - Still fixed for mobile */}
-      <div className="sm:hidden">
-        <AISidebar
-          isOpen={isAIOpen}
-          onClose={closeAISidebar}
-          variant="mobile"
-        />
-      </div>
 
       {/* Image to Text Sidebar */}
       <ImageToTextModal

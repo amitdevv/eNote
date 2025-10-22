@@ -22,7 +22,6 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  Brain,
   Brush,
   Camera
 } from 'lucide-react';
@@ -140,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
         
-        {/* New Note, Memory Palace, Open Canvas Buttons */}
+        {/* New Note, Open Canvas Buttons */}
         <div className={cn("flex flex-col", "space-y-2")}> 
           <Button
             onClick={onNewNote}
@@ -155,20 +154,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Plus className="w-4 h-4" />
             {!isCollapsed && <span className="ml-2">New Note</span>}
-          </Button>
-          <Button
-            onClick={() => { navigate('/memory-palace'); }}
-            className={cn(
-              "bg-[#333333] hover:bg-[#404040] text-white transition-all duration-300",
-              isCollapsed 
-                ? "w-8 h-8 p-0 rounded-md" 
-                : "w-full"
-            )}
-            size="sm"
-            title={isCollapsed ? 'Memory Palace' : undefined}
-          >
-            <Brain className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">Memory Palace</span>}
           </Button>
           <Button
             onClick={() => { onWorkspaceChange('canvas'); }}
