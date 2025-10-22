@@ -2,7 +2,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
-  type: 'markdown'; // Only markdown now
+  type: 'markdown' | 'html'; // Support both markdown and HTML
   folderId?: string; // Optional folder assignment
   createdAt: Date;
   updatedAt: Date;

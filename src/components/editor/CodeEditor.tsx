@@ -144,19 +144,18 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   return (
     <div className={cn(
       "relative rounded-lg border overflow-hidden transition-colors duration-200",
-      "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1e1e1e]",
-      "shadow-sm",
+      "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#272727]",
       isFullscreen && "fixed inset-4 z-50 h-auto",
       className
     )}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-[#333333] border-b border-gray-200 dark:border-gray-600">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-[#232323] border-b border-gray-200 dark:border-gray-600">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+          <span className="text-xs font-medium text-gray-600 dark:text-white">
             {language.toUpperCase()}
           </span>
           {value && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-500 dark:text-white">
               {value.split('\n').length} lines
             </span>
           )}
@@ -166,7 +165,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             variant="ghost"
             size="sm"
             onClick={copyToClipboard}
-            className="h-7 w-7 p-0 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            className="h-7 w-7 p-0 text-gray-600 dark:text-white hover:text-gray-700 dark:hover:text-gray-200"
             disabled={!value}
           >
             {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -175,7 +174,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             variant="ghost"
             size="sm"
             onClick={toggleFullscreen}
-            className="h-7 w-7 p-0 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            className="h-7 w-7 p-0 text-gray-600 dark:text-white hover:text-gray-700 dark:hover:text-gray-200"
           >
             {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
           </Button>
@@ -219,7 +218,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           placeholder={placeholder}
           className={cn(
             "absolute inset-0 w-full h-full p-4 text-sm font-mono resize-none outline-none z-10",
-            "bg-transparent text-gray-800 dark:text-gray-200 caret-gray-800 dark:caret-white",
+            "bg-transparent text-gray-800 dark:text-white caret-gray-800 dark:caret-white",
             "selection:bg-blue-200 dark:selection:bg-blue-800",
             "placeholder:text-gray-400 dark:placeholder:text-gray-500",
             // Make text visible when syntax highlighter is not working

@@ -22,15 +22,15 @@ export const FontSizeSelector: React.FC<FontSizeSelectorProps> = ({
 }) => {
   return (
     <Select value={currentSize.toString()} onValueChange={(value) => onSizeChange(Number(value))}>
-      <SelectTrigger className="w-28 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100">
+      <SelectTrigger className="w-28 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-0">
         <SelectValue placeholder="Size" />
       </SelectTrigger>
-      <SelectContent className="bg-white dark:bg-[#333333]">
+      <SelectContent className="bg-white dark:bg-[#333333] border-0">
         {fontSizes.map((size) => (
           <SelectItem 
             key={size.value} 
             value={size.value.toString()}
-            className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1e1e1e]"
+            className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0"
           >
             <div className="flex items-center justify-between w-full">
               <span style={{ fontSize: `${Math.min(size.value, 16)}px` }}>{size.label}</span>

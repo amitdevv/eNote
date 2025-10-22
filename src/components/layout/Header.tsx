@@ -15,7 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { 
   Plus, 
@@ -27,7 +26,6 @@ import {
   ClipboardList, 
   Eye, 
   CheckCircle,
-  LogOut,
   User,
   Rocket,
   Code,
@@ -37,20 +35,12 @@ import {
   List,
   Filter,
   SortDesc,
-  Focus,
 } from 'lucide-react';
 import { FontSelector } from '@/components/ui/font-selector';
 import { FontSizeSelector } from '@/components/ui/font-size-selector';
 
-import { useNotesStore } from '@/stores/notesStore';
-import { useEditorStore } from '@/stores/editorStore';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFocusMode } from '@/contexts/FocusModeContext';
-import { 
-  exportNoteAsPDF,
-  exportNoteAsText
-} from '@/utils/export';
 import { useNavigate } from 'react-router-dom';
+import { useEditorStore } from '@/stores/editorStore';
 import { cn } from '@/lib/utils';
 
 interface HeaderProps {
@@ -86,34 +76,17 @@ export const Header: React.FC<HeaderProps> = ({
   currentWorkspace,
   onMobileMenuToggle,
 }) => {
-  const { getNoteById } = useNotesStore();
   const { 
-    title: editorTitle,
-    content: editorContent,
     tags: editorTags, 
     fontFamily: editorFontFamily,
     fontSize: editorFontSize,
-    setTitle: setEditorTitle,
     setFontFamily: setEditorFontFamily,
     setFontSize: setEditorFontSize,
     addTag: addEditorTag,
     removeTag: removeEditorTag
   } = useEditorStore();
   
-  const { user, signOut } = useAuth();
-  const { toggleFocusMode } = useFocusMode();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = React.useState(false);
-
-  // Calculate dynamic width for title input based on content
-  const getTitleInputWidth = () => {
-    const baseWidth = 120; // Minimum width in pixels
-    const charWidth = 8; // Approximate character width in pixels
-    const padding = 24; // Account for padding
-    const titleLength = editorTitle.length || 13; // Use placeholder length if empty
-    const calculatedWidth = Math.max(baseWidth, (titleLength * charWidth) + padding);
-    const maxWidth = 300; // Maximum width to prevent it from getting too wide
-    return Math.min(calculatedWidth, maxWidth);
-  };
   
   // Close mobile search when switching to editor mode
   React.useEffect(() => {
@@ -138,7 +111,6 @@ export const Header: React.FC<HeaderProps> = ({
   
   // Editor mode state
   const navigate = useNavigate();
-  const currentNote = noteId ? getNoteById(noteId) : null;
 
   const handleBackToNotes = () => {
     navigate('/notes');
@@ -156,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   if (isEditorMode) {
     return (
-      <header className="bg-white dark:bg-[#171717] border-b border-gray-200 dark:border-gray-800 px-6 py-3 transition-colors duration-200">
+      <header className="bg-transparent dark:bg-[#212121] px-6 py-3 transition-colors duration-200">
         <div className="flex items-center justify-between">
           {/* Left Side - Logo, Back and Note Info */}
           <div className="flex items-center gap-4">
@@ -165,24 +137,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={handleBackToNotes}
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="flex items-center gap-2 text-gray-600 dark:text-white hover:text-gray-700 dark:hover:text-gray-200"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </button>
-            
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
-            
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={editorTitle}
-                onChange={(e) => setEditorTitle(e.target.value)}
-                placeholder="Untitled Note"
-                style={{ width: `${getTitleInputWidth()}px` }}
-                className="text-sm font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 border-none focus:outline-none focus:ring-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-3 py-1.5 rounded-md transition-all duration-200"
-              />
-            </div>
           </div>
 
           {/* Right Side - Editor Controls */}
@@ -194,25 +153,25 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Tags Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-40 h-8 text-xs justify-between">
+                  <Button variant="outline" className="w-40 h-8 text-xs justify-between bg-white dark:bg-[#333333] text-gray-900 dark:text-white border-0 focus:outline-none focus:ring-0">
                     <div className="flex items-center gap-2">
-                      <Hash className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                      <Hash className="w-3 h-3 text-gray-500 dark:text-white" />
                       Add Tags
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-400 dark:text-gray-300">
                       {editorTags.length > 0 ? `(${editorTags.length})` : ''}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48">
-                  <div className="px-2 py-1 text-xs text-gray-500 border-b">
+                <DropdownMenuContent className="w-48 bg-white dark:bg-[#333333] border-0">
+                  <div className="px-2 py-1 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
                     Click to add/remove tags:
                   </div>
                   {predefinedTags.map((tag) => (
                     <DropdownMenuItem 
                       key={tag.id} 
                       onClick={() => handlePredefinedTagClick(tag.id)}
-                      className="cursor-pointer"
+                      className="cursor-pointer text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0"
                     >
                       <div className="flex items-center gap-2 w-full">
                         <tag.icon className={cn("w-3 h-3", tag.color)} />
@@ -239,76 +198,6 @@ export const Header: React.FC<HeaderProps> = ({
               onSizeChange={setEditorFontSize}
             />
 
-            {/* Focus Mode Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleFocusMode}
-              className="h-8 px-3 flex items-center gap-2 text-xs"
-              title="Enter Focus Mode (Ctrl+Shift+F)"
-            >
-              <Focus className="w-3 h-3" />
-              <span className="hidden sm:inline">Focus</span>
-            </Button>
-
-
-
-            {/* Export */}
-            {currentNote && (
-              <Select value="export" onValueChange={(value) => {
-                if (value === "pdf") {
-                  exportNoteAsPDF(currentNote || { title: editorTitle, content: editorContent } as any, editorTitle, editorContent);
-                } else if (value === "txt") {
-                  exportNoteAsText(currentNote || { title: editorTitle, content: editorContent } as any, editorTitle, editorContent);
-                }
-              }}>
-                <SelectTrigger className="w-20 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="export">
-                    Export
-                  </SelectItem>
-                  <SelectItem value="txt">
-                    Export as Text
-                  </SelectItem>
-                  <SelectItem value="pdf">
-                    Export as PDF
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* User Profile */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
-                  <Avatar className="h-7 w-7">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name || user?.email} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="flex flex-col items-start p-3">
-                  <div className="font-medium text-sm">
-                    {user?.user_metadata?.full_name || 'User'}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {user?.email}
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => signOut()}
-                  className="text-red-600 dark:text-red-400"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -316,7 +205,7 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <header className="bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 py-3 sm:py-4 transition-colors duration-200 sticky top-0 z-30">
+    <header className="bg-transparent dark:bg-[#212121] px-4 sm:px-6 py-3 sm:py-4 transition-colors duration-200 sticky top-0 z-30">
       <div className="flex items-center justify-between">
         {/* Left Section - Mobile Menu + Title */}
         <div className="flex items-center space-x-3 sm:space-x-4">
@@ -326,21 +215,17 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               id="mobile-menu-button"
               onClick={onMobileMenuToggle}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none"
               aria-label="Toggle menu"
             >
-              <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Menu className="w-5 h-5 text-gray-600 dark:text-white" />
             </button>
           )}
           
           {/* Logo and Title/Breadcrumb - Responsive */}
           <div className="flex items-center space-x-3">
-            <img 
-              src="/favicon.svg" 
-              alt="eNote Logo" 
-              className="w-6 h-6 sm:w-7 sm:h-7"
-            />
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
+            
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
               {isEditorMode ? (
                 <span className="hidden sm:inline">
                   {noteId ? 'Edit Note' : 'New Note'}
@@ -365,13 +250,13 @@ export const Header: React.FC<HeaderProps> = ({
                 placeholder="Search notes..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="search-input w-full pl-10 pr-4 py-2 text-sm border-none rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
+                className="search-input w-full pl-10 pr-4 py-2 text-sm border-0 rounded-lg bg-[#f5f5f5] dark:bg-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-300 focus:outline-none focus:ring-0 focus:border-none"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -387,12 +272,12 @@ export const Header: React.FC<HeaderProps> = ({
             <button 
               type="button"
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-              className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none"
+              className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none"
             >
               {isMobileSearchOpen ? (
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <X className="w-5 h-5 text-gray-600 dark:text-white" />
               ) : (
-                <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <Search className="w-5 h-5 text-gray-600 dark:text-white" />
               )}
             </button>
           )}
@@ -406,8 +291,8 @@ export const Header: React.FC<HeaderProps> = ({
                 className={cn(
                   "p-1 rounded focus:outline-none",
                   viewMode === 'grid' 
-                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
-                    : "text-gray-500 dark:text-gray-400"
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" 
+                    : "text-gray-500 dark:text-white"
                 )}
                 title="Grid view"
               >
@@ -419,8 +304,8 @@ export const Header: React.FC<HeaderProps> = ({
                 className={cn(
                   "p-1 rounded focus:outline-none",
                   viewMode === 'list' 
-                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
-                    : "text-gray-500 dark:text-gray-400"
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" 
+                    : "text-gray-500 dark:text-white"
                 )}
                 title="List view"
               >
@@ -434,7 +319,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Button 
             onClick={onNewNote}
             size="sm"
-            className="bg-[#333333] hover:bg-[#404040] text-white px-3 sm:px-4 py-2 text-sm font-medium min-h-[36px] sm:min-h-[40px]"
+            className="bg-[#333333] hover:bg-[#232323] text-white px-3 sm:px-4 py-2 text-sm font-medium min-h-[36px] sm:min-h-[40px]"
           >
             <Plus className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">New Note</span>
@@ -451,8 +336,8 @@ export const Header: React.FC<HeaderProps> = ({
                   className={cn(
                     "p-1.5 rounded focus:outline-none",
                     viewMode === 'grid' 
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" 
+                      : "text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-gray-200"
                   )}
                   title="Grid view"
                 >
@@ -464,8 +349,8 @@ export const Header: React.FC<HeaderProps> = ({
                   className={cn(
                     "p-1.5 rounded focus:outline-none",
                     viewMode === 'list' 
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100" 
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" 
+                      : "text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-gray-200"
                   )}
                   title="List view"
                 >
@@ -475,30 +360,30 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Sort Dropdown */}
               <Select value={sortBy} onValueChange={onSortChange}>
-                <SelectTrigger className="w-32 h-9">
+                <SelectTrigger className="w-32 h-9 focus:outline-none focus:ring-0 border-0 bg-white dark:bg-[#333333] text-gray-900 dark:text-white">
                   <div className="flex items-center gap-2">
                     <SortDesc className="w-4 h-4" />
                     <SelectValue />
                   </div>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Recent</SelectItem>
-                  <SelectItem value="alphabetical">A-Z</SelectItem>
-                  <SelectItem value="priority">Priority</SelectItem>
+                <SelectContent className="bg-white dark:bg-[#333333] border-0">
+                  <SelectItem value="recent" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0">Recent</SelectItem>
+                  <SelectItem value="alphabetical" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0">A-Z</SelectItem>
+                  <SelectItem value="priority" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0">Priority</SelectItem>
                 </SelectContent>
               </Select>
 
               {/* Filter Dropdown */}
               <Select value={filterBy} onValueChange={onFilterChange}>
-                <SelectTrigger className="w-28 h-9">
+                <SelectTrigger className="w-28 h-9 focus:outline-none focus:ring-0 border-0 bg-white dark:bg-[#333333] text-gray-900 dark:text-white">
                   <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4" />
                     <SelectValue />
                   </div>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="starred">Starred</SelectItem>
+                <SelectContent className="bg-white dark:bg-[#333333] border-0">
+                  <SelectItem value="all" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0">All</SelectItem>
+                  <SelectItem value="starred" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0">Starred</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -516,14 +401,14 @@ export const Header: React.FC<HeaderProps> = ({
               placeholder="Search notes..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="search-input w-full pl-10 pr-4 py-2.5 text-sm border-none rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
+              className="search-input w-full pl-10 pr-4 py-2.5 text-sm border-none rounded-lg bg-gray-50 dark:bg-[#171717] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-300 focus:outline-none focus:ring-0 focus:border-none"
               autoFocus
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => onSearchChange('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
               >
                 <X className="w-4 h-4" />
               </button>

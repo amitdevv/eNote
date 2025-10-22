@@ -14,11 +14,6 @@ const fonts = [
   { value: 'Open Sans', label: 'Open Sans', style: 'font-sans' },
   { value: 'Lato', label: 'Lato', style: 'font-sans' },
   { value: 'PT Sans', label: 'PT Sans', style: 'font-sans' },
-  { value: 'Kalam', label: 'Kalam', style: 'font-sans' },
-  { value: 'Inconsolata', label: 'Inconsolata', style: 'font-mono' },
-  { value: 'Patrick Hand', label: 'Patrick Hand', style: 'font-sans' },
-  { value: 'Handlee', label: 'Handlee', style: 'font-sans' },
-  { value: 'Comfortaa', label: 'Comfortaa', style: 'font-sans' },
 ];
 
 export const FontSelector: React.FC<FontSelectorProps> = ({ 
@@ -27,15 +22,15 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
 }) => {
   return (
     <Select value={currentFont} onValueChange={onFontChange}>
-      <SelectTrigger className="w-40 bg-white dark:bg-[#333333]   text-gray-900 dark:text-gray-100">
+      <SelectTrigger className="w-40 bg-white dark:bg-[#333333] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-0">
         <SelectValue placeholder="Select font" />
       </SelectTrigger>
-      <SelectContent className="bg-white dark:bg-[#333333]  ">
+      <SelectContent className="bg-white dark:bg-[#333333] border-0">
         {fonts.map((font) => (
           <SelectItem 
             key={font.value} 
             value={font.value}
-            className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-[#1e1e1e]"
+            className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#232323] focus:outline-none focus:ring-0"
           >
             <div 
               style={{ fontFamily: `"${font.value}", ${font.style === 'font-mono' ? 'monospace' : 'sans-serif'}` }}

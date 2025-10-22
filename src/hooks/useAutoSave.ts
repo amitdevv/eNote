@@ -6,8 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useAutoSave = () => {
   const { 
     currentNoteId, 
-    title, 
     content, 
+    contentType,
     tags, 
     fontFamily,
     fontSize,
@@ -25,17 +25,16 @@ export const useAutoSave = () => {
     }
 
     // Only save if we have something to save
-    if (!title.trim() && !content.trim() && (!tags || tags.length === 0)) {
+    if (!content.trim() && (!tags || tags.length === 0)) {
       return;
     }
 
     const noteData = {
-      title: title.trim() || 'Untitled',
       content: content,
+      type: contentType,
       tags: tags || [],
       fontFamily: fontFamily || 'Inter',
       fontSize: fontSize || 16,
-      type: 'markdown' as const
     };
 
     try {
@@ -51,7 +50,7 @@ export const useAutoSave = () => {
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [currentNoteId, title, content, tags, fontFamily, fontSize, addNote, updateNote, markClean, user?.id]);
+  }, [currentNoteId, content, contentType, tags, fontFamily, fontSize, addNote, updateNote, markClean, user?.id]);
 
   // Auto-save with debounce
   useEffect(() => {
@@ -76,7 +75,7 @@ export const useAutoSave = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [title, content, tags, fontFamily, fontSize, saveNote, user?.id]);
+  }, [content, contentType, tags, fontFamily, fontSize, saveNote, user?.id]);
 
   return {
     saveNote

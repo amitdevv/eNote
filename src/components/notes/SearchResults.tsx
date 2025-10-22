@@ -1,4 +1,5 @@
 import React from 'react';
+import { getDisplayTitle } from '@/utils/titleUtils';
 import { SearchResult } from '@/utils/search';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +72,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       <Badge 
         key={tag} 
         variant="secondary" 
-        className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+        className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-white"
       >
         {tag}
       </Badge>
@@ -81,9 +82,9 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   if (results.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Search className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No results found</h3>
-        <p className="text-gray-500 dark:text-gray-400 max-w-md">
+        <Search className="w-12 h-12 text-gray-400 dark:text-gray-300 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No results found</h3>
+        <p className="text-gray-500 dark:text-white max-w-md">
           Try adjusting your search terms or check for typos. You can search in note titles, content, and tags.
         </p>
       </div>
@@ -135,7 +136,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white">
           {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
         </h2>
       </div>
@@ -152,20 +153,20 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     {/* Title */}
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-lg leading-tight mb-2">
-                      {result.note.title}
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight mb-2">
+                      {getDisplayTitle(result.note.content)}
                     </h3>
                     
                     {/* Metadata */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                      <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-300">
                         <Clock className="w-3 h-3" />
                         {result.note.updatedAt.toLocaleDateString()}
                       </div>
                     </div>
                   </div>
                   
-                  <Badge variant="secondary" className="text-xs ml-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                  <Badge variant="secondary" className="text-xs ml-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-white">
                     Score: {result.score}
                   </Badge>
                 </div>
@@ -173,14 +174,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               
               <CardContent className="pt-0">
                 {/* Content preview */}
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
+                <p className="text-sm text-gray-600 dark:text-white leading-relaxed mb-3">
                   {getContentPreview(result.note)}
                 </p>
                 
                 {/* Tags */}
                 {result.note.tags.length > 0 && (
                   <div className="flex items-center gap-2 mt-3">
-                    <Tag className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                    <Tag className="w-3 h-3 text-gray-400 dark:text-gray-300" />
                     <div className="flex flex-wrap gap-1">
                       {result.note.tags.map((tag: string) => renderTag(tag))}
                     </div>
@@ -189,7 +190,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                 
                 {/* Action */}
                 <div className="flex items-center justify-end mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                  <Button variant="ghost" size="sm" className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <Button variant="ghost" size="sm" className="text-xs text-gray-600 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
                     View Note →
                   </Button>
                 </div>

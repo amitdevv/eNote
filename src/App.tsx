@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { FocusModeProvider } from '@/contexts/FocusModeContext';
 import { LandingPage } from '@/components/landing/LandingPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/components/auth/LoginPage';
@@ -33,7 +32,7 @@ const AppContent = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div className="min-h-screen bg-white dark:bg-[#212121] text-gray-900 dark:text-gray-100 transition-colors duration-200 font-inter">
       <Router>
         <Routes>
           {/* Public landing page - only show if not authenticated */}
@@ -93,9 +92,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <FocusModeProvider>
-          <AppContent />
-        </FocusModeProvider>
+        <AppContent />
       </AuthProvider>
     </ThemeProvider>
   );

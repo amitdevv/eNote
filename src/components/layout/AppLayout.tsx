@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ImageToTextModal } from '@/components/features/ImageToTextModal';
 import { useImageToTextStore } from '@/stores/imageToTextStore';
 import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { searchNotes } from '@/utils/search';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 import { ExcelDraw } from '../notes/exceldraw';
@@ -311,10 +310,6 @@ export const AppLayout: React.FC = () => {
     }
   };
 
-  useKeyboardShortcuts({
-    onNewNote: handleNewNote,
-    onSearch: () => searchInputRef.current?.focus(),
-  });
 
   const renderMainContent = () => {
     // Show loading state only if we don't have any data and we're loading
@@ -323,7 +318,7 @@ export const AppLayout: React.FC = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-500 dark:text-gray-400">Loading your notes...</p>
+            <p className="text-gray-500 dark:text-white">Loading your notes...</p>
           </div>
         </div>
       );
@@ -380,12 +375,12 @@ export const AppLayout: React.FC = () => {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <FileText className="w-8 h-8 text-gray-400 dark:text-gray-600" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 {navValue !== 'all' 
                   ? `No ${navValue} notes` 
                   : "No notes yet"}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm sm:text-base">
+              <p className="text-gray-500 dark:text-white mb-6 text-sm sm:text-base">
                 {navValue !== 'all'
                   ? `You don't have any notes in this section yet.`
                   : "Get started by creating your first note. Use markdown to format your content, add tags, and organize your thoughts."}
@@ -393,7 +388,7 @@ export const AppLayout: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={handleNewNote}
-                  className="inline-flex items-center px-6 py-3 bg-[#333333] hover:bg-[#404040] text-white rounded-lg font-medium transition-colors w-full sm:w-auto"
+                  className="inline-flex items-center px-6 py-3 bg-[#333333] hover:bg-[#232323] text-white rounded-lg font-medium transition-colors w-full sm:w-auto"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create your first note
@@ -404,7 +399,7 @@ export const AppLayout: React.FC = () => {
                       onClick={() => {
                         setNavValue('all');
                       }}
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      className="text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-gray-200"
                     >
                       or view all notes
                     </button>
@@ -419,7 +414,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-[#171717] transition-colors duration-200 relative">
+    <div className="flex h-screen bg-[#fafafa] dark:bg-[#212121] transition-colors duration-200 relative">
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" />
@@ -473,7 +468,7 @@ export const AppLayout: React.FC = () => {
           onMobileMenuToggle={toggleMobileSidebar}
         />
         
-        <main className={`flex-1 overflow-y-auto bg-gray-50 dark:bg-[#171717] transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
+        <main className={`flex-1 overflow-y-auto bg-[#fafafa] dark:bg-[#212121] transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
           <div className={isEditorMode ? "w-full h-full" : ""}>
             {renderMainContent()}
           </div>

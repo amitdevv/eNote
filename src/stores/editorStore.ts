@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import { Note } from '@/types/note';
+import { getTitleFromContent } from '@/utils/titleUtils';
 
 interface EditorStore {
   // Current note being edited
   currentNoteId: string | null;
   
   // Editor state
-  title: string;
   content: string;
+  contentType: 'markdown' | 'html';
   tags: string[];
   fontFamily: string;
   fontSize: number;
@@ -18,8 +19,8 @@ interface EditorStore {
   
   // Actions
   setCurrentNote: (note: Note | null) => void;
-  setTitle: (title: string) => void;
   setContent: (content: string) => void;
+  setContentType: (type: 'markdown' | 'html') => void;
   setTags: (tags: string[]) => void;
   setFontFamily: (fontFamily: string) => void;
   setFontSize: (fontSize: number) => void;
@@ -30,6 +31,9 @@ interface EditorStore {
   resetEditor: () => void;
   markDirty: () => void;
   markClean: () => void;
+  
+  // Computed getters
+  getTitle: () => string;
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => {
@@ -40,8 +44,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
 
   return {
     currentNoteId: null,
-    title: '',
     content: '',
+    contentType: 'markdown',
     tags: [],
     fontFamily: defaultFont,
     fontSize: defaultFontSize,
@@ -52,8 +56,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     if (note) {
       set({
         currentNoteId: note.id,
-        title: note.title,
         content: note.content,
+        contentType: note.type || 'markdown',
         tags: note.tags || [],
         fontFamily: note.fontFamily || 'Fira Code',
         fontSize: note.fontSize || 20,
@@ -68,8 +72,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
       
       set({
         currentNoteId: null,
-        title: '',
         content: '',
+        contentType: 'markdown',
         tags: [],
         fontFamily: defaultFont,
         fontSize: defaultFontSize,
@@ -79,12 +83,12 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     }
   },
 
-  setTitle: (title) => {
-    set({ title, isDirty: true });
-  },
-
   setContent: (content) => {
     set({ content, isDirty: true });
+  },
+
+  setContentType: (contentType) => {
+    set({ contentType, isDirty: true });
   },
 
   setTags: (tags) => {
@@ -130,8 +134,8 @@ export const useEditorStore = create<EditorStore>((set, get) => {
     
     set({
       currentNoteId: null,
-      title: '',
       content: '',
+      contentType: 'markdown',
       tags: [],
       fontFamily: defaultFont,
       fontSize: defaultFontSize,
@@ -143,5 +147,10 @@ export const useEditorStore = create<EditorStore>((set, get) => {
   markDirty: () => set({ isDirty: true }),
   
   markClean: () => set({ isDirty: false, lastSaved: new Date() }),
+  
+  getTitle: () => {
+    const state = get();
+    return getTitleFromContent(state.content);
+  },
   };
 }); 

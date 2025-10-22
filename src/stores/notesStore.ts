@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Note } from '@/types/note';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { getTitleFromContent } from '@/utils/titleUtils';
 
 interface NotesStore {
   notes: Note[];
@@ -53,7 +54,7 @@ const dbNoteToNote = (dbNote: any): Note => ({
 
 // Helper function to convert app note to database note
 const noteToDbNote = (note: Partial<Note>, userId: string) => ({
-  title: note.title || 'Untitled',
+  title: getTitleFromContent(note.content || ''),
   content: note.content || '',
   type: 'markdown',
   folder_id: note.folderId || null,
@@ -205,8 +206,16 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   updateNote: async (id, updates, userId) => {
     try {
       const dbUpdates: any = {};
-      if (updates.title !== undefined) dbUpdates.title = updates.title;
-      if (updates.content !== undefined) dbUpdates.content = updates.content;
+      
+      // If content is being updated, generate title from content
+      if (updates.content !== undefined) {
+        dbUpdates.title = getTitleFromContent(updates.content);
+        dbUpdates.content = updates.content;
+      } else if (updates.title !== undefined) {
+        // If only title is being updated (shouldn't happen in new system, but keeping for compatibility)
+        dbUpdates.title = updates.title;
+      }
+      
       if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
       if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
       if (updates.starred !== undefined) dbUpdates.starred = updates.starred;

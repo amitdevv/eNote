@@ -1,4 +1,5 @@
 import React from 'react';
+import { getTitleFromContent } from '@/utils/titleUtils';
 import { ChevronRight, Home, FileText } from 'lucide-react';
 import { Note } from '@/types/note';
 
@@ -20,7 +21,7 @@ export const NoteBreadcrumb: React.FC<NoteBreadcrumbProps> = ({
       <ChevronRight className="w-4 h-4" />
       <FileText className="w-4 h-4" />
       <span className="font-medium text-gray-900 dark:text-gray-100">
-        {isNewNote ? (currentTitle || 'New Note') : (note?.title || 'Untitled')}
+        {isNewNote ? (currentTitle || 'New Note') : (note ? getTitleFromContent(note.content) : 'Untitled')}
       </span>
     </nav>
   );
