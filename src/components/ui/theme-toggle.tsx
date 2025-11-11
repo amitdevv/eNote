@@ -20,10 +20,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       variant="outline"
       size={size}
       onClick={toggleTheme}
-      className={cn(
-        " hover:bg-gray-100 dark:hover:bg-[#333333]",
-        className
-      )}
+      className={cn(className)}
     >
       {theme === 'light' ? (
         <Moon className="w-4 h-4" />
