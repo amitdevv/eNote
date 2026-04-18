@@ -112,13 +112,12 @@ export function NoteEditor({ initialContent, onChange }: Props) {
     },
   });
 
-  const lastInitialRef = useRef(initialContent);
-  useEffect(() => {
-    if (editor && initialContent !== lastInitialRef.current) {
-      editor.commands.setContent(initialContent as unknown as JSONContent, { emitUpdate: false });
-      lastInitialRef.current = initialContent;
-    }
-  }, [initialContent, editor]);
+  // NOTE: NoteEditor is deliberately UNCONTROLLED. `initialContent` is read
+  // only by useEditor on mount; we never call setContent from a prop effect.
+  // If we did, every onUpdate → parent setState → re-render with a new
+  // initialContent reference would fire setContent(), which replaces the
+  // doc and resets the cursor to the end — the exact bug from screenshots.
+  // To open a different note, remount this component via key={note.id}.
 
   // Reset link-editing mode whenever the selection changes so we don't get stuck in it.
   useEffect(() => {

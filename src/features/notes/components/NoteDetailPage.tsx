@@ -233,6 +233,7 @@ export function NoteDetailPage() {
             className="mb-6"
           />
           <NoteEditor
+            key={note.id}
             initialContent={draft.content}
             onChange={(doc, text) => {
               setDraft((d) => ({ ...d, content: doc, contentText: text }));
