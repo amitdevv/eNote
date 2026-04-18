@@ -181,28 +181,12 @@ export const AppLayout: React.FC = () => {
     });
   }, [notes, navValue, filterBy, sortBy]);
 
-  const sidebarCounts = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const counts: Record<string, number> = {
-      all: notes.length,
-      today: 0,
-      starred: 0,
-    };
-    for (const tag of predefinedTags) counts[tag] = 0;
-
+  const usedTags = useMemo(() => {
+    const seen = new Set<string>();
     for (const note of notes) {
-      if (note.updatedAt >= today) counts.today++;
-      if (note.starred) counts.starred++;
-      if (note.tags) {
-        for (const tag of note.tags) {
-          if (tag in counts) counts[tag]++;
-        }
-      }
+      note.tags?.forEach(tag => seen.add(tag));
     }
-
-    return counts;
+    return Array.from(seen);
   }, [notes]);
 
   const handleSearchChange = (query: string) => {
@@ -391,10 +375,9 @@ export const AppLayout: React.FC = () => {
           selectedWorkspace={navValue}
           onWorkspaceChange={handleWorkspaceChange}
           onNewNote={handleNewNote}
-          noteCount={filteredNotes.length}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapse}
-          sidebarCounts={sidebarCounts}
+          usedTags={usedTags}
         />
       </div>
 
@@ -409,8 +392,7 @@ export const AppLayout: React.FC = () => {
           selectedWorkspace={navValue}
           onWorkspaceChange={handleWorkspaceChange}
           onNewNote={handleNewNote}
-          noteCount={filteredNotes.length}
-          sidebarCounts={sidebarCounts}
+          usedTags={usedTags}
         />
       </div>
       
