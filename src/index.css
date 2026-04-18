@@ -89,6 +89,28 @@ body {
   }
 }
 
+@layer components {
+  /* Surfaces */
+  .surface-app    { @apply bg-[#fafafa] dark:bg-[#212121]; }
+  .surface-panel  { @apply bg-gray-50 dark:bg-[#212121]; }
+  .surface-card   { @apply bg-white dark:bg-[#1e1e1e]; }
+  .surface-raised { @apply bg-white dark:bg-[#333333]; }
+  .surface-input  { @apply bg-[#f5f5f5] dark:bg-[#333333]; }
+
+  /* Text */
+  .text-primary-inv { @apply text-gray-900 dark:text-white; }
+  .text-muted-inv   { @apply text-gray-600 dark:text-white; }
+  .text-subtle-inv  { @apply text-gray-500 dark:text-gray-300; }
+
+  /* Interactive */
+  .hover-muted { @apply hover:bg-gray-100 dark:hover:bg-[#333333]; }
+  .hover-panel { @apply hover:bg-gray-100 dark:hover:bg-[#232323]; }
+
+  /* Borders */
+  .border-subtle { @apply border-gray-200 dark:border-gray-700; }
+  .border-panel  { @apply border-gray-200 dark:border-gray-800; }
+}
+
 @layer utilities {
   .line-clamp-3 {
     display: -webkit-box;

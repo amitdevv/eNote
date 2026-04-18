@@ -379,7 +379,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#fafafa] dark:bg-[#212121] transition-colors duration-200 relative">
+    <div className="flex h-screen surface-app transition-colors duration-200 relative">
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" />
@@ -433,7 +433,7 @@ export const AppLayout: React.FC = () => {
           onMobileMenuToggle={toggleMobileSidebar}
         />
         
-        <main className={`flex-1 overflow-y-auto bg-[#fafafa] dark:bg-[#212121] transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
+        <main className={`flex-1 overflow-y-auto surface-app transition-colors duration-200 w-full ${isEditorMode ? 'p-0' : 'p-4 sm:p-6'}`}>
           <div className={isEditorMode ? "w-full h-full" : ""}>
             {renderMainContent()}
           </div>
