@@ -39,6 +39,38 @@ export interface Database {
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
         Update: Partial<Database['public']['Tables']['profiles']['Row']>;
       };
+      tasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          priority: 1 | 2 | 3 | 4;
+          done: boolean;
+          done_at: string | null;
+          due_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string;
+          priority?: 1 | 2 | 3 | 4;
+          done?: boolean;
+          done_at?: string | null;
+          due_at?: string | null;
+        };
+        Update: {
+          title?: string;
+          description?: string;
+          priority?: 1 | 2 | 3 | 4;
+          done?: boolean;
+          done_at?: string | null;
+          due_at?: string | null;
+        };
+      };
       notes: {
         Row: {
           id: string;
@@ -70,6 +102,12 @@ export interface Database {
           pinned?: boolean;
           labels?: string[];
         };
+      };
+    };
+    Functions: {
+      delete_user: {
+        Args: Record<string, never>;
+        Returns: void;
       };
     };
   };

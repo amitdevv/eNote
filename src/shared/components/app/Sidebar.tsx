@@ -3,13 +3,15 @@ import type { IconSvgElement } from '@hugeicons/react';
 import {
   HugeiconsIcon,
   ArchiveIcon,
-  InboxIcon,
   Note01Icon,
+  CheckmarkSquare01Icon,
   Settings01Icon,
   Logout01Icon,
   PlusSignIcon,
 } from '@/shared/lib/icons';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/features/auth/hooks';
+import { useProfile } from '@/features/account/hooks';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/components/ui/button';
 import { Tooltip } from '@/shared/components/ui/tooltip';
@@ -58,20 +60,20 @@ function Item({
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="px-2 pt-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-ink-subtle">
-      {children}
-    </div>
-  );
-}
-
 export function Sidebar() {
   const { user, signOut } = useAuth();
+  const { data: profile } = useProfile();
   const setSidebarOpen = useNotesUI((s) => s.setSidebarOpen);
   const setQuickCaptureOpen = useNotesUI((s) => s.setQuickCaptureOpen);
 
-  const initials = (user?.email ?? '?').slice(0, 2).toUpperCase();
+  const displayName =
+    profile?.display_name?.trim() || user?.email?.split('@')[0] || 'eNote';
+  const initials = (profile?.display_name || user?.email || '?')
+    .slice(0, 2)
+    .toUpperCase();
+  const avatarUrl = profile?.avatar_url ?? null;
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  useEffect(() => setAvatarBroken(false), [avatarUrl]);
 
   function handleCreate() {
     setSidebarOpen(false);
@@ -88,12 +90,19 @@ export function Sidebar() {
           onClick={closeDrawer}
           className="flex flex-1 items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-surface-muted"
         >
-          <div className="size-6 rounded-md bg-brand flex items-center justify-center text-[11px] font-medium text-white">
-            {initials}
-          </div>
-          <span className="text-nav text-ink-default truncate">
-            {user?.email?.split('@')[0] ?? 'eNote'}
-          </span>
+          {avatarUrl && !avatarBroken ? (
+            <img
+              src={avatarUrl}
+              onError={() => setAvatarBroken(true)}
+              alt=""
+              className="size-6 rounded-md object-cover"
+            />
+          ) : (
+            <div className="size-6 rounded-md bg-brand flex items-center justify-center text-[11px] font-medium text-white">
+              {initials}
+            </div>
+          )}
+          <span className="text-nav text-ink-default truncate">{displayName}</span>
         </Link>
         <Tooltip content="New note">
           <Button
@@ -114,18 +123,11 @@ export function Sidebar() {
         <Item to="/archived" icon={ArchiveIcon} onClick={closeDrawer}>
           Archived
         </Item>
-        <Item to="/inbox" icon={InboxIcon} disabled>
-          Inbox
-        </Item>
       </nav>
 
-      <SectionLabel>Coming soon</SectionLabel>
       <nav className="flex flex-col gap-px px-3">
-        <Item to="/tasks" icon={Note01Icon} disabled>
+        <Item to="/tasks" icon={CheckmarkSquare01Icon} onClick={closeDrawer}>
           Tasks
-        </Item>
-        <Item to="/calendar" icon={Note01Icon} disabled>
-          Calendar
         </Item>
       </nav>
 

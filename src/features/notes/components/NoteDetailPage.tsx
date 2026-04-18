@@ -8,6 +8,11 @@ import { Button } from '@/shared/components/ui/button';
 import type { NoteDoc } from '@/shared/lib/supabase';
 import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
+import {
+  useDraftSnapshot,
+  readDraftSnapshot,
+  clearDraftSnapshot,
+} from '@/shared/hooks/useDraftSnapshot';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { PageHeader } from '@/shared/components/app/PageHeader';
 import { Tooltip } from '@/shared/components/ui/tooltip';
@@ -52,13 +57,23 @@ export function NoteDetailPage() {
   const loadedIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (note && note.id !== loadedIdRef.current) {
-      setDraft({
+      const serverDraft: Draft = {
         title: note.title,
         content: note.content,
         contentText: note.content_text,
         labels: note.labels ?? [],
-      });
-      setDirty(false);
+      };
+      const recovered = readDraftSnapshot<Draft>(note.id, note.updated_at);
+      if (recovered) {
+        setDraft(recovered);
+        setDirty(true);
+        toast('Recovered unsaved changes', {
+          description: 'Picked up where you left off.',
+        });
+      } else {
+        setDraft(serverDraft);
+        setDirty(false);
+      }
       loadedIdRef.current = note.id;
 
       // If user just created this note, focus the title so they can start typing immediately.
@@ -91,6 +106,7 @@ export function NoteDetailPage() {
           },
         });
         setDirty(false);
+        clearDraftSnapshot(note.id);
       } catch (e) {
         toast.error('Failed to save', {
           description: e instanceof Error ? e.message : 'Retrying on next change.',
@@ -101,9 +117,17 @@ export function NoteDetailPage() {
 
   useEffect(() => () => flush(), [flush]);
 
+  useDraftSnapshot<Draft>({
+    id: note?.id,
+    draft,
+    baseUpdatedAt: note?.updated_at ?? null,
+    enabled: !!note && dirty,
+  });
+
   async function performDelete() {
     if (!note) return;
     flush();
+    clearDraftSnapshot(note.id);
     await del.mutateAsync(note.id);
     navigate('/notes');
   }

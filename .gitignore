@@ -89,6 +89,12 @@ setup*.sql
 migration*.sql
 seed*.sql
 
+# Supabase dev-only data seeds — schema migrations stay tracked, seed files don't
+supabase/migrations/*_seed_*.sql
+supabase/seed.sql
+supabase/.branches/
+supabase/.temp/
+
 # Draft and backup files
 *.draft
 *.backup

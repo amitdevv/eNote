@@ -18,6 +18,9 @@ const ArchivedPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('@/features/settings/components/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
+const TasksPage = lazy(() =>
+  import('@/features/tasks/components/TasksPage').then((m) => ({ default: m.TasksPage }))
+);
 
 function LoadingFallback() {
   return (
@@ -81,6 +84,14 @@ export function AppRoutes() {
         element={
           <ProtectedShell>
             <ArchivedPage />
+          </ProtectedShell>
+        }
+      />
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedShell>
+            <TasksPage />
           </ProtectedShell>
         }
       />

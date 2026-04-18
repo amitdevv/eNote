@@ -1,9 +1,8 @@
-import { useAuth } from '@/features/auth/hooks';
-import { Button } from '@/shared/components/ui/button';
 import { Kbd } from '@/shared/components/ui/kbd';
 import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useSettings, type Density } from '../store';
 import { cn } from '@/shared/lib/cn';
+import { AccountSettings } from '@/features/account/components/AccountSettings';
 import { LabelsSettings } from '@/features/labels/components/LabelsSettings';
 import { HighlightsSettings } from '@/features/highlights/components/HighlightsSettings';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
@@ -17,7 +16,6 @@ const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
 
 export function SettingsPage() {
   useDocumentTitle('Settings');
-  const { user, signOut } = useAuth();
   const density = useSettings((s) => s.density);
   const setDensity = useSettings((s) => s.setDensity);
 
@@ -27,13 +25,7 @@ export function SettingsPage() {
 
       <div className="flex-1 overflow-y-auto bg-surface-muted/40">
         <div className="max-w-[640px] mx-auto p-8 space-y-8">
-          <SettingsSection title="Account">
-            <SettingsRow label="Signed in as" hint={user?.email ?? ''}>
-              <Button variant="outline" size="sm" onClick={() => signOut()}>
-                Sign out
-              </Button>
-            </SettingsRow>
-          </SettingsSection>
+          <AccountSettings />
 
           <SettingsSection
             title="Appearance"

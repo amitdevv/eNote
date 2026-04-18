@@ -10,6 +10,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
+import { SlashCommand } from '../slashCommand';
 // Common languages — add more by importing from `highlight.js/lib/languages/*`
 import js from 'highlight.js/lib/languages/javascript';
 import ts from 'highlight.js/lib/languages/typescript';
@@ -99,7 +100,19 @@ export function NoteEditor({ initialContent, onChange }: Props) {
       Highlight.configure({ multicolor: true }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Placeholder.configure({ placeholder: 'Start writing…' }),
+      Placeholder.configure({
+        placeholder: ({ node, pos }) => {
+          if (node.type.name === 'paragraph' && pos === 0) {
+            return 'Start writing…';
+          }
+          if (node.type.name === 'paragraph') {
+            return "Type '/' for commands";
+          }
+          return '';
+        },
+        showOnlyCurrent: true,
+      }),
+      SlashCommand,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
