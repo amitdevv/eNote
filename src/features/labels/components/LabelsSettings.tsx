@@ -5,7 +5,6 @@ import { PALETTE_KEYS, paletteByKey, type PaletteKey } from '@/features/notes/la
 import { LabelChip } from '@/features/notes/components/LabelChip';
 import { HugeiconsIcon, Delete01Icon, PlusSignIcon, Edit02Icon } from '@/shared/lib/icons';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/lib/cn';
 import type { Label } from '../types';
@@ -19,7 +18,7 @@ function ColorSwatches({
   onChange: (next: PaletteKey) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
       {PALETTE_KEYS.map((k) => {
         const p = paletteByKey(k);
         const selected = value === k;
@@ -30,23 +29,28 @@ function ColorSwatches({
             aria-label={`Color ${k}`}
             onClick={() => onChange(k)}
             className={cn(
-              'relative size-6 rounded-full transition-transform duration-150',
-              selected ? 'scale-110' : 'hover:scale-105'
+              'relative size-5 rounded-full transition-all duration-150 outline-none',
+              selected
+                ? 'ring-2 ring-offset-2 ring-offset-surface-raised'
+                : 'hover:scale-110'
             )}
-            style={{ backgroundColor: p.dot }}
+            style={{
+              backgroundColor: p.dot,
+              ...(selected ? { boxShadow: `0 0 0 2px ${p.dot}` } : {}),
+            }}
           >
             {selected && (
               <svg
                 viewBox="0 0 20 20"
-                width={12}
-                height={12}
+                width={10}
+                height={10}
                 className="absolute inset-0 m-auto"
                 fill="none"
               >
                 <path
                   d="M4 10l3.5 3.5L16 5"
                   stroke="white"
-                  strokeWidth="2.5"
+                  strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -89,7 +93,7 @@ function EditableLabelRow({ label }: { label: Label }) {
     return (
       <div className="flex flex-col gap-3 px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <Input
+          <input
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -101,7 +105,7 @@ function EditableLabelRow({ label }: { label: Label }) {
                 setEditing(false);
               }
             }}
-            className="flex-1"
+            className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
           />
           <Button size="sm" onClick={save} disabled={update.isPending}>
             {update.isPending ? 'Saving…' : 'Save'}
@@ -198,7 +202,7 @@ function CreateLabelRow() {
   return (
     <div className="flex flex-col gap-3 px-4 py-3.5">
       <div className="flex items-center gap-2">
-        <Input
+        <input
           autoFocus
           placeholder="Label name"
           value={name}
@@ -210,7 +214,7 @@ function CreateLabelRow() {
               setName('');
             }
           }}
-          className="flex-1"
+          className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
         />
         <Button size="sm" onClick={submit} disabled={!name.trim() || create.isPending}>
           {create.isPending ? 'Adding…' : 'Add'}

@@ -9,7 +9,6 @@ import {
 import { PALETTE, PALETTE_KEYS, type PaletteKey } from '@/features/notes/labelColor';
 import { HugeiconsIcon, Delete01Icon, PlusSignIcon, Edit02Icon } from '@/shared/lib/icons';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/lib/cn';
 import type { Highlight } from '../types';
@@ -32,7 +31,7 @@ function ColorSwatches({
   onChange: (hex: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
       {PALETTE_KEYS.map((k) => {
         const bg = PALETTE[k as PaletteKey].bg;
         const dot = PALETTE[k as PaletteKey].dot;
@@ -44,18 +43,14 @@ function ColorSwatches({
             aria-label={`Highlight ${k}`}
             onClick={() => onChange(bg)}
             className={cn(
-              'relative size-7 rounded-md transition-transform duration-150 border',
-              selected ? 'scale-110 border-ink-strong' : 'border-line-default hover:scale-105'
+              'relative size-7 rounded-md transition-transform duration-150 outline-none',
+              !selected && 'hover:scale-110'
             )}
-            style={{ backgroundColor: bg }}
-          >
-            {selected && (
-              <span
-                className="absolute inset-1 rounded-sm"
-                style={{ border: `2px solid ${dot}` }}
-              />
-            )}
-          </button>
+            style={{
+              backgroundColor: bg,
+              ...(selected ? { boxShadow: `0 0 0 2px ${dot}` } : {}),
+            }}
+          />
         );
       })}
     </div>
@@ -91,7 +86,7 @@ function Row({ highlight }: { highlight: Highlight }) {
     return (
       <div className="flex flex-col gap-3 px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <Input
+          <input
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -103,7 +98,7 @@ function Row({ highlight }: { highlight: Highlight }) {
                 setEditing(false);
               }
             }}
-            className="flex-1"
+            className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
           />
           <Button size="sm" onClick={save} disabled={update.isPending}>
             {update.isPending ? 'Saving…' : 'Save'}
@@ -204,7 +199,7 @@ function CreateRow() {
   return (
     <div className="flex flex-col gap-3 px-4 py-3.5">
       <div className="flex items-center gap-2">
-        <Input
+        <input
           autoFocus
           placeholder="Name (e.g. important, quote, todo)"
           value={name}
@@ -216,7 +211,7 @@ function CreateRow() {
               setName('');
             }
           }}
-          className="flex-1"
+          className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
         />
         <Button size="sm" onClick={submit} disabled={!name.trim() || create.isPending}>
           {create.isPending ? 'Adding…' : 'Add'}
