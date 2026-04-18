@@ -242,6 +242,12 @@ body {
     border: 1px solid color-mix(in srgb, var(--line-default) 60%, transparent);
   }
 
+  /* Wrap toggle on the code-block NodeView persists via data-wrapped. */
+  .tiptap [data-wrapped="true"] pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
   /* Code block — clean solid, no border, Linear-style */
   .tiptap pre {
     background: var(--surface-muted);

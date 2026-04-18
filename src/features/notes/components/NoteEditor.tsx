@@ -1,5 +1,6 @@
-import { useEditor, EditorContent, type JSONContent } from '@tiptap/react';
+import { useEditor, EditorContent, ReactNodeViewRenderer, type JSONContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
+import { CodeBlockView } from './CodeBlockView';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -25,6 +26,25 @@ import java from 'highlight.js/lib/languages/java';
 
 const lowlight = createLowlight();
 lowlight.register({ js, javascript: js, ts, typescript: ts, html, xml: html, css, json, bash, shell: bash, sh: bash, python, py: python, sql, markdown: md, md, go, golang: go, rust, rs: rust, java });
+
+// Extend the code-block extension with a React NodeView (toolbar: language
+// picker, wrap toggle, copy) and a `wrapped` attribute persisted on the node.
+const CustomCodeBlock = CodeBlockLowlight.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      wrapped: {
+        default: false,
+        parseHTML: (el: HTMLElement) => el.getAttribute('data-wrapped') === 'true',
+        renderHTML: (attrs: { wrapped?: boolean }) =>
+          attrs.wrapped ? { 'data-wrapped': 'true' } : {},
+      },
+    };
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(CodeBlockView);
+  },
+});
 import { useEffect, useRef, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Link as RouterLink } from 'react-router-dom';
@@ -70,7 +90,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
         // Lowlight version below for syntax highlighting.
         codeBlock: false,
       }),
-      CodeBlockLowlight.configure({
+      CustomCodeBlock.configure({
         lowlight,
         // Auto-detect language when it's not specified on the node
         defaultLanguage: null,
