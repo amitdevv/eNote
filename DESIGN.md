@@ -18,7 +18,7 @@ Everything below descends from those two:
 
 1. **Chrome recedes, content leads.** Sidebar is dimmer than content. Main surface is the brightest thing on screen. Controls are low-contrast until hovered.
 2. **Warm neutrals, not cool neutrals.** Our grays have a faint warm tint — less clinical, more paper-like. Pure blue-tinted grays feel sterile at density.
-3. **One accent + one bounded palette.** Teal (`#009BB6`) is reserved for identity (workspace avatar, selected state, pin). Labels/statuses/priorities use the separate 12-hue palette in §2.6 — never the brand teal. Buttons and rows stay neutral.
+3. **One accent + one bounded palette.** Emerald (`#10B981`) is reserved for identity (workspace avatar, pin, selected state, focus rings). Labels/statuses/priorities use the separate 12-hue palette in §2.6 — never the brand green. Buttons and rows stay neutral.
 4. **Soft depth over hard edges.** `shadow-xs` + 1px translucent border beats a 2px solid border. Fewer separators overall; if two elements are on different surfaces, you don't need a line between them.
 5. **Rounded, restrained.** 8px default radius. 12px for surfaces/cards. 9999px for pill controls. Never 4px (too sharp), never 16px (too playful).
 6. **Text hierarchy by weight + shade, not size.** Three sizes cover 95% of the UI: 12px (meta), 13px (body UI), 16px (content). Differentiate via weight (400/500/600) and ink shade.
@@ -57,7 +57,7 @@ Everything below descends from those two:
 | `--ink-placeholder` | `#A09E9A` | Placeholder, disabled |
 | `--line-subtle` | `#F0EEEB` | Section dividers |
 | `--line-default` | `#E2E0DC` | Inputs, cards |
-| `--brand` | `#009BB6` | Avatar, active identity (rationed) |
+| `--brand` | `#10B981` | Avatar, active identity (rationed) |
 | `--brand-fg` | `#FFFFFF` | Text on brand |
 
 ### 2.2 Color (dark)
