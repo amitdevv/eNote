@@ -123,8 +123,8 @@ export function NoteEditor({ initialContent, onChange }: Props) {
     <>
       <BubbleMenu
         editor={editor}
-        options={{ strategy: 'fixed', placement: 'top', offset: 8 }}
-        className="flex items-center gap-0.5 rounded-lg border border-line-default bg-surface-panel shadow-md p-1 z-50"
+        options={{ strategy: 'fixed', placement: 'top', offset: 10 }}
+        className="flex items-center gap-0.5 rounded-xl border border-ink-default/12 bg-surface-panel shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15),0_4px_10px_-6px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.06)] p-1 z-50"
       >
         {linkEditing ? (
           <LinkEditor
@@ -299,7 +299,7 @@ function LinkEditor({
 }
 
 function Divider() {
-  return <div className="w-px h-5 bg-line-default mx-0.5" aria-hidden />;
+  return <div className="w-px h-5 bg-ink-default/10 mx-1" aria-hidden />;
 }
 
 function BtnIcon({
