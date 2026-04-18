@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks';
 import { Spinner } from '@/shared/components/ui/spinner';
@@ -5,9 +6,26 @@ import { LoginPage } from '@/features/auth/components/LoginPage';
 import { AppShell } from '@/shared/components/app/AppShell';
 import { ErrorBoundary } from '@/shared/components/app/ErrorBoundary';
 import { NotesListPage } from '@/features/notes/components/NotesListPage';
-import { NoteDetailPage } from '@/features/notes/components/NoteDetailPage';
-import { ArchivedPage } from '@/features/notes/components/ArchivedPage';
-import { SettingsPage } from '@/features/settings/components/SettingsPage';
+
+// Heavy routes — loaded on demand. NoteDetailPage pulls in TipTap + ProseMirror,
+// ArchivedPage and SettingsPage are visited less often.
+const NoteDetailPage = lazy(() =>
+  import('@/features/notes/components/NoteDetailPage').then((m) => ({ default: m.NoteDetailPage }))
+);
+const ArchivedPage = lazy(() =>
+  import('@/features/notes/components/ArchivedPage').then((m) => ({ default: m.ArchivedPage }))
+);
+const SettingsPage = lazy(() =>
+  import('@/features/settings/components/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
+
+function LoadingFallback() {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <Spinner />
+    </div>
+  );
+}
 
 function ProtectedShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,7 +39,9 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
   if (!user) return <Navigate to="/login" replace />;
   return (
     <ErrorBoundary>
-      <AppShell>{children}</AppShell>
+      <AppShell>
+        <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+      </AppShell>
     </ErrorBoundary>
   );
 }

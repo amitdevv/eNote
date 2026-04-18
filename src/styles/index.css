@@ -106,17 +106,33 @@ body {
 }
 
 @layer components {
-  /* TipTap editor — minimal prose styling, Linear/Notion-like */
+  /* ────────── TipTap editor styling ──────────
+     Goal: quiet typography that gets out of the way when you're writing,
+     but earns attention on focus states (selection, hover on links, etc).
+  */
   .tiptap {
     outline: none;
     color: var(--ink-default);
     font-size: var(--size-editor);
-    line-height: 1.65;
+    font-family: Inter, system-ui, sans-serif;
+    line-height: 1.7;
     min-height: 60vh;
+    letter-spacing: -0.005em;
   }
-  .tiptap > * + * {
-    margin-top: 0.75em;
+  .tiptap ::selection {
+    background: color-mix(in srgb, var(--brand) 22%, transparent);
   }
+
+  /* Block rhythm */
+  .tiptap > * + * { margin-top: 0.65em; }
+  .tiptap > h1 + *,
+  .tiptap > h2 + *,
+  .tiptap > h3 + * { margin-top: 0.35em; }
+  .tiptap > * + h1,
+  .tiptap > * + h2,
+  .tiptap > * + h3 { margin-top: 1.4em; }
+
+  /* Placeholder — first empty line only */
   .tiptap p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     color: var(--ink-placeholder);
@@ -124,55 +140,146 @@ body {
     pointer-events: none;
     height: 0;
   }
+
+  /* Headings — tight, heavy, quiet */
   .tiptap h1, .tiptap h2, .tiptap h3 {
     color: var(--ink-strong);
     font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    line-height: 1.2;
+    letter-spacing: -0.022em;
   }
-  .tiptap h1 { font-size: 1.75em; margin-top: 1.2em; }
-  .tiptap h2 { font-size: 1.375em; margin-top: 1em; }
-  .tiptap h3 { font-size: 1.125em; margin-top: 0.8em; }
+  .tiptap h1 { font-size: 1.75em; }
+  .tiptap h2 { font-size: 1.375em; }
+  .tiptap h3 { font-size: 1.125em; }
+
+  /* Paragraph */
+  .tiptap p { margin: 0; }
+
+  /* Lists */
   .tiptap ul, .tiptap ol {
-    padding-left: 1.25em;
+    padding-left: 1.4em;
+    margin-left: 0;
   }
   .tiptap ul { list-style: disc; }
   .tiptap ol { list-style: decimal; }
-  .tiptap li > p { margin: 0; }
-  .tiptap blockquote {
-    border-left: 2px solid var(--line-default);
-    padding-left: 1em;
-    color: var(--ink-muted);
+  .tiptap li {
+    padding-left: 0.25em;
+    margin: 0.15em 0;
   }
+  .tiptap li::marker { color: var(--ink-subtle); }
+  .tiptap li > p { margin: 0; display: inline; }
+
+  /* Task list (checkboxes) */
+  .tiptap ul[data-type="taskList"] {
+    list-style: none;
+    padding-left: 0;
+  }
+  .tiptap ul[data-type="taskList"] li {
+    display: flex;
+    gap: 0.6em;
+    align-items: flex-start;
+    padding-left: 0;
+  }
+  .tiptap ul[data-type="taskList"] li > label {
+    flex-shrink: 0;
+    margin-top: 0.25em;
+    cursor: pointer;
+  }
+  .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+    appearance: none;
+    width: 1em;
+    height: 1em;
+    border: 1.5px solid var(--line-default);
+    border-radius: 4px;
+    background: var(--surface-raised);
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    transition: all 150ms ease-out;
+  }
+  .tiptap ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
+    border-color: var(--ink-muted);
+  }
+  .tiptap ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+  .tiptap ul[data-type="taskList"] li > label input[type="checkbox"]:checked::before {
+    content: "";
+    width: 0.55em;
+    height: 0.35em;
+    border-left: 2px solid var(--brand-fg);
+    border-bottom: 2px solid var(--brand-fg);
+    transform: rotate(-45deg) translateY(-10%);
+  }
+  .tiptap ul[data-type="taskList"] li > div { flex: 1; min-width: 0; }
+  .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+    color: var(--ink-placeholder);
+    text-decoration: line-through;
+  }
+
+  /* Blockquote — left bar + subtle italic */
+  .tiptap blockquote {
+    border-left: 3px solid var(--line-default);
+    padding: 0.1em 0 0.1em 1em;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+
+  /* Inline code */
   .tiptap code {
     background: var(--surface-muted);
-    padding: 0.1em 0.35em;
-    border-radius: 4px;
-    font-size: 0.9em;
-    font-family: 'Fira Code', ui-monospace, monospace;
+    padding: 0.12em 0.38em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    font-family: 'Fira Code', ui-monospace, SFMono-Regular, monospace;
+    color: var(--ink-strong);
+    border: 1px solid color-mix(in srgb, var(--line-default) 60%, transparent);
   }
+
+  /* Code block — solid card with soft border */
   .tiptap pre {
     background: var(--surface-muted);
-    padding: 0.75em 1em;
-    border-radius: 8px;
-    font-family: 'Fira Code', ui-monospace, monospace;
+    border: 1px solid var(--line-subtle);
+    padding: 0.9em 1.1em;
+    border-radius: 10px;
+    font-family: 'Fira Code', ui-monospace, SFMono-Regular, monospace;
     font-size: 0.9em;
+    line-height: 1.55;
     overflow-x: auto;
+    color: var(--ink-strong);
   }
   .tiptap pre code {
     background: transparent;
     padding: 0;
+    border: none;
+    font-size: inherit;
+    color: inherit;
   }
+
+  /* Divider */
   .tiptap hr {
     border: none;
     border-top: 1px solid var(--line-default);
-    margin: 1.5em 0;
+    margin: 1.8em 0;
   }
+
+  /* Link */
   .tiptap a {
     color: var(--brand);
     text-decoration: underline;
-    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, var(--brand) 40%, transparent);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+    transition: text-decoration-color 150ms ease-out;
   }
+  .tiptap a:hover {
+    text-decoration-color: var(--brand);
+  }
+
+  /* Strong / em */
+  .tiptap strong { color: var(--ink-strong); font-weight: 600; }
+  .tiptap em { font-style: italic; }
 }
 
 @layer utilities {

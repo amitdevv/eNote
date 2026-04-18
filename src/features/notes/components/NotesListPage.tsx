@@ -24,7 +24,7 @@ export function NotesListPage() {
 
   async function handleCreate() {
     const note = await createNote.mutateAsync();
-    navigate(`/notes/${note.id}`);
+    navigate(`/notes/${note.id}`, { state: { fresh: true } });
   }
 
   const visible = searching ? searchResults ?? [] : notes ?? [];

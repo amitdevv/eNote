@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cn } from '@/shared/lib/cn';
 import { Button } from './button';
+import { Spinner } from './spinner';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -77,7 +78,7 @@ export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLD
   return <div className={cn('mt-5 flex items-center justify-end gap-2', className)} {...props} />;
 }
 
-/** Convenience: confirm modal with title + description + confirm/cancel actions. */
+/** Confirm modal with title + description + confirm/cancel actions. */
 export function ConfirmDialog({
   open,
   onOpenChange,
@@ -123,8 +124,9 @@ export function ConfirmDialog({
             size="md"
             onClick={handleConfirm}
             disabled={busy}
+            className="min-w-[96px]"
           >
-            {confirmLabel}
+            {busy ? <Spinner className="border-white/40 border-t-white" /> : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

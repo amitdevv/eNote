@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useNote, useUpdateNote, useDeleteNote } from '../hooks';
 import { NoteEditor } from './NoteEditor';
@@ -35,6 +35,7 @@ type Draft = {
 export function NoteDetailPage() {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: note, isLoading } = useNote(noteId);
   const update = useUpdateNote();
   const del = useDeleteNote();
@@ -42,6 +43,7 @@ export function NoteDetailPage() {
   const [draft, setDraft] = useState<Draft>({ title: '', content: EMPTY_DOC, contentText: '' });
   const [dirty, setDirty] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadedIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -49,8 +51,19 @@ export function NoteDetailPage() {
       setDraft({ title: note.title, content: note.content, contentText: note.content_text });
       setDirty(false);
       loadedIdRef.current = note.id;
+
+      // If user just created this note, focus the title so they can start typing immediately.
+      const state = location.state as { fresh?: boolean } | null;
+      if (state?.fresh) {
+        requestAnimationFrame(() => {
+          titleInputRef.current?.focus();
+          titleInputRef.current?.select();
+        });
+        // Clear the flag so refresh doesn't re-focus.
+        window.history.replaceState({}, '');
+      }
     }
-  }, [note]);
+  }, [note, location.state]);
 
   const { flush } = useAutoSave<Draft>({
     value: draft,
@@ -187,6 +200,7 @@ export function NoteDetailPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[720px] mx-auto px-10 md:px-12 py-12">
           <input
+            ref={titleInputRef}
             value={draft.title}
             onChange={(e) => {
               setDraft((d) => ({ ...d, title: e.target.value }));

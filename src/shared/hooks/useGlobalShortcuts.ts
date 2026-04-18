@@ -22,7 +22,7 @@ export function useGlobalShortcuts() {
     async (e) => {
       e.preventDefault();
       const note = await createNote.mutateAsync();
-      navigate(`/notes/${note.id}`);
+      navigate(`/notes/${note.id}`, { state: { fresh: true } });
     },
     { enableOnFormTags: false }
   );

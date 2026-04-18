@@ -77,7 +77,7 @@ export function Sidebar() {
   async function handleCreate() {
     setSidebarOpen(false);
     const note = await createNote.mutateAsync();
-    navigate(`/notes/${note.id}`);
+    navigate(`/notes/${note.id}`, { state: { fresh: true } });
   }
 
   // Close mobile drawer after navigating
