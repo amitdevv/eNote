@@ -6,9 +6,11 @@ import { HugeiconsIcon, PinIcon, ArchiveIcon } from '@/shared/lib/icons';
 import { useUpdateNote } from '../hooks';
 import { cn } from '@/shared/lib/cn';
 import { LabelChip } from './LabelChip';
+import { useLabelColorMap } from '@/features/labels/hooks';
 
 export function NoteRow({ note }: { note: Note }) {
   const update = useUpdateNote();
+  const colorMap = useLabelColorMap();
   const title = getDisplayTitle(note);
   const hasRealTitle = !!note.title?.trim() && note.title !== 'Untitled';
   // If we're showing derived-from-body title, show a different preview or nothing.
@@ -42,7 +44,7 @@ export function NoteRow({ note }: { note: Note }) {
           {note.labels && note.labels.length > 0 && (
             <span className="flex items-center gap-1 shrink-0">
               {note.labels.slice(0, 3).map((l) => (
-                <LabelChip key={l} label={l} size="xs" />
+                <LabelChip key={l} label={l} color={colorMap[l]} size="xs" />
               ))}
               {note.labels.length > 3 && (
                 <span className="text-[11px] text-ink-subtle">+{note.labels.length - 3}</span>

@@ -18,7 +18,7 @@ import {
   Search01Icon,
 } from '@/shared/lib/icons';
 import type { NoteSort } from '../api';
-import { useUserLabels } from '../hooks';
+import { useLabels, useLabelColorMap } from '@/features/labels/hooks';
 import { LabelChip, LabelDot } from './LabelChip';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ function LabelPicker({
   selected: string[];
   onChange: (next: string[]) => void;
 }) {
-  const { data: allLabels } = useUserLabels();
+  const { data: allLabels } = useLabels();
   const labels = allLabels ?? [];
 
   function toggle(label: string) {
@@ -102,19 +102,19 @@ function LabelPicker({
       </div>
       <Command.List className="max-h-[260px] overflow-y-auto p-1">
         <Command.Empty className="py-6 text-center text-[12px] text-ink-muted">
-          {labels.length === 0 ? 'No labels yet. Add one from a note.' : 'No matches.'}
+          {labels.length === 0 ? 'No labels yet. Create one in Settings.' : 'No matches.'}
         </Command.Empty>
-        {labels.map((label) => {
-          const checked = selected.includes(label);
+        {labels.map((l) => {
+          const checked = selected.includes(l.name);
           return (
             <Command.Item
-              key={label}
-              value={label}
-              onSelect={() => toggle(label)}
+              key={l.id}
+              value={l.name}
+              onSelect={() => toggle(l.name)}
               className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
             >
-              <LabelDot label={label} />
-              <span className="truncate flex-1">{label}</span>
+              <LabelDot color={l.color} />
+              <span className="truncate flex-1">{l.name}</span>
               {checked && <span className="text-brand text-[13px]">✓</span>}
             </Command.Item>
           );
@@ -143,6 +143,7 @@ export function NotesFilterBar({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [activeKind, setActiveKind] = useState<FilterKind | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const colorMap = useLabelColorMap();
 
   const anyActive =
     state.pinnedOnly || state.labels.length > 0 || state.sort !== 'updated';
@@ -183,7 +184,7 @@ export function NotesFilterBar({
               className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
             >
               {state.labels.length === 1 ? (
-                <LabelChip label={state.labels[0]} size="sm" className="pr-0.5">
+                <LabelChip label={state.labels[0]} color={colorMap[state.labels[0]]} size="sm" className="pr-0.5">
                   <span
                     onClick={(e) => {
                       e.stopPropagation();
@@ -198,7 +199,7 @@ export function NotesFilterBar({
                 <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-muted text-[12px] font-medium text-ink-default pl-2 pr-1">
                   <span className="flex items-center -space-x-1">
                     {state.labels.slice(0, 3).map((l) => (
-                      <LabelDot key={l} label={l} size={8} className="ring-2 ring-surface-panel" />
+                      <LabelDot key={l} color={colorMap[l]} size={8} className="ring-2 ring-surface-panel" />
                     ))}
                   </span>
                   <span>{state.labels.length} labels</span>

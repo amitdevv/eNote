@@ -4,6 +4,7 @@ import { Kbd } from '@/shared/components/ui/kbd';
 import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useSettings, type Density } from '../store';
 import { cn } from '@/shared/lib/cn';
+import { LabelsSettings } from '@/features/labels/components/LabelsSettings';
 
 const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
   { value: 'compact', label: 'Compact', hint: 'Smaller text, denser rows' },
@@ -91,6 +92,8 @@ export function SettingsPage() {
               </div>
             </Row>
           </Section>
+
+          <LabelsSettings />
 
           <Section title="Keyboard shortcuts">
             {[

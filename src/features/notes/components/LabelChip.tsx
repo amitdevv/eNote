@@ -1,31 +1,28 @@
-import { labelColor } from '../labelColor';
+import { paletteByKey, type PaletteKey } from '../labelColor';
 import { cn } from '@/shared/lib/cn';
 
 type Size = 'xs' | 'sm' | 'md';
 
-const SIZE_CLASSES: Record<Size, { pill: string; dot: string; text: string }> = {
-  xs: { pill: 'h-5 gap-1 pl-1.5 pr-2 text-[10px]', dot: 'size-1.5', text: '' },
-  sm: { pill: 'h-6 gap-1.5 pl-2 pr-2.5 text-[11px]', dot: 'size-2', text: '' },
-  md: { pill: 'h-7 gap-2 pl-2.5 pr-3 text-[12px]', dot: 'size-2', text: '' },
+const SIZE_CLASSES: Record<Size, { pill: string; dot: string }> = {
+  xs: { pill: 'h-5 gap-1 pl-1.5 pr-2 text-[10px]', dot: 'size-1.5' },
+  sm: { pill: 'h-6 gap-1.5 pl-2 pr-2.5 text-[11px]', dot: 'size-2' },
+  md: { pill: 'h-7 gap-2 pl-2.5 pr-3 text-[12px]', dot: 'size-2' },
 };
 
-/**
- * A Linear-style label pill: tinted background + colored dot + text.
- * Deterministic color per label string.
- */
 export function LabelChip({
   label,
+  color,
   size = 'sm',
   className,
   children,
 }: {
   label: string;
+  color: PaletteKey | string | null | undefined;
   size?: Size;
   className?: string;
-  /** Optional extra (e.g. an X button) appended inside the pill. */
   children?: React.ReactNode;
 }) {
-  const c = labelColor(label);
+  const c = paletteByKey(color);
   const sz = SIZE_CLASSES[size];
   return (
     <span
@@ -39,17 +36,16 @@ export function LabelChip({
   );
 }
 
-/** Just the dot — for use in pickers where the text sits beside it separately. */
 export function LabelDot({
-  label,
+  color,
   className,
   size = 8,
 }: {
-  label: string;
+  color: PaletteKey | string | null | undefined;
   className?: string;
   size?: number;
 }) {
-  const c = labelColor(label);
+  const c = paletteByKey(color);
   return (
     <span
       className={cn('rounded-full shrink-0 inline-block', className)}

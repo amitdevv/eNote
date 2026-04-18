@@ -35,6 +35,8 @@ Everything below descends from those two:
 
 **Color strategy:** warm neutrals, not cool. Our grays carry a faint hint of yellow/red (hue ~40°) instead of blue — closer to parchment than steel. Saturation stays under 4% so the warmth is felt but never seen.
 
+**Label colors are user-assigned, not hashed.** Users pick a color from the 12-entry palette (§2.6) when they create a label in Settings. The choice is stored on the `labels` row and rendered everywhere the label appears. No automatic hashing, no "work is always amber" magic — the user gets a small swatch picker and decides. Orphan label names (referenced by a note but no longer in the user's label set) render in `stone` so they're still visible but obviously demoted.
+
 > **Future direction — LCH + 3 variables.** Linear rebuilt their theming on LCH (perceptually uniform) and expose only three inputs: `base`, `accent`, `contrast`. Every surface and ink shade is derived. We'll migrate when we add user themes; for now the static tokens below are the source of truth. When the migration happens, these tokens become derived values, not declared ones.
 
 ### 2.1 Color (light)

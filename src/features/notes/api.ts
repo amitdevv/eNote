@@ -37,19 +37,6 @@ export async function listNotes(userId: string, opts?: NotesListFilters): Promis
   return data ?? [];
 }
 
-/** Collect the full set of labels the user has used, for the filter picker. */
-export async function listUserLabels(userId: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('notes')
-    .select('labels')
-    .eq('user_id', userId);
-  if (error) throw error;
-  const all = new Set<string>();
-  for (const row of data ?? []) {
-    for (const l of row.labels ?? []) all.add(l);
-  }
-  return [...all].sort();
-}
 
 export async function getNote(id: string): Promise<Note | null> {
   const { data, error } = await supabase.from('notes').select('*').eq('id', id).maybeSingle();

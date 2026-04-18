@@ -72,11 +72,3 @@ export function useSearchNotes(query: string) {
   });
 }
 
-export function useUserLabels() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: user ? [...keys.all, 'labels', user.id] : ['notes', 'labels', 'none'],
-    queryFn: () => api.listUserLabels(user!.id),
-    enabled: !!user,
-  });
-}
