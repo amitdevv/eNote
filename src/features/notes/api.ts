@@ -2,15 +2,35 @@ import { supabase } from '@/shared/lib/supabase';
 import type { Note, NoteInsert, NoteUpdate } from './types';
 import { EMPTY_DOC } from './types';
 
-export async function listNotes(userId: string, opts?: { archived?: boolean }): Promise<Note[]> {
-  const archived = opts?.archived ?? false;
-  const { data, error } = await supabase
-    .from('notes')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('archived', archived)
-    .order('pinned', { ascending: false })
-    .order('updated_at', { ascending: false });
+export type NoteSort = 'updated' | 'created' | 'title';
+export type NotesListFilters = {
+  archived?: boolean;
+  pinnedOnly?: boolean;
+  sort?: NoteSort;
+};
+
+export async function listNotes(userId: string, opts?: NotesListFilters): Promise<Note[]> {
+  const { archived = false, pinnedOnly = false, sort = 'updated' } = opts ?? {};
+
+  let q = supabase.from('notes').select('*').eq('user_id', userId).eq('archived', archived);
+  if (pinnedOnly) q = q.eq('pinned', true);
+
+  // Pinned always bubble to top (unless we're only showing pinned anyway).
+  if (!pinnedOnly) q = q.order('pinned', { ascending: false });
+
+  switch (sort) {
+    case 'created':
+      q = q.order('created_at', { ascending: false });
+      break;
+    case 'title':
+      q = q.order('title', { ascending: true });
+      break;
+    case 'updated':
+    default:
+      q = q.order('updated_at', { ascending: false });
+  }
+
+  const { data, error } = await q;
   if (error) throw error;
   return data ?? [];
 }

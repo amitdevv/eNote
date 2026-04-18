@@ -5,16 +5,17 @@ import type { NoteInsert, NoteUpdate } from './types';
 
 const keys = {
   all: ['notes'] as const,
-  list: (userId: string, archived: boolean) => [...keys.all, 'list', userId, { archived }] as const,
+  list: (userId: string, filters: api.NotesListFilters) =>
+    [...keys.all, 'list', userId, filters] as const,
   detail: (id: string) => [...keys.all, 'detail', id] as const,
   search: (userId: string, q: string) => [...keys.all, 'search', userId, q] as const,
 };
 
-export function useNotes({ archived = false }: { archived?: boolean } = {}) {
+export function useNotes(filters: api.NotesListFilters = {}) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: user ? keys.list(user.id, archived) : ['notes', 'list', 'none'],
-    queryFn: () => api.listNotes(user!.id, { archived }),
+    queryKey: user ? keys.list(user.id, filters) : ['notes', 'list', 'none'],
+    queryFn: () => api.listNotes(user!.id, filters),
     enabled: !!user,
   });
 }

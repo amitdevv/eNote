@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useNotes, useCreateNote, useSearchNotes } from '../hooks';
 import { NoteRow } from './NoteRow';
+import { NotesFilterBar, type FilterState } from './NotesFilterBar';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Button } from '@/shared/components/ui/button';
@@ -14,10 +15,11 @@ import { HugeiconsIcon, Search01Icon, Note01Icon } from '@/shared/lib/icons';
 
 export function NotesListPage() {
   const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState<FilterState>({ pinnedOnly: false, sort: 'updated' });
   const debouncedQuery = useDebounce(query, 200);
   const searching = debouncedQuery.trim().length > 0;
 
-  const { data: notes, isLoading } = useNotes();
+  const { data: notes, isLoading } = useNotes(filters);
   const { data: searchResults, isFetching: searchLoading } = useSearchNotes(debouncedQuery);
   const createNote = useCreateNote();
   const navigate = useNavigate();
@@ -70,6 +72,8 @@ export function NotesListPage() {
         </div>
       </div>
 
+      {!searching && <NotesFilterBar state={filters} onChange={setFilters} />}
+
       <div className="flex-1 overflow-y-auto">
         {loading && (
           <div className="flex justify-center p-10">
@@ -80,12 +84,18 @@ export function NotesListPage() {
         {!loading && visible.length === 0 && !searching && (
           <EmptyState
             icon={<HugeiconsIcon icon={Note01Icon} size={24} className="text-ink-subtle" />}
-            title="No notes yet"
-            description="Press C anywhere to create a note. ⌘K opens commands."
+            title={filters.pinnedOnly ? 'No pinned notes' : 'No notes yet'}
+            description={
+              filters.pinnedOnly
+                ? 'Pin a note from its row or detail view to keep it handy.'
+                : 'Press C anywhere to create a note. ⌘K opens commands.'
+            }
             action={
-              <Button size="md" onClick={handleCreate} disabled={createNote.isPending}>
-                Create note
-              </Button>
+              !filters.pinnedOnly && (
+                <Button size="md" onClick={handleCreate} disabled={createNote.isPending}>
+                  Create note
+                </Button>
+              )
             }
           />
         )}
