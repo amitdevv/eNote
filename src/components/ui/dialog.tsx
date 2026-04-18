@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Cross2Icon } from '@radix-ui/react-icons';
+import { Cross2 as Cross2Icon } from '@/lib/icons';
 
 import { cn } from '@/lib/utils';
 

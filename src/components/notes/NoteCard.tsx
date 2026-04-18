@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getDisplayTitle } from '@/utils/titleUtils';
-import { 
+import {
   MoreHorizontal, Edit3, Trash2, Star,
   Lightbulb, ClipboardList, Eye, CheckCircle,
-  Rocket, Code, GraduationCap, User
-} from 'lucide-react';
+  Rocket, Code, GraduationCap, User,
+} from '@/lib/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 

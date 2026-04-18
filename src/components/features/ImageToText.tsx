@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Upload, 
-  FileImage, 
-  Copy, 
-  Check, 
-  Loader2, 
+import {
+  Upload,
+  FileImage,
+  Copy,
+  Check,
+  Loader2,
   X,
   Image as ImageIcon,
-  Download
-} from 'lucide-react';
+  Download,
+} from '@/lib/icons';
 import { createWorker } from 'tesseract.js';
 import confetti from 'canvas-confetti';
 

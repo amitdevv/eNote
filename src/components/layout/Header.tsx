@@ -16,15 +16,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { 
-  Plus, 
+import {
+  Plus,
   Search,
   ArrowLeft,
   Hash,
   X,
-  Lightbulb, 
-  ClipboardList, 
-  Eye, 
+  Lightbulb,
+  ClipboardList,
+  Eye,
   CheckCircle,
   User,
   Rocket,
@@ -35,7 +35,7 @@ import {
   List,
   Filter,
   SortDesc,
-} from 'lucide-react';
+} from '@/lib/icons';
 import { FontSelector } from '@/components/ui/font-selector';
 import { FontSizeSelector } from '@/components/ui/font-size-selector';
 

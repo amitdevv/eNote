@@ -5,7 +5,7 @@ import { LandingPage } from '@/components/landing/LandingPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/components/auth/LoginPage';
 import { Toaster } from '@/components/ui/toaster';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/lib/icons';
 import './App.css';
 
 // Protected route component

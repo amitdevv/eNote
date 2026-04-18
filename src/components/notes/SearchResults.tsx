@@ -4,7 +4,7 @@ import { SearchResult } from '@/utils/search';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Search,
   Clock,
   Tag,
@@ -15,8 +15,8 @@ import {
   Lightbulb,
   CheckCircle,
   ClipboardList,
-  Eye
-} from 'lucide-react';
+  Eye,
+} from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 

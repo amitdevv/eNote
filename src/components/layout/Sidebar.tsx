@@ -20,8 +20,8 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  Camera
-} from 'lucide-react';
+  Camera,
+} from '@/lib/icons';
 import { useImageToTextStore } from '@/stores/imageToTextStore';
 // Removed workspaces import - we'll show folders directly
 

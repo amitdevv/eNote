@@ -1,10 +1,10 @@
 import * as React from 'react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import {
-  CheckIcon,
-  ChevronRightIcon,
-  DotFilledIcon,
-} from '@radix-ui/react-icons';
+  CheckMark as CheckIcon,
+  ChevronRight as ChevronRightIcon,
+  DotFilled as DotFilledIcon,
+} from '@/lib/icons';
 
 import { cn } from '@/lib/utils';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/lib/icons';
 import { toast } from 'sonner';
 
 const LoginPage: React.FC = () => {

@@ -9,7 +9,7 @@ import { useNotesStore } from '@/stores/notesStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { ImageToTextModal } from '@/components/features/ImageToTextModal';
 import { useImageToTextStore } from '@/stores/imageToTextStore';
-import { FileText, Plus, Loader2, Trash2 } from 'lucide-react';
+import { FileText, Plus, Loader2, Trash2 } from '@/lib/icons';
 import { searchNotes } from '@/utils/search';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 import { ExcelDraw } from '../notes/exceldraw';
