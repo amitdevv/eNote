@@ -32,8 +32,9 @@ export const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      style={{ left: 'calc(50% + (var(--sidebar-w) / 2))' }}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 -translate-y-1/2',
+        'fixed top-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 -translate-y-1/2',
         'rounded-xl border border-line-subtle bg-surface-panel shadow-lg',
         'p-5 data-[state=open]:animate-slide-up focus:outline-none',
         className
