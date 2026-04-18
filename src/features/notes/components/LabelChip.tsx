@@ -4,9 +4,9 @@ import { cn } from '@/shared/lib/cn';
 type Size = 'xs' | 'sm' | 'md';
 
 const SIZE_CLASSES: Record<Size, { pill: string; dot: string }> = {
-  xs: { pill: 'h-5 gap-1 pl-1.5 pr-2 text-[10px]', dot: 'size-1.5' },
-  sm: { pill: 'h-6 gap-1.5 pl-2 pr-2.5 text-[11px]', dot: 'size-2' },
-  md: { pill: 'h-7 gap-2 pl-2.5 pr-3 text-[12px]', dot: 'size-2' },
+  xs: { pill: 'h-5 gap-1 pl-1.5 pr-2 text-micro', dot: 'size-1.5' },
+  sm: { pill: 'h-6 gap-1.5 pl-2 pr-2.5 text-micro', dot: 'size-2' },
+  md: { pill: 'h-7 gap-2 pl-2.5 pr-3 text-caption', dot: 'size-2' },
 };
 
 export function LabelChip({

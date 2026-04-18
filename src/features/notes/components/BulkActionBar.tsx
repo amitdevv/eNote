@@ -50,7 +50,7 @@ export function BulkActionBar({
             <div
               className={cn(
                 'pointer-events-auto inline-flex items-center gap-1 rounded-xl border border-line-default bg-surface-panel shadow-lg p-1 pl-3',
-                'text-[13px] text-ink-default'
+                'text-preview text-ink-default'
               )}
             >
               <span className="pr-2 text-ink-muted tabular-nums">

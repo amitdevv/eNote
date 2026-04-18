@@ -105,7 +105,7 @@ function EditableLabelRow({ label }: { label: Label }) {
                 setEditing(false);
               }
             }}
-            className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+            className="flex-1 h-8 bg-transparent text-nav text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
           />
           <Button size="sm" onClick={save} disabled={update.isPending}>
             {update.isPending ? 'Saving…' : 'Save'}
@@ -191,7 +191,7 @@ function CreateLabelRow() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className="flex items-center gap-1.5 h-11 w-full px-4 text-[13px] font-medium text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
+        className="flex items-center gap-1.5 h-11 w-full px-4 text-preview font-medium text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={14} />
         New label
@@ -214,7 +214,7 @@ function CreateLabelRow() {
               setName('');
             }
           }}
-          className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+          className="flex-1 h-8 bg-transparent text-nav text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
         />
         <Button size="sm" onClick={submit} disabled={!name.trim() || create.isPending}>
           {create.isPending ? 'Adding…' : 'Add'}
@@ -239,10 +239,10 @@ export function LabelsSettings() {
   return (
     <SettingsSection
       title="Labels"
-      description="Tag your notes. Each label has a colour you choose — consistent everywhere it appears."
+      description="Tag your notes. Each label has a colour you choose, consistent everywhere it appears."
     >
       {isLoading ? (
-        <div className="px-4 py-6 text-[13px] text-ink-muted">Loading…</div>
+        <div className="px-4 py-6 text-preview text-ink-muted">Loading…</div>
       ) : (
         <>
           {(labels ?? []).length > 0 && (

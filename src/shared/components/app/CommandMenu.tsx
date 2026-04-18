@@ -17,10 +17,10 @@ import {
 } from '@/shared/lib/icons';
 
 const itemCls =
-  'flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer select-none data-[selected=true]:bg-surface-muted data-[selected=true]:text-ink-strong';
+  'flex items-center gap-2.5 rounded-md px-2 h-8 text-preview text-ink-default cursor-pointer select-none data-[selected=true]:bg-surface-muted data-[selected=true]:text-ink-strong';
 
 const groupCls =
-  '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ink-subtle';
+  '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-micro [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ink-subtle';
 
 export function CommandMenu() {
   const { commandOpen, setCommandOpen } = useNotesUI();
@@ -68,12 +68,12 @@ export function CommandMenu() {
             value={query}
             onValueChange={setQuery}
             placeholder="Search notes or run a command…"
-            className="flex-1 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+            className="flex-1 bg-transparent text-nav text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
           />
         </div>
 
         <Command.List className="max-h-[50vh] overflow-y-auto p-1.5">
-          <Command.Empty className="py-10 text-center text-[13px] text-ink-muted">
+          <Command.Empty className="py-10 text-center text-preview text-ink-muted">
             No results.
           </Command.Empty>
 

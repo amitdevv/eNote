@@ -102,7 +102,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: Props) {
             onChange={(e) => setBody(e.target.value)}
             placeholder="Start writing…"
             rows={5}
-            className="w-full px-5 pt-2 pb-4 text-[15px] leading-[1.6] text-ink-default placeholder:text-ink-placeholder bg-transparent focus:outline-none resize-none"
+            className="w-full px-5 pt-2 pb-4 text-title leading-[1.6] text-ink-default placeholder:text-ink-placeholder bg-transparent focus:outline-none resize-none"
           />
 
           {/* Label chip picker */}

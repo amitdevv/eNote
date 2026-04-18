@@ -54,7 +54,7 @@ export const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashComman
 
     if (items.length === 0) {
       return (
-        <div className="w-[280px] rounded-xl border border-line-default bg-surface-panel shadow-[0_10px_30px_-10px_rgba(0,0,0,0.18),0_4px_10px_-6px_rgba(0,0,0,0.08)] p-2 text-[13px] text-ink-muted">
+        <div className="w-[280px] rounded-xl border border-line-default bg-surface-panel shadow-[0_10px_30px_-10px_rgba(0,0,0,0.18),0_4px_10px_-6px_rgba(0,0,0,0.08)] p-2 text-preview text-ink-muted">
           No results
         </div>
       );
@@ -86,10 +86,10 @@ export const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashComman
                 <HugeiconsIcon icon={item.icon} size={15} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-ink-strong truncate">
+                <p className="text-preview font-medium text-ink-strong truncate">
                   {item.title}
                 </p>
-                <p className="text-[11px] text-ink-muted truncate">{item.description}</p>
+                <p className="text-micro text-ink-muted truncate">{item.description}</p>
               </div>
             </button>
           );

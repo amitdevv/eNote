@@ -16,8 +16,8 @@ function ThemedToaster() {
         classNames: {
           toast:
             '!bg-surface-panel !border !border-line-subtle !shadow-md !rounded-xl !text-ink-default !p-3 !pl-3.5 !gap-2.5 !min-h-0',
-          title: '!text-[13px] !font-medium !text-ink-strong !leading-tight',
-          description: '!text-[12px] !text-ink-muted !leading-snug !mt-0.5',
+          title: '!text-preview !font-medium !text-ink-strong !leading-tight',
+          description: '!text-caption !text-ink-muted !leading-snug !mt-0.5',
           icon: '!mr-0 !shrink-0 flex items-center',
           success: '',
           error: '',
@@ -42,7 +42,7 @@ function ThemedToaster() {
           </span>
         ),
         error: (
-          <span className="inline-flex items-center justify-center size-4 rounded-full bg-red-600 text-white text-[11px] font-bold">
+          <span className="inline-flex items-center justify-center size-4 rounded-full bg-red-600 text-white text-micro font-bold">
             !
           </span>
         ),

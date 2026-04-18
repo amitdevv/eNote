@@ -4,7 +4,7 @@ import { dueTone, formatDue, type DueTone } from '../date';
 
 const TONE_CLASS: Record<DueTone, string> = {
   overdue: 'text-red-600',
-  today: 'text-emerald-600',
+  today: 'text-brand',
   tomorrow: 'text-amber-600',
   soon: 'text-violet-600',
   later: 'text-ink-muted',
@@ -24,7 +24,7 @@ export function DateChip({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-[12px] leading-none',
+        'inline-flex items-center gap-1 text-caption leading-none',
         TONE_CLASS[tone],
         className,
       )}

@@ -36,7 +36,7 @@ export const DropdownMenuItem = React.forwardRef<React.ElementRef<typeof DM.Item
     <DM.Item
       ref={ref}
       className={cn(
-        'relative flex items-center gap-2 rounded-md px-2 h-8 text-[13px] outline-none cursor-pointer select-none transition-colors duration-100',
+        'relative flex items-center gap-2 rounded-md px-2 h-8 text-preview outline-none cursor-pointer select-none transition-colors duration-100',
         destructive
           ? 'text-red-600 data-[highlighted]:bg-red-500/10'
           : 'text-ink-default data-[highlighted]:bg-surface-muted data-[highlighted]:text-ink-strong',
@@ -46,7 +46,7 @@ export const DropdownMenuItem = React.forwardRef<React.ElementRef<typeof DM.Item
     >
       <span className="flex-1 min-w-0 flex items-center gap-2">{children}</span>
       {shortcut && (
-        <span className="text-[11px] font-mono text-ink-subtle">{shortcut}</span>
+        <span className="text-micro font-mono text-ink-subtle">{shortcut}</span>
       )}
     </DM.Item>
   )
@@ -68,7 +68,7 @@ export const DropdownMenuLabel = React.forwardRef<
   <DM.Label
     ref={ref}
     className={cn(
-      'px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-ink-subtle',
+      'px-2 py-1 text-micro font-medium uppercase tracking-wider text-ink-subtle',
       className
     )}
     {...props}

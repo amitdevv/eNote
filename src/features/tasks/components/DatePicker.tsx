@@ -42,25 +42,25 @@ export function DatePicker({ value, onChange, children }: Props) {
               navLayout="around"
               classNames={{
                 months: 'flex flex-col gap-2',
-                month: 'flex flex-col gap-2',
+                month: 'flex flex-col gap-2 relative',
                 month_caption:
-                  'flex items-center justify-between gap-2 h-7 px-0.5',
+                  'flex items-center justify-center h-7',
                 caption_label:
-                  'flex-1 text-center text-[12px] font-semibold text-ink-strong tracking-tight',
+                  'text-caption font-semibold text-ink-strong tracking-tight',
                 button_previous:
-                  'h-6 w-6 rounded-md hover:bg-surface-muted flex items-center justify-center text-ink-muted cursor-pointer bg-transparent border-0 p-0',
+                  'absolute left-0 top-0 h-7 w-7 rounded-md hover:bg-surface-muted flex items-center justify-center text-ink-muted cursor-pointer bg-transparent border-0 p-0 z-10',
                 button_next:
-                  'h-6 w-6 rounded-md hover:bg-surface-muted flex items-center justify-center text-ink-muted cursor-pointer bg-transparent border-0 p-0',
+                  'absolute right-0 top-0 h-7 w-7 rounded-md hover:bg-surface-muted flex items-center justify-center text-ink-muted cursor-pointer bg-transparent border-0 p-0 z-10',
                 chevron: 'h-3.5 w-3.5 fill-current',
                 month_grid: 'w-full border-collapse',
                 weekdays: 'flex',
                 weekday:
-                  'w-8 h-6 text-[12px] font-medium text-ink-muted uppercase tracking-wide text-center',
+                  'w-8 h-6 text-caption font-medium text-ink-muted uppercase tracking-wide text-center',
                 weeks: '',
                 week: 'flex w-full mt-0.5',
                 day: 'w-8 h-8 p-0 relative text-center',
                 day_button:
-                  'w-7 h-7 mx-auto rounded-md text-[12px] text-ink-default hover:bg-surface-muted transition-colors flex items-center justify-center font-medium disabled:opacity-40 disabled:pointer-events-none bg-transparent border-0 cursor-pointer',
+                  'w-7 h-7 mx-auto rounded-md text-caption text-ink-default hover:bg-surface-muted transition-colors flex items-center justify-center font-medium disabled:opacity-40 disabled:pointer-events-none bg-transparent border-0 cursor-pointer',
                 selected:
                   '[&_button]:bg-brand [&_button]:text-white [&_button]:hover:bg-brand',
                 today:
@@ -79,7 +79,7 @@ export function DatePicker({ value, onChange, children }: Props) {
                 onChange(null);
                 setOpen(false);
               }}
-              className="flex items-center gap-1.5 h-7 px-2 text-[11px] text-ink-muted hover:text-red-600 transition-colors rounded-md"
+              className="flex items-center gap-1.5 h-7 px-2 text-micro text-ink-muted hover:text-red-600 transition-colors rounded-md"
             >
               <HugeiconsIcon icon={Delete01Icon} size={11} />
               Clear

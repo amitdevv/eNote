@@ -9,7 +9,7 @@ const BASE = 'eNote';
 export function useDocumentTitle(prefix?: string | null) {
   useEffect(() => {
     const prev = document.title;
-    document.title = prefix && prefix.trim() ? `${prefix} — ${BASE}` : BASE;
+    document.title = prefix && prefix.trim() ? `${prefix} - ${BASE}` : BASE;
     return () => {
       document.title = prev;
     };

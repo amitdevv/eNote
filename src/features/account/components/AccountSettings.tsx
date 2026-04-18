@@ -94,7 +94,7 @@ export function AccountSettings() {
     <>
       <SettingsSection title="Account">
         {isLoading ? (
-          <div className="px-4 py-6 text-[13px] text-ink-muted">Loading…</div>
+          <div className="px-4 py-6 text-preview text-ink-muted">Loading…</div>
         ) : (
           <>
             <div className="flex items-center gap-4 px-4 py-4">
@@ -104,16 +104,16 @@ export function AccountSettings() {
                 avatarUrl={avatarUrl || null}
               />
               <div className="min-w-0">
-                <p className="text-[14px] text-ink-strong truncate">
+                <p className="text-nav text-ink-strong truncate">
                   {displayName || profile?.display_name || user?.email?.split('@')[0] || 'You'}
                 </p>
-                <p className="text-[12px] text-ink-muted truncate">{user?.email}</p>
+                <p className="text-caption text-ink-muted truncate">{user?.email}</p>
               </div>
             </div>
             <SettingsDivider />
 
             <div className="px-4 py-3.5 flex flex-col gap-2">
-              <label className="text-[12px] font-medium text-ink-muted" htmlFor="display-name">
+              <label className="text-caption font-medium text-ink-muted" htmlFor="display-name">
                 Display name
               </label>
               <Input
@@ -128,7 +128,7 @@ export function AccountSettings() {
             <SettingsDivider />
 
             <div className="px-4 py-3.5 flex flex-col gap-2">
-              <label className="text-[12px] font-medium text-ink-muted" htmlFor="avatar-url">
+              <label className="text-caption font-medium text-ink-muted" htmlFor="avatar-url">
                 Avatar URL
               </label>
               <Input
@@ -138,7 +138,7 @@ export function AccountSettings() {
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
               />
-              <p className="text-[12px] text-ink-subtle">
+              <p className="text-caption text-ink-subtle">
                 Paste an image URL. Leave empty to fall back to your initials.
               </p>
             </div>

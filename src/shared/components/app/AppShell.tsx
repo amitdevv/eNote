@@ -6,7 +6,7 @@ import { CommandMenu } from './CommandMenu';
 import { PageTransition } from './PageTransition';
 import { QuickCaptureDialog } from '@/features/notes/components/QuickCaptureDialog';
 import { useGlobalShortcuts } from '@/shared/hooks/useGlobalShortcuts';
-import { useApplyDensity } from '@/features/settings/hooks';
+import { useApplyDensity, useApplyFonts, useSyncSettings } from '@/features/settings/hooks';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useNotesUI } from '@/features/notes/store';
 import { HugeiconsIcon, Menu01Icon } from '@/shared/lib/icons';
@@ -14,6 +14,8 @@ import { HugeiconsIcon, Menu01Icon } from '@/shared/lib/icons';
 export function AppShell({ children }: { children: ReactNode }) {
   useGlobalShortcuts();
   useApplyDensity();
+  useApplyFonts();
+  useSyncSettings();
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const sidebarOpen = useNotesUI((s) => s.sidebarOpen);
@@ -53,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </AnimatePresence>
       )}
 
-      <main className="flex-1 min-w-0 p-2">
+      <main className="flex-1 min-w-0 p-3">
         {isMobile && (
           <div className="flex items-center gap-2 h-10 px-2">
             <button

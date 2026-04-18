@@ -97,7 +97,7 @@ export function TaskRow({ task, hideDate }: Props) {
               }
             }}
             placeholder="Task name"
-            className="w-full bg-transparent text-[13px] text-ink-strong focus:outline-none placeholder:text-ink-placeholder"
+            className="w-full bg-transparent text-preview text-ink-strong focus:outline-none placeholder:text-ink-placeholder"
           />
           <input
             value={description}
@@ -114,7 +114,7 @@ export function TaskRow({ task, hideDate }: Props) {
             }}
             onBlur={save}
             placeholder="Description"
-            className="w-full bg-transparent text-[12px] text-ink-muted focus:outline-none placeholder:text-ink-placeholder"
+            className="w-full bg-transparent text-caption text-ink-muted focus:outline-none placeholder:text-ink-placeholder"
           />
         </div>
       </div>
@@ -142,7 +142,7 @@ export function TaskRow({ task, hideDate }: Props) {
       >
         <span
           className={cn(
-            'text-[13px] truncate shrink-0 max-w-[70%]',
+            'text-preview truncate shrink-0 max-w-[70%]',
             task.done ? 'text-ink-muted line-through' : 'text-ink-strong',
           )}
         >
@@ -151,7 +151,7 @@ export function TaskRow({ task, hideDate }: Props) {
         {task.description && (
           <span
             className={cn(
-              'text-[12px] truncate',
+              'text-caption truncate',
               task.done ? 'text-ink-subtle' : 'text-ink-muted',
             )}
           >

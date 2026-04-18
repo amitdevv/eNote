@@ -96,7 +96,7 @@ export function NoteRow({ note, selected, anySelected, onToggleSelect }: Props) 
                   <LabelChip key={l} label={l} color={colorMap[l]} size="xs" />
                 ))}
                 {note.labels.length > 3 && (
-                  <span className="text-[11px] text-ink-subtle">+{note.labels.length - 3}</span>
+                  <span className="text-micro text-ink-subtle">+{note.labels.length - 3}</span>
                 )}
               </span>
             )}

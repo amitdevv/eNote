@@ -21,10 +21,12 @@ export default {
         mono: ['"Fira Code"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
-        nav: 'var(--size-nav)',
-        title: 'var(--size-title)',
+        micro: 'var(--size-micro)',
+        caption: 'var(--size-caption)',
         preview: 'var(--size-preview)',
+        nav: 'var(--size-nav)',
         header: 'var(--size-header)',
+        title: 'var(--size-title)',
       },
       colors: {
         // Legacy shadcn tokens (kept for existing components)
@@ -87,6 +89,12 @@ export default {
         shimmer: { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(100%)" } },
         "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
         "slide-up": { from: { opacity: "0", transform: "translateY(4px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+        // Centered-dialog entrance. Uses the `translate` property (not transform)
+        // so the `-translate-x-1/2 -translate-y-1/2` centering utilities stay intact.
+        "dialog-in": {
+          from: { opacity: "0", translate: "0 6px" },
+          to: { opacity: "1", translate: "0 0" },
+        },
         // Bottom-sheet style for quick capture. Uses the `translate` property
         // (not transform) so the X-centering via `translate: -50% 0` stays
         // intact while we animate the Y.
@@ -105,6 +113,7 @@ export default {
         shimmer: "shimmer 1.5s ease-in-out infinite",
         "fade-in": "fade-in 150ms ease-out",
         "slide-up": "slide-up 200ms cubic-bezier(.16,1,.3,1)",
+        "dialog-in": "dialog-in 180ms cubic-bezier(.16,1,.3,1)",
         // Emil-style: slightly overshoot ease, fast, anchored at the bottom edge.
         "sheet-in": "sheet-in 280ms cubic-bezier(.16,1,.3,1)",
         "sheet-out": "sheet-out 180ms cubic-bezier(.4,0,1,1)",

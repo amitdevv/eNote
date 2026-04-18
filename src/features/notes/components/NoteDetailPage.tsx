@@ -56,7 +56,7 @@ export function NoteDetailPage() {
   if (!note) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2">
-        <p className="text-[14px] text-ink-muted">Note not found.</p>
+        <p className="text-nav text-ink-muted">Note not found.</p>
         <Button variant="ghost" size="sm" onClick={() => navigate('/notes')}>
           Back to notes
         </Button>

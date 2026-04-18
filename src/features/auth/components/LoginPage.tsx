@@ -1,7 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/features/auth/hooks';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { Spinner } from '@/shared/components/ui/spinner';
 
 function GoogleIcon() {
@@ -16,104 +15,131 @@ function GoogleIcon() {
 }
 
 export function LoginPage() {
-  const { signInWithMagicLink, signInWithGoogle } = useAuth();
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'google' | 'error'>('idle');
+  const { signInWithGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function submitEmail(e: FormEvent) {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setStatus('sending');
-    setError(null);
-    const { error } = await signInWithMagicLink(email.trim());
-    if (error) {
-      setStatus('error');
-      setError(error);
-    } else {
-      setStatus('sent');
-    }
-  }
-
   async function handleGoogle() {
-    setStatus('google');
+    setLoading(true);
     setError(null);
     const { error } = await signInWithGoogle();
     if (error) {
-      setStatus('error');
       setError(error);
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-surface-app flex items-center justify-center p-6">
-      <div className="w-full max-w-[380px]">
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 size-11 rounded-xl bg-brand flex items-center justify-center text-white font-semibold text-[14px] shadow-xs">
-            eN
-          </div>
-          <h1 className="text-[20px] font-semibold text-ink-strong tracking-[-0.01em]">
-            Welcome to eNote
-          </h1>
-          <p className="mt-1.5 text-[13px] text-ink-muted">Sign in to your notes</p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Sky gradient base — sky on top AND bottom */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-20"
+        style={{
+          background:
+            'linear-gradient(180deg, #dbeafe 0%, #e0f2fe 20%, #f0f9ff 45%, #f0f9ff 55%, #e0f2fe 80%, #bae6fd 100%)',
+        }}
+      />
+      {/* Soft sky glow top-left */}
+      <div
+        aria-hidden
+        className="absolute -top-40 -left-40 w-[620px] h-[620px] rounded-full -z-10 blur-3xl opacity-60"
+        style={{ background: 'radial-gradient(circle, #7dd3fc 0%, transparent 70%)' }}
+      />
+      {/* Soft sky glow bottom-right */}
+      <div
+        aria-hidden
+        className="absolute -bottom-48 -right-40 w-[620px] h-[620px] rounded-full -z-10 blur-3xl opacity-70"
+        style={{ background: 'radial-gradient(circle, #7dd3fc 0%, transparent 70%)' }}
+      />
+      {/* Soft sky glow bottom-left */}
+      <div
+        aria-hidden
+        className="absolute -bottom-40 -left-32 w-[480px] h-[480px] rounded-full -z-10 blur-3xl opacity-55"
+        style={{ background: 'radial-gradient(circle, #bae6fd 0%, transparent 70%)' }}
+      />
+      {/* Noise overlay */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 pointer-events-none opacity-[0.15] mix-blend-overlay"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+        }}
+      />
 
-        {status === 'sent' ? (
-          <div className="rounded-xl bg-surface-muted p-5 text-center">
-            <p className="text-[14px] text-ink-strong font-medium">Check your email</p>
-            <p className="mt-1 text-[12px] text-ink-muted">
-              We sent a magic link to <span className="text-ink-default">{email}</span>.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
+      <div className="relative min-h-screen grid grid-cols-1 lg:grid-cols-2">
+        {/* LEFT — Login form */}
+        <div className="flex items-center justify-center p-6 lg:p-10">
+          <div className="w-full max-w-[400px]">
+            {/* Logo */}
+            <div className="flex justify-center lg:justify-start mb-8">
+              <div className="size-12 rounded-2xl bg-brand flex items-center justify-center text-white font-semibold text-[16px] shadow-lg shadow-brand/20">
+                eN
+              </div>
+            </div>
+
+            {/* Hero */}
+            <div className="text-center lg:text-left mb-8">
+              <h1 className="text-[30px] leading-[1.15] font-semibold text-ink-strong tracking-[-0.02em]">
+                Welcome to <span className="text-brand">eNote</span>
+              </h1>
+              <p className="mt-3 text-title leading-[1.5] text-ink-muted">
+                A calm home for your notes, tasks, and fleeting thoughts.
+              </p>
+            </div>
+
             <Button
               variant="outline"
               size="lg"
-              className="w-full gap-2 h-11"
+              className="w-full gap-3 h-14 rounded-xl border-2 border-ink-strong/80 !bg-white hover:!bg-surface-muted text-title font-semibold text-ink-strong shadow-[0_10px_28px_-10px_rgba(14,165,233,0.35)] hover:shadow-[0_14px_32px_-10px_rgba(14,165,233,0.45)] transition-shadow duration-200"
               onClick={handleGoogle}
-              disabled={status === 'google' || status === 'sending'}
+              disabled={loading}
             >
-              {status === 'google' ? <Spinner /> : <GoogleIcon />}
+              {loading ? <Spinner /> : <GoogleIcon />}
               <span>Continue with Google</span>
             </Button>
 
-            <div className="flex items-center gap-3 py-1">
-              <div className="h-px flex-1 bg-line-default" />
-              <span className="text-[11px] uppercase tracking-wider text-ink-subtle">or</span>
-              <div className="h-px flex-1 bg-line-default" />
-            </div>
-
-            <form onSubmit={submitEmail} className="space-y-2.5">
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={status === 'sending'}
-                className="h-11 text-sm"
-              />
-              <Button
-                type="submit"
-                size="lg"
-                variant="default"
-                className="w-full h-11"
-                disabled={status === 'sending' || !email.trim()}
-              >
-                {status === 'sending' ? <Spinner className="border-white/40 border-t-white" /> : 'Send magic link'}
-              </Button>
-            </form>
-
             {error && (
-              <p className="text-[12px] text-red-600 text-center pt-1">{error}</p>
+              <p className="mt-3 text-caption text-red-600 text-center">{error}</p>
             )}
           </div>
-        )}
+        </div>
 
-        <p className="mt-10 text-center text-[11px] text-ink-subtle">
-          By continuing you agree to use eNote for personal notes.
-        </p>
+        {/* RIGHT — Quote panel (hidden on mobile) */}
+        <div className="hidden lg:flex items-center justify-center p-12 relative">
+          {/* Decorative vertical divider */}
+          <div
+            aria-hidden
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-[60%] w-px bg-gradient-to-b from-transparent via-ink-subtle/20 to-transparent"
+          />
+
+          <figure className="max-w-[480px]">
+            {/* Big opening quote mark */}
+            <div
+              aria-hidden
+              className="mb-2 text-[80px] leading-none font-serif text-brand/30 select-none"
+            >
+              &ldquo;
+            </div>
+
+            <blockquote className="text-[28px] leading-[1.4] font-medium text-ink-strong tracking-[-0.01em]">
+              I don't know what I think until I write it down.
+            </blockquote>
+
+            <figcaption className="mt-6 flex items-center gap-3">
+              <span className="h-px w-8 bg-ink-subtle/40" />
+              <span className="text-preview text-ink-muted tracking-wide uppercase">
+                Joan Didion
+              </span>
+            </figcaption>
+
+            <p className="mt-10 text-nav leading-[1.6] text-ink-muted">
+              Writing is thinking. eNote gives your ideas a place to land, so
+              you can come back to them, connect them, and keep building.
+            </p>
+          </figure>
+        </div>
       </div>
     </div>
   );

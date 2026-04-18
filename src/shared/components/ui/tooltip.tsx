@@ -12,7 +12,7 @@ export const TooltipContent = React.forwardRef<
     ref={ref}
     sideOffset={sideOffset}
     className={cn(
-      'z-50 rounded-md bg-ink-strong px-2 py-1 text-[11px] font-medium text-surface-raised shadow-md',
+      'z-50 rounded-md bg-ink-strong px-2 py-1 text-micro font-medium text-surface-raised shadow-md',
       'data-[state=delayed-open]:animate-fade-in',
       className
     )}

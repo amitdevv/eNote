@@ -29,7 +29,7 @@ export function ArchivedPage() {
       <PageHeader
         title="Archived"
         trailing={
-          <Link to="/notes" className="text-[13px] text-ink-muted hover:text-ink-strong transition-colors">
+          <Link to="/notes" className="text-preview text-ink-muted hover:text-ink-strong transition-colors">
             ← Back to Notes
           </Link>
         }
@@ -83,7 +83,7 @@ export function ArchivedPage() {
                     <button
                       onClick={(e) => unarchive(e, n.id)}
                       aria-label="Restore"
-                      className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] text-ink-subtle hover:bg-surface-active hover:text-ink-strong transition-colors"
+                      className="flex h-7 items-center gap-1 rounded-md px-2 text-caption text-ink-subtle hover:bg-surface-active hover:text-ink-strong transition-colors"
                     >
                       Restore
                     </button>

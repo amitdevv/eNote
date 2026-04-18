@@ -31,7 +31,7 @@ export function PriorityPicker({
                   type="button"
                   onClick={() => onChange(p)}
                   className={cn(
-                    'flex w-full items-center gap-2.5 rounded-md px-2 h-8 text-[13px] transition-colors text-left',
+                    'flex w-full items-center gap-2.5 rounded-md px-2 h-8 text-preview transition-colors text-left',
                     active
                       ? 'bg-surface-muted text-ink-strong'
                       : 'text-ink-default hover:bg-surface-muted/60',

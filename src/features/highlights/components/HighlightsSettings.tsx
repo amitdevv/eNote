@@ -17,7 +17,7 @@ import { SettingsSection } from '@/features/settings/components/SettingsSection'
 /** Editor sample — shows how the highlight looks on real text. */
 function Sample({ color }: { color: string }) {
   return (
-    <span className="text-[13px] text-ink-default">
+    <span className="text-preview text-ink-default">
       When I wrote <mark style={{ backgroundColor: color, padding: '1px 4px', borderRadius: 3 }}>this sentence</mark> I meant it.
     </span>
   );
@@ -98,7 +98,7 @@ function Row({ highlight }: { highlight: Highlight }) {
                 setEditing(false);
               }
             }}
-            className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+            className="flex-1 h-8 bg-transparent text-nav text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
           />
           <Button size="sm" onClick={save} disabled={update.isPending}>
             {update.isPending ? 'Saving…' : 'Save'}
@@ -121,7 +121,7 @@ function Row({ highlight }: { highlight: Highlight }) {
             className="size-5 rounded-md border border-line-default shrink-0"
             style={{ backgroundColor: highlight.color }}
           />
-          <span className="text-[14px] text-ink-strong truncate">{highlight.name}</span>
+          <span className="text-nav text-ink-strong truncate">{highlight.name}</span>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
           <button
@@ -188,7 +188,7 @@ function CreateRow() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className="flex items-center gap-1.5 h-11 w-full px-4 text-[13px] font-medium text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
+        className="flex items-center gap-1.5 h-11 w-full px-4 text-preview font-medium text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={14} />
         New highlight
@@ -211,7 +211,7 @@ function CreateRow() {
               setName('');
             }
           }}
-          className="flex-1 h-8 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+          className="flex-1 h-8 bg-transparent text-nav text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
         />
         <Button size="sm" onClick={submit} disabled={!name.trim() || create.isPending}>
           {create.isPending ? 'Adding…' : 'Add'}
@@ -235,7 +235,7 @@ export function HighlightsSettings() {
       description="Pick colours for the editor's highlight tool. Existing highlighted text keeps its colour even after you change a definition."
     >
       {isLoading ? (
-        <div className="px-4 py-6 text-[13px] text-ink-muted">Loading…</div>
+        <div className="px-4 py-6 text-preview text-ink-muted">Loading…</div>
       ) : (
         <>
           {(data ?? []).length > 0 && (

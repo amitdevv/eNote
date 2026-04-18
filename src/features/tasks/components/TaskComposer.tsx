@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   HugeiconsIcon,
@@ -36,6 +36,28 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
   const [dueAt, setDueAt] = useState<string | null>(defaultDueAt ?? null);
 
   const priorityMeta = PRIORITY_META[priority];
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Close when user clicks outside the composer (but ignore clicks inside
+  // portalled popovers like DatePicker/PriorityPicker).
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (rootRef.current?.contains(target)) return;
+      // Ignore clicks inside Radix popovers/portals — they live outside our root.
+      if (
+        target instanceof Element &&
+        target.closest('[data-radix-popper-content-wrapper], [role="dialog"], [role="listbox"], [role="menu"]')
+      ) {
+        return;
+      }
+      close();
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
 
   function reset() {
     setTitle('');
@@ -74,18 +96,18 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 h-10 w-full px-3 rounded-lg border border-dashed border-line-default bg-surface-raised text-[13px] text-ink-muted hover:border-brand/60 hover:text-ink-strong hover:bg-surface-muted/40 transition-colors"
+        className="flex items-center gap-2.5 h-11 w-full px-3.5 rounded-lg bg-brand/10 text-brand text-preview font-semibold hover:bg-brand/15 transition-colors shadow-xs"
       >
         <span className="flex size-5 items-center justify-center rounded-full bg-brand text-white">
           <HugeiconsIcon icon={PlusSignIcon} size={12} strokeWidth={2.4} />
         </span>
-        <span className="font-medium">Add task</span>
+        <span>Add task</span>
       </button>
     );
   }
 
   return (
-    <div className="rounded-xl border border-line-default bg-surface-raised shadow-xs overflow-hidden">
+    <div ref={rootRef} className="rounded-xl border border-line-default bg-surface-raised shadow-xs overflow-hidden">
       <div className="flex flex-col gap-1 px-3 pt-3">
         <input
           autoFocus
@@ -102,7 +124,7 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
             }
           }}
           placeholder="Task name"
-          className="w-full bg-transparent text-[14px] font-medium text-ink-strong focus:outline-none placeholder:text-ink-placeholder"
+          className="w-full bg-transparent text-nav font-medium text-ink-strong focus:outline-none placeholder:text-ink-placeholder"
         />
         <input
           value={description}
@@ -118,7 +140,7 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
             }
           }}
           placeholder="Description"
-          className="w-full bg-transparent text-[12px] text-ink-muted focus:outline-none placeholder:text-ink-placeholder"
+          className="w-full bg-transparent text-caption text-ink-muted focus:outline-none placeholder:text-ink-placeholder"
         />
 
         <div className="flex items-center gap-1.5 py-2 flex-wrap">
@@ -126,7 +148,7 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
             <button
               type="button"
               className={cn(
-                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border text-[12px] transition-colors',
+                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border text-caption transition-colors',
                 dueAt
                   ? 'border-line-subtle bg-surface-muted/40'
                   : 'border-line-default text-ink-muted hover:text-ink-strong hover:bg-surface-muted/60',
@@ -146,7 +168,7 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
           <PriorityPicker value={priority} onChange={setPriority}>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-line-default text-[12px] text-ink-muted hover:text-ink-strong hover:bg-surface-muted/60 transition-colors"
+              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-line-default text-caption text-ink-muted hover:text-ink-strong hover:bg-surface-muted/60 transition-colors"
               style={priority < 4 ? { color: priorityMeta.dot } : undefined}
             >
               <HugeiconsIcon icon={Flag03Icon} size={12} />

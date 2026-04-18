@@ -1,3 +1,9 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  HugeiconsIcon,
+  CircleIcon,
+  CheckmarkCircle02Icon,
+} from '@/shared/lib/icons';
 import { PRIORITY_META, type Priority } from '../types';
 import { cn } from '@/shared/lib/cn';
 
@@ -9,15 +15,17 @@ type Props = {
 };
 
 /**
- * Todoist-style circular checkbox whose border colour reflects priority.
- * When checked, the ring fills solid with the priority colour and a white tick lands on top.
+ * Circular task checkbox with a satisfying tick animation.
+ * Uses HugeIcons' CircleIcon (idle) and CheckmarkCircle02Icon (checked).
+ * Border/fill colour reflects priority. Hover previews the filled state.
  */
 export function TaskCheckbox({ checked, priority, onChange, className }: Props) {
   const meta = PRIORITY_META[priority];
   const isNone = priority === 4;
+  const tint = isNone ? 'var(--ink-subtle, #9ca3af)' : meta.dot;
 
   return (
-    <button
+    <motion.button
       type="button"
       role="checkbox"
       aria-checked={checked}
@@ -26,37 +34,59 @@ export function TaskCheckbox({ checked, priority, onChange, className }: Props) 
         e.stopPropagation();
         onChange(!checked);
       }}
+      whileTap={{ scale: 0.85 }}
+      animate={checked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+      transition={{ duration: 0.28, ease: [0.34, 1.56, 0.64, 1] }}
       className={cn(
-        'size-[18px] shrink-0 rounded-full border transition-colors duration-150 flex items-center justify-center',
+        'group relative size-[18px] shrink-0 rounded-full flex items-center justify-center',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-ink-default/20',
-        checked ? 'text-white' : 'bg-transparent',
         className,
       )}
-      style={{
-        borderColor: isNone && !checked ? undefined : meta.dot,
-        borderWidth: isNone ? 1 : 1.5,
-        backgroundColor: checked ? meta.dot : undefined,
-      }}
+      style={{ color: tint }}
     >
-      {checked && (
-        <svg viewBox="0 0 16 16" width={11} height={11} fill="none" aria-hidden>
-          <path
-            d="M3.5 8l3 3L12.5 5"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-      {/* Subtle inner tint when not checked, to echo the design's opacity-10 fill. */}
-      {!checked && !isNone && (
-        <span
-          aria-hidden
-          className="size-[10px] rounded-full opacity-30"
-          style={{ backgroundColor: meta.dot }}
-        />
-      )}
-    </button>
+      <AnimatePresence initial={false} mode="wait">
+        {checked ? (
+          <motion.span
+            key="check"
+            initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            exit={{ opacity: 0, scale: 0.6 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="flex items-center justify-center"
+          >
+            <HugeiconsIcon
+              icon={CheckmarkCircle02Icon}
+              size={18}
+              strokeWidth={2}
+              className="drop-shadow-sm"
+            />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="idle"
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.15 }}
+            className="relative flex items-center justify-center"
+          >
+            {/* Idle circle */}
+            <HugeiconsIcon
+              icon={CircleIcon}
+              size={18}
+              strokeWidth={isNone ? 1.5 : 2}
+              className="transition-opacity duration-150 group-hover:opacity-0"
+            />
+            {/* Hover preview — the filled check shows faintly on hover */}
+            <HugeiconsIcon
+              icon={CheckmarkCircle02Icon}
+              size={18}
+              strokeWidth={2}
+              className="absolute inset-0 opacity-0 group-hover:opacity-60 transition-opacity duration-150"
+            />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   );
 }

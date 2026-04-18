@@ -29,11 +29,11 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-app p-6">
         <div className="w-full max-w-[420px] rounded-xl border border-line-subtle bg-surface-panel shadow-sm p-6">
-          <p className="text-[15px] font-semibold text-ink-strong">Something went wrong.</p>
-          <p className="mt-1 text-[13px] text-ink-muted">
-            A rendering error happened. Your notes are safe — they auto-save to Supabase.
+          <p className="text-title font-semibold text-ink-strong">Something went wrong.</p>
+          <p className="mt-1 text-preview text-ink-muted">
+            A rendering error happened. Your notes are safe - they auto-save to Supabase.
           </p>
-          <pre className="mt-3 rounded-md bg-surface-muted p-3 text-[11px] text-ink-muted overflow-x-auto max-h-40">
+          <pre className="mt-3 rounded-md bg-surface-muted p-3 text-micro text-ink-muted overflow-x-auto max-h-40">
             {this.state.error.message}
           </pre>
           <div className="mt-4 flex items-center gap-2">

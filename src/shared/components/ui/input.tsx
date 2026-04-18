@@ -9,7 +9,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       ref={ref}
       type={type}
       className={cn(
-        'h-8 w-full rounded-md border border-line-default bg-surface-raised px-2.5 text-[13px] text-ink-strong placeholder:text-ink-placeholder',
+        'h-8 w-full rounded-md border border-line-default bg-surface-raised px-2.5 text-preview text-ink-strong placeholder:text-ink-placeholder',
         'transition-colors duration-150 ease-out',
         // Linear-style focus: quiet border darken, no glowing ring.
         'focus-visible:outline-none focus-visible:border-ink-default/40',

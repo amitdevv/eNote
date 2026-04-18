@@ -14,7 +14,6 @@ import TextAlign from '@tiptap/extension-text-align';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Image from '@tiptap/extension-image';
-import CharacterCount from '@tiptap/extension-character-count';
 import Focus from '@tiptap/extension-focus';
 import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
@@ -120,7 +119,6 @@ export function NoteEditor({ initialContent, onChange }: Props) {
       Subscript,
       Superscript,
       Image.configure({ inline: false, allowBase64: false }),
-      CharacterCount,
       Focus.configure({ className: 'has-focus', mode: 'shallowest' }),
       Table.configure({ resizable: true }),
       TableRow,
@@ -313,7 +311,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
                   className="z-50 rounded-lg border border-line-default bg-surface-panel shadow-md overflow-hidden p-1.5 w-[220px] data-[state=open]:animate-fade-in"
                 >
                   {(highlights ?? []).length === 0 ? (
-                    <div className="p-2 text-[12px] text-ink-muted text-center">
+                    <div className="p-2 text-caption text-ink-muted text-center">
                       No highlights yet.
                       <RouterLink
                         to="/settings"
@@ -331,7 +329,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
                             key={h.id}
                             type="button"
                             onClick={() => applyHighlight(h.color)}
-                            className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default hover:bg-surface-muted transition-colors text-left"
+                            className="flex items-center gap-2.5 rounded-md px-2 h-8 text-preview text-ink-default hover:bg-surface-muted transition-colors text-left"
                           >
                             <span
                               className="size-4 rounded border border-line-default shrink-0"
@@ -347,7 +345,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
                           <button
                             type="button"
                             onClick={() => applyHighlight(null)}
-                            className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors w-full text-left"
+                            className="flex items-center gap-2.5 rounded-md px-2 h-8 text-preview text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors w-full text-left"
                           >
                             <span className="size-4 rounded border border-dashed border-line-default shrink-0" />
                             Remove highlight
@@ -358,7 +356,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
                       <RouterLink
                         to="/settings"
                         onClick={() => setHighlightOpen(false)}
-                        className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[12px] text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+                        className="flex items-center gap-2.5 rounded-md px-2 h-8 text-caption text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
                       >
                         Manage highlights…
                       </RouterLink>
@@ -373,12 +371,6 @@ export function NoteEditor({ initialContent, onChange }: Props) {
       </BubbleMenu>
 
       <EditorContent editor={editor} />
-
-      <div className="mt-8 pt-3 border-t border-line-subtle flex items-center gap-3 text-[11px] text-ink-subtle tabular-nums">
-        <span>{editor.storage.characterCount.words()} words</span>
-        <span className="text-ink-default/20">·</span>
-        <span>{editor.storage.characterCount.characters()} chars</span>
-      </div>
     </>
   );
 }
@@ -413,12 +405,12 @@ function LinkEditor({
           }
         }}
         placeholder="Paste or type URL"
-        className="w-64 h-8 px-2.5 bg-surface-muted rounded-md text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none focus:bg-surface-active"
+        className="w-64 h-8 px-2.5 bg-surface-muted rounded-md text-preview text-ink-strong placeholder:text-ink-placeholder focus:outline-none focus:bg-surface-active"
       />
       <button
         type="button"
         onClick={onApply}
-        className="h-8 px-2.5 text-[12px] font-medium text-brand hover:bg-brand/10 rounded-md transition-colors"
+        className="h-8 px-2.5 text-caption font-medium text-brand hover:bg-brand/10 rounded-md transition-colors"
       >
         Apply
       </button>

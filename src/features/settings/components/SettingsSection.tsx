@@ -28,9 +28,9 @@ export function SettingsSection({
     <section className={className}>
       <div className="flex items-end justify-between mb-3 gap-3">
         <div className="min-w-0">
-          <h2 className="text-[14px] font-semibold text-ink-strong">{title}</h2>
+          <h2 className="text-nav font-semibold text-ink-strong">{title}</h2>
           {description && (
-            <p className="text-[12px] text-ink-muted mt-0.5">{description}</p>
+            <p className="text-caption text-ink-muted mt-0.5">{description}</p>
           )}
         </div>
         {action && <div className="shrink-0">{action}</div>}
@@ -64,8 +64,8 @@ export function SettingsRow({
       className={cn('flex items-center justify-between gap-4 px-4 py-3.5', className)}
     >
       <div className="min-w-0">
-        <p className="text-[14px] text-ink-strong">{label}</p>
-        {hint && <p className="text-[12px] text-ink-muted mt-0.5">{hint}</p>}
+        <p className="text-nav text-ink-strong">{label}</p>
+        {hint && <p className="text-caption text-ink-muted mt-0.5">{hint}</p>}
       </div>
       {children && <div className="shrink-0">{children}</div>}
     </div>

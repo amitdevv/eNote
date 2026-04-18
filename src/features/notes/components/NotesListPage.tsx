@@ -63,7 +63,7 @@ export function NotesListPage() {
           <span className="flex items-center gap-2">
             Notes
             {notes && notes.length > 0 && (
-              <span className="text-[12px] font-normal text-ink-subtle tabular-nums">
+              <span className="text-caption font-normal text-ink-subtle tabular-nums">
                 {notes.length}
               </span>
             )}
@@ -105,7 +105,7 @@ export function NotesListPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.12 }}
-            className="grid gap-3 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+            className="columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-3 px-4 py-4 [&>*]:mb-3 [&>*]:break-inside-avoid"
           >
             <AnimatePresence initial={false}>
               {visible.map((n) => (

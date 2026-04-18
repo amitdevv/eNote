@@ -5,20 +5,40 @@ type Props = ComponentProps<typeof BaseHugeiconsIcon>;
 
 /**
  * App-wide icon wrapper. Defaults to strokeWidth=2 (bolder than HugeIcons'
- * default 1.5) and size=18 so icons read with more confidence at our
- * information density. Per-call overrides still work.
+ * default 1.5) and size=18. Per-call `size` overrides still work.
+ *
+ * Density-aware: the final rendered size is `size * var(--icon-scale, 1)`,
+ * which the density hook sets to 0.88 (compact) / 1 (default) / 1.14
+ * (comfortable). We keep passing `size` to the base component so any internal
+ * sizing math stays consistent, then override width/height via inline style.
  */
-export function HugeiconsIcon({ strokeWidth = 2, size = 18, ...props }: Props) {
-  return <BaseHugeiconsIcon strokeWidth={strokeWidth} size={size} {...props} />;
+export function HugeiconsIcon({
+  strokeWidth = 2,
+  size = 18,
+  style,
+  ...props
+}: Props) {
+  const scaled = `calc(${size}px * var(--icon-scale, 1))`;
+  return (
+    <BaseHugeiconsIcon
+      strokeWidth={strokeWidth}
+      size={size}
+      style={{ width: scaled, height: scaled, ...style }}
+      {...props}
+    />
+  );
 }
 
 export {
   ArchiveIcon,
+  Archive02Icon,
   ArrowRight01Icon,
   BubbleChatIcon,
   Calendar01Icon,
   Calendar03Icon,
+  CheckmarkCircle02Icon,
   CheckmarkSquare01Icon,
+  CircleIcon,
   Delete01Icon,
   Flag03Icon,
   Edit02Icon,
@@ -33,6 +53,7 @@ export {
   Search01Icon,
   Settings01Icon,
   StarIcon,
+  Tag01Icon,
   TextBoldIcon,
   TextItalicIcon,
   TextStrikethroughIcon,

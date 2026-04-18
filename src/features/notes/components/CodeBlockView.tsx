@@ -71,7 +71,7 @@ function CodeBlockViewImpl({ node, updateAttributes }: NodeViewProps) {
         <select
           value={language}
           onChange={(e) => updateAttributes({ language: e.target.value === 'null' ? null : e.target.value })}
-          className="h-6 pl-1.5 pr-5 text-[11px] font-medium text-ink-muted hover:text-ink-strong bg-transparent hover:bg-surface-active rounded-md border-0 appearance-none cursor-pointer focus:outline-none"
+          className="h-6 pl-1.5 pr-5 text-micro font-medium text-ink-muted hover:text-ink-strong bg-transparent hover:bg-surface-active rounded-md border-0 appearance-none cursor-pointer focus:outline-none"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10' fill='none'><path d='M2.5 3.75 5 6.25l2.5-2.5' stroke='%236B6965' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>\")",

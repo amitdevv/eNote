@@ -18,7 +18,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { cn } from '@/shared/lib/cn';
-import { HugeiconsIcon, CheckmarkSquare01Icon, PlusSignIcon } from '@/shared/lib/icons';
+import { HugeiconsIcon, CheckmarkSquare01Icon } from '@/shared/lib/icons';
 import { groupByDay, dayHeading, isOverdue } from '../date';
 
 type View = 'inbox' | 'today' | 'upcoming';
@@ -89,7 +89,7 @@ function ColumnButton({
         <button
           type="button"
           className={cn(
-            'inline-flex h-6 items-center gap-1 rounded px-1.5 text-[12px] font-medium uppercase tracking-wide transition-colors',
+            'inline-flex h-6 items-center gap-1 rounded px-1.5 text-caption font-medium uppercase tracking-wide transition-colors',
             active
               ? 'text-ink-strong bg-surface-muted'
               : 'text-ink-muted hover:text-ink-strong hover:bg-surface-muted/70',
@@ -189,18 +189,18 @@ function SectionHeader({
       <h3 className="flex items-baseline gap-2">
         <span
           className={cn(
-            'text-[12px] font-semibold',
+            'text-caption font-semibold',
             tone === 'overdue'
               ? 'text-red-600'
               : tone === 'today'
-                ? 'text-emerald-600'
+                ? 'text-brand'
                 : 'text-ink-strong',
           )}
         >
           {primary}
         </span>
         {secondary && (
-          <span className="text-[11px] text-ink-muted tabular-nums">{secondary}</span>
+          <span className="text-micro text-ink-muted tabular-nums">{secondary}</span>
         )}
       </h3>
       {action}
@@ -465,20 +465,11 @@ export function TasksPage() {
     };
   }, [all]);
 
-  const [composerKey, setComposerKey] = useState(0);
-  const bumpComposer = () => setComposerKey((k) => k + 1);
+  const [composerKey] = useState(0);
 
   return (
     <>
-      <PageHeader
-        title="Tasks"
-        trailing={
-          <Button size="sm" variant="default" onClick={bumpComposer}>
-            <HugeiconsIcon icon={PlusSignIcon} size={12} strokeWidth={2.4} />
-            Add task
-          </Button>
-        }
-      />
+      <PageHeader title="Tasks" />
 
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[860px] mx-auto px-4 py-6">
@@ -489,13 +480,14 @@ export function TasksPage() {
                   key={v.id}
                   value={v.id}
                   className={cn(
-                    'relative h-9 px-3 text-[13px] font-medium text-ink-muted hover:text-ink-strong transition-colors',
+                    'relative h-9 px-3 rounded-md text-preview font-medium text-ink-muted hover:text-ink-strong transition-colors',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30',
                     'data-[state=active]:text-ink-strong',
                     'after:absolute after:inset-x-2 after:bottom-[-1px] after:h-[2px] after:rounded-t after:bg-brand after:opacity-0 data-[state=active]:after:opacity-100',
                   )}
                 >
                   {v.label}
-                  <span className="ml-1.5 text-[11px] text-ink-subtle tabular-nums">
+                  <span className="ml-1.5 text-micro text-ink-subtle tabular-nums">
                     {counts[v.id]}
                   </span>
                 </Tabs.Trigger>
@@ -503,7 +495,7 @@ export function TasksPage() {
             </Tabs.List>
 
             {isLoading ? (
-              <div className="px-3 py-12 text-[13px] text-ink-muted text-center">
+              <div className="px-3 py-12 text-preview text-ink-muted text-center">
                 Loading…
               </div>
             ) : (

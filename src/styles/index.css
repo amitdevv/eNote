@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 /* Geist Font - using variable font from Vercel */
 @font-face {
@@ -14,7 +14,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-ui, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif);
   line-height: 1.5;
   /* App chrome reads as medium — confident, Linear-ish. Editor prose
      overrides to 400 below so long-form writing stays readable. */
@@ -49,14 +49,16 @@ body {
     --line-subtle: #F0EEEB;
     --line-default: #E2E0DC;
 
-    --brand: #16A34A;
+    --brand: #6d78d5;
     --brand-fg: #FFFFFF;
 
     /* Typography scale — default density */
-    --size-nav: 14px;
-    --size-title: 15px;
+    --size-micro: 11px;
+    --size-caption: 12px;
     --size-preview: 13px;
+    --size-nav: 14px;
     --size-header: 14px;
+    --size-title: 15px;
     --size-editor: 17px;
 
     --radius: 0.5rem;
@@ -83,19 +85,28 @@ body {
     --ring: 0 0% 3.9%;
   }
 
+  :root {
+    --icon-scale: 1;
+  }
   html[data-density="compact"] {
-    --size-nav: 13px;
-    --size-title: 14px;
+    --size-micro: 10px;
+    --size-caption: 11px;
     --size-preview: 12px;
+    --size-nav: 13px;
     --size-header: 13px;
+    --size-title: 14px;
     --size-editor: 16px;
+    --icon-scale: 0.88;
   }
   html[data-density="comfortable"] {
-    --size-nav: 15.5px;
-    --size-title: 17px;
+    --size-micro: 12px;
+    --size-caption: 13px;
     --size-preview: 14px;
+    --size-nav: 15.5px;
     --size-header: 15.5px;
+    --size-title: 17px;
     --size-editor: 19px;
+    --icon-scale: 1.14;
   }
 }
 
@@ -105,6 +116,15 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Global: no focus outlines or focus rings anywhere. Per user preference.
+     We zero Tailwind's ring-shadow var (not box-shadow) so regular element
+     shadows stay intact while focus rings disappear. */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
   }
 }
 
@@ -117,7 +137,7 @@ body {
     outline: none;
     color: var(--ink-default);
     font-size: var(--size-editor);
-    font-family: Inter, system-ui, sans-serif;
+    font-family: var(--font-editor, Inter, system-ui, sans-serif);
     /* Prose stays at regular weight for long-form readability. */
     font-weight: 400;
     line-height: 1.7;
