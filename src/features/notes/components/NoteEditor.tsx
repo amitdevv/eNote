@@ -275,7 +275,7 @@ function LinkEditor({
           }
         }}
         placeholder="Paste or type URL"
-        className="w-64 h-8 px-2.5 bg-surface-muted rounded-md text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none focus:ring-2 focus:ring-brand/30"
+        className="w-64 h-8 px-2.5 bg-surface-muted rounded-md text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none focus:bg-surface-active"
       />
       <button
         type="button"

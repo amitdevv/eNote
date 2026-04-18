@@ -8,7 +8,7 @@ import { cn } from '@/shared/lib/cn';
 //   • Visual weight comes from background fill, not stroke.
 //   • `default` is the one heavy CTA (solid dark). Use it sparingly.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium select-none transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium select-none transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-strong/20 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-panel disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
