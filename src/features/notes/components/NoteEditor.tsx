@@ -109,6 +109,43 @@ export function NoteEditor({ initialContent, onChange }: Props) {
     setLinkEditing(false);
   }
 
+  /**
+   * Smart code-block toggle: TipTap's default `toggleCodeBlock` makes
+   * EACH paragraph in a multi-paragraph selection its own block. That
+   * matches CSS but not user intent — selecting 10 lines of code and
+   * hitting the button should produce ONE block with 10 lines.
+   *
+   * So: if the selection spans paragraphs, we extract the text with
+   * newlines preserved, delete the selection, and insert a single
+   * codeBlock node containing the joined text.
+   */
+  function toggleCodeBlockSmart() {
+    if (!editor) return;
+
+    if (editor.isActive('codeBlock')) {
+      editor.chain().focus().toggleCodeBlock().run();
+      return;
+    }
+
+    const { from, to } = editor.state.selection;
+    if (from === to) {
+      editor.chain().focus().toggleCodeBlock().run();
+      return;
+    }
+
+    const text = editor.state.doc.textBetween(from, to, '\n');
+
+    editor
+      .chain()
+      .focus()
+      .deleteSelection()
+      .insertContent({
+        type: 'codeBlock',
+        content: text ? [{ type: 'text', text }] : [],
+      })
+      .run();
+  }
+
   function applyHighlight(color: string | null) {
     if (!editor) return;
     if (color === null) {
@@ -149,7 +186,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
             <BtnIcon active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} icon={CheckmarkSquare01Icon} label="Task list" />
             <Divider />
             <BtnIcon active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} icon={QuoteUpIcon} label="Quote" />
-            <BtnIcon active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()} icon={SourceCodeCircleIcon} label="Code block" />
+            <BtnIcon active={editor.isActive('codeBlock')} onClick={toggleCodeBlockSmart} icon={SourceCodeCircleIcon} label="Code block" />
             <Popover.Root open={highlightOpen} onOpenChange={setHighlightOpen}>
               <Popover.Trigger asChild>
                 <button
