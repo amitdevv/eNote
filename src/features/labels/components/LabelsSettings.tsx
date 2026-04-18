@@ -9,6 +9,7 @@ import { Input } from '@/shared/components/ui/input';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/lib/cn';
 import type { Label } from '../types';
+import { SettingsSection } from '@/features/settings/components/SettingsSection';
 
 function ColorSwatches({
   value,
@@ -58,7 +59,7 @@ function ColorSwatches({
   );
 }
 
-function LabelRow({ label }: { label: Label }) {
+function EditableLabelRow({ label }: { label: Label }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(label.name);
   const [color, setColor] = useState<PaletteKey>((label.color as PaletteKey) ?? 'stone');
@@ -86,7 +87,7 @@ function LabelRow({ label }: { label: Label }) {
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-3 py-3">
+      <div className="flex flex-col gap-3 px-4 py-3.5">
         <div className="flex items-center gap-2">
           <Input
             autoFocus
@@ -119,7 +120,7 @@ function LabelRow({ label }: { label: Label }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 py-3 group">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 group">
         <LabelChip label={label.name} color={label.color} size="sm" />
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
           <button
@@ -186,7 +187,7 @@ function CreateLabelRow() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className="flex items-center gap-1.5 h-8 px-2 rounded-md text-[13px] font-medium text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+        className="flex items-center gap-1.5 h-11 w-full px-4 text-[13px] font-medium text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={14} />
         New label
@@ -195,7 +196,7 @@ function CreateLabelRow() {
   }
 
   return (
-    <div className="flex flex-col gap-3 py-3">
+    <div className="flex flex-col gap-3 px-4 py-3.5">
       <div className="flex items-center gap-2">
         <Input
           autoFocus
@@ -232,29 +233,25 @@ export function LabelsSettings() {
   const { data: labels, isLoading } = useLabels();
 
   return (
-    <section>
-      <h2 className="text-[12px] font-medium uppercase tracking-wider text-ink-subtle mb-3">
-        Labels
-      </h2>
-      <p className="text-[12px] text-ink-muted mb-3">
-        Create labels here and assign them to notes. Each label has a color you pick — it
-        stays consistent everywhere it appears.
-      </p>
-
+    <SettingsSection
+      title="Labels"
+      description="Tag your notes. Each label has a colour you choose — consistent everywhere it appears."
+    >
       {isLoading ? (
-        <div className="py-4 text-[13px] text-ink-muted">Loading…</div>
+        <div className="px-4 py-6 text-[13px] text-ink-muted">Loading…</div>
       ) : (
         <>
           {(labels ?? []).length > 0 && (
-            <div className="divide-y divide-line-subtle mb-2">
+            <div className="divide-y divide-line-subtle">
               {labels!.map((l) => (
-                <LabelRow key={l.id} label={l} />
+                <EditableLabelRow key={l.id} label={l} />
               ))}
             </div>
           )}
+          {(labels ?? []).length > 0 && <div className="h-px bg-line-subtle" />}
           <CreateLabelRow />
         </>
       )}
-    </section>
+    </SettingsSection>
   );
 }

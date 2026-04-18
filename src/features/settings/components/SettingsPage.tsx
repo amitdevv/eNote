@@ -7,49 +7,13 @@ import { cn } from '@/shared/lib/cn';
 import { LabelsSettings } from '@/features/labels/components/LabelsSettings';
 import { HighlightsSettings } from '@/features/highlights/components/HighlightsSettings';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { SettingsSection, SettingsRow, SettingsDivider } from './SettingsSection';
 
 const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
   { value: 'compact', label: 'Compact', hint: 'Smaller text, denser rows' },
   { value: 'default', label: 'Default', hint: 'Balanced' },
   { value: 'comfortable', label: 'Comfortable', hint: 'Larger text, more breathing room' },
 ];
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <h2 className="text-[12px] font-medium uppercase tracking-wider text-ink-subtle mb-3">
-        {title}
-      </h2>
-      <div className="divide-y divide-line-subtle">{children}</div>
-    </section>
-  );
-}
-
-function Row({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <div className="min-w-0">
-        <p className="text-[14px] text-ink-strong">{label}</p>
-        {hint && <p className="text-[12px] text-ink-muted mt-0.5">{hint}</p>}
-      </div>
-      {children && <div className="shrink-0">{children}</div>}
-    </div>
-  );
-}
 
 export function SettingsPage() {
   useDocumentTitle('Settings');
@@ -61,18 +25,21 @@ export function SettingsPage() {
     <>
       <PageHeader title="Settings" />
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[620px] mx-auto p-8 space-y-10">
-          <Section title="Account">
-            <Row label="Signed in as" hint={user?.email ?? ''}>
+      <div className="flex-1 overflow-y-auto bg-surface-muted/40">
+        <div className="max-w-[640px] mx-auto p-8 space-y-8">
+          <SettingsSection title="Account">
+            <SettingsRow label="Signed in as" hint={user?.email ?? ''}>
               <Button variant="outline" size="sm" onClick={() => signOut()}>
                 Sign out
               </Button>
-            </Row>
-          </Section>
+            </SettingsRow>
+          </SettingsSection>
 
-          <Section title="Appearance">
-            <Row label="Density" hint="Scale of text and controls across the app.">
+          <SettingsSection
+            title="Appearance"
+            description="Adjust how eNote looks and feels across the app."
+          >
+            <SettingsRow label="Density" hint="Scale of text and controls.">
               <div className="flex items-center gap-1 rounded-md bg-surface-muted p-0.5">
                 {DENSITY_OPTIONS.map((opt) => {
                   const active = density === opt.value;
@@ -93,25 +60,31 @@ export function SettingsPage() {
                   );
                 })}
               </div>
-            </Row>
-          </Section>
+            </SettingsRow>
+          </SettingsSection>
 
           <LabelsSettings />
 
           <HighlightsSettings />
 
-          <Section title="Keyboard shortcuts">
-            {[
+          <SettingsSection
+            title="Keyboard shortcuts"
+            description="Press these from anywhere in the app."
+          >
+            {([
               ['New note', 'C'],
               ['Focus search', '/'],
               ['Command palette', '⌘K'],
               ['Close overlays', 'Esc'],
-            ].map(([label, key]) => (
-              <Row key={label} label={label}>
-                <Kbd>{key}</Kbd>
-              </Row>
+            ] as const).map(([label, key], i, arr) => (
+              <div key={label}>
+                <SettingsRow label={label}>
+                  <Kbd>{key}</Kbd>
+                </SettingsRow>
+                {i < arr.length - 1 && <SettingsDivider />}
+              </div>
             ))}
-          </Section>
+          </SettingsSection>
         </div>
       </div>
     </>

@@ -13,6 +13,7 @@ import { Input } from '@/shared/components/ui/input';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { cn } from '@/shared/lib/cn';
 import type { Highlight } from '../types';
+import { SettingsSection } from '@/features/settings/components/SettingsSection';
 
 /** Editor sample — shows how the highlight looks on real text. */
 function Sample({ color }: { color: string }) {
@@ -88,7 +89,7 @@ function Row({ highlight }: { highlight: Highlight }) {
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-3 py-3">
+      <div className="flex flex-col gap-3 px-4 py-3.5">
         <div className="flex items-center gap-2">
           <Input
             autoFocus
@@ -119,7 +120,7 @@ function Row({ highlight }: { highlight: Highlight }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 py-3 group">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 group">
         <div className="flex items-center gap-3 min-w-0">
           <span
             className="size-5 rounded-md border border-line-default shrink-0"
@@ -192,7 +193,7 @@ function CreateRow() {
       <button
         type="button"
         onClick={() => setCreating(true)}
-        className="flex items-center gap-1.5 h-8 px-2 rounded-md text-[13px] font-medium text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+        className="flex items-center gap-1.5 h-11 w-full px-4 text-[13px] font-medium text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={14} />
         New highlight
@@ -201,7 +202,7 @@ function CreateRow() {
   }
 
   return (
-    <div className="flex flex-col gap-3 py-3">
+    <div className="flex flex-col gap-3 px-4 py-3.5">
       <div className="flex items-center gap-2">
         <Input
           autoFocus
@@ -234,29 +235,25 @@ export function HighlightsSettings() {
   const { data, isLoading } = useHighlights();
 
   return (
-    <section>
-      <h2 className="text-[12px] font-medium uppercase tracking-wider text-ink-subtle mb-3">
-        Highlights
-      </h2>
-      <p className="text-[12px] text-ink-muted mb-3">
-        Curated highlight colours for the editor. Select text, pick one from the bubble menu.
-        Existing highlights keep their colour even if you later change or delete the definition.
-      </p>
-
+    <SettingsSection
+      title="Highlights"
+      description="Pick colours for the editor's highlight tool. Existing highlighted text keeps its colour even after you change a definition."
+    >
       {isLoading ? (
-        <div className="py-4 text-[13px] text-ink-muted">Loading…</div>
+        <div className="px-4 py-6 text-[13px] text-ink-muted">Loading…</div>
       ) : (
         <>
           {(data ?? []).length > 0 && (
-            <div className="divide-y divide-line-subtle mb-2">
+            <div className="divide-y divide-line-subtle">
               {data!.map((h) => (
                 <Row key={h.id} highlight={h} />
               ))}
             </div>
           )}
+          {(data ?? []).length > 0 && <div className="h-px bg-line-subtle" />}
           <CreateRow />
         </>
       )}
-    </section>
+    </SettingsSection>
   );
 }
