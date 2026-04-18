@@ -9,6 +9,7 @@ import { formatAgo } from '@/shared/lib/date';
 import type { NoteDoc } from '@/shared/lib/supabase';
 import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
+import { ConfirmDialog } from '@/shared/components/ui/dialog';
 
 type Draft = {
   title: string;
@@ -25,6 +26,7 @@ export function NoteDetailPage() {
 
   const [draft, setDraft] = useState<Draft>({ title: '', content: EMPTY_DOC, contentText: '' });
   const [dirty, setDirty] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Load note → draft; track which noteId we've loaded so switching notes resets cleanly.
   const loadedIdRef = useRef<string | null>(null);
@@ -64,9 +66,8 @@ export function NoteDetailPage() {
   // Also flush on route change (unmount handles most cases, but belt-and-suspenders).
   useEffect(() => () => flush(), [flush]);
 
-  async function handleDelete() {
+  async function performDelete() {
     if (!note) return;
-    if (!confirm('Delete this note?')) return;
     flush();
     await del.mutateAsync(note.id);
     navigate('/notes');
@@ -130,11 +131,21 @@ export function NoteDetailPage() {
           <Button size="sm" variant="ghost" onClick={toggleArchive}>
             {note.archived ? 'Unarchive' : 'Archive'}
           </Button>
-          <Button size="sm" variant="ghost" onClick={handleDelete} disabled={del.isPending}>
+          <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(true)} disabled={del.isPending}>
             Delete
           </Button>
         </div>
       </header>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete this note?"
+        description="This cannot be undone. Archive instead if you might want it back."
+        confirmLabel={del.isPending ? 'Deleting…' : 'Delete'}
+        destructive
+        onConfirm={performDelete}
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[720px] mx-auto px-12 py-10">

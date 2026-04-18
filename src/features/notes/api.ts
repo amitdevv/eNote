@@ -2,12 +2,13 @@ import { supabase } from '@/shared/lib/supabase';
 import type { Note, NoteInsert, NoteUpdate } from './types';
 import { EMPTY_DOC } from './types';
 
-export async function listNotes(userId: string): Promise<Note[]> {
+export async function listNotes(userId: string, opts?: { archived?: boolean }): Promise<Note[]> {
+  const archived = opts?.archived ?? false;
   const { data, error } = await supabase
     .from('notes')
     .select('*')
     .eq('user_id', userId)
-    .eq('archived', false)
+    .eq('archived', archived)
     .order('pinned', { ascending: false })
     .order('updated_at', { ascending: false });
   if (error) throw error;

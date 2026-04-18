@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&family=Recursive:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=PT+Sans:wght@400;700&family=Kalam:wght@300;400;700&family=Inconsolata:wght@300;400;500;600;700&family=Patrick+Hand:wght@400&family=Handlee:wght@400&family=La+Belle+Aurore:wght@400&family=Special+Elite:wght@400&family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
 /* Geist Font - using variable font from Vercel */
 @font-face {
@@ -93,46 +93,6 @@ body {
     --size-preview: 14px;
     --size-header: 15.5px;
     --size-editor: 19px;
-  }
-
-  .dark {
-    --surface-app: #0F0E0D;
-    --surface-panel: #171614;
-    --surface-raised: #1E1C1A;
-    --surface-muted: #252320;
-    --surface-active: #2E2B27;
-
-    --ink-strong: #F5F4F2;
-    --ink-default: #D6D4D0;
-    --ink-muted: #9C9A95;
-    --ink-subtle: #807E78;
-    --ink-placeholder: #57554F;
-
-    --line-subtle: #1F1E1B;
-    --line-default: #2A2825;
-
-    --brand: #12B5D0;
-    --brand-fg: #FFFFFF;
-
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
   }
 }
 
@@ -234,92 +194,22 @@ body {
   }
 }
 
-/* Custom scrollbar */
+/* Scrollbar — thin, neutral */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
-
-.dark ::-webkit-scrollbar-track {
-  background: #212121;
-}
-
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: var(--line-default);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #232323;
-  border-radius: 3px;
-}
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #2a2a2a;
-}
-
-/* Smooth transitions for all interactive elements */
-button, input, textarea, select {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Custom focus styles */
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
-}
-
-/* Override global styles for search inputs */
-.search-input {
-  transition: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-.search-input:focus {
-  transition: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-/* Animation keyframes */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out;
-}
-
-#memopal{
-    font-family: 'Press Start 2P', monospace;
+  background: var(--ink-placeholder);
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }

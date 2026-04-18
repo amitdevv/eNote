@@ -3,8 +3,10 @@ import { useAuth } from '@/features/auth/hooks';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { LoginPage } from '@/features/auth/components/LoginPage';
 import { AppShell } from '@/shared/components/app/AppShell';
+import { ErrorBoundary } from '@/shared/components/app/ErrorBoundary';
 import { NotesListPage } from '@/features/notes/components/NotesListPage';
 import { NoteDetailPage } from '@/features/notes/components/NoteDetailPage';
+import { ArchivedPage } from '@/features/notes/components/ArchivedPage';
 import { SettingsPage } from '@/features/settings/components/SettingsPage';
 
 function ProtectedShell({ children }: { children: React.ReactNode }) {
@@ -17,7 +19,11 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
     );
   }
   if (!user) return <Navigate to="/login" replace />;
-  return <AppShell>{children}</AppShell>;
+  return (
+    <ErrorBoundary>
+      <AppShell>{children}</AppShell>
+    </ErrorBoundary>
+  );
 }
 
 export function AppRoutes() {
@@ -47,6 +53,14 @@ export function AppRoutes() {
         element={
           <ProtectedShell>
             <NoteDetailPage />
+          </ProtectedShell>
+        }
+      />
+      <Route
+        path="/archived"
+        element={
+          <ProtectedShell>
+            <ArchivedPage />
           </ProtectedShell>
         }
       />

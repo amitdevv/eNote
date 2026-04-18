@@ -5,16 +5,16 @@ import type { NoteInsert, NoteUpdate } from './types';
 
 const keys = {
   all: ['notes'] as const,
-  list: (userId: string) => [...keys.all, 'list', userId] as const,
+  list: (userId: string, archived: boolean) => [...keys.all, 'list', userId, { archived }] as const,
   detail: (id: string) => [...keys.all, 'detail', id] as const,
   search: (userId: string, q: string) => [...keys.all, 'search', userId, q] as const,
 };
 
-export function useNotes() {
+export function useNotes({ archived = false }: { archived?: boolean } = {}) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: user ? keys.list(user.id) : ['notes', 'list', 'none'],
-    queryFn: () => api.listNotes(user!.id),
+    queryKey: user ? keys.list(user.id, archived) : ['notes', 'list', 'none'],
+    queryFn: () => api.listNotes(user!.id, { archived }),
     enabled: !!user,
   });
 }
@@ -34,7 +34,7 @@ export function useCreateNote() {
     mutationFn: (partial: Partial<NoteInsert> | void) =>
       api.createNote(user!.id, partial ?? undefined),
     onSuccess: () => {
-      if (user) qc.invalidateQueries({ queryKey: keys.list(user.id) });
+      if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
     },
   });
 }
@@ -46,7 +46,7 @@ export function useUpdateNote() {
     mutationFn: ({ id, patch }: { id: string; patch: NoteUpdate }) => api.updateNote(id, patch),
     onSuccess: (note) => {
       qc.setQueryData(keys.detail(note.id), note);
-      if (user) qc.invalidateQueries({ queryKey: keys.list(user.id) });
+      if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
     },
   });
 }
@@ -57,7 +57,7 @@ export function useDeleteNote() {
   return useMutation({
     mutationFn: (id: string) => api.deleteNote(id),
     onSuccess: () => {
-      if (user) qc.invalidateQueries({ queryKey: keys.list(user.id) });
+      if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
     },
   });
 }

@@ -1,15 +1,17 @@
 import { create } from 'zustand';
 
 type NotesUIState = {
-  sidebarCollapsed: boolean;
+  sidebarOpen: boolean;
   commandOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
   setCommandOpen: (open: boolean) => void;
 };
 
 export const useNotesUI = create<NotesUIState>((set) => ({
-  sidebarCollapsed: false,
+  sidebarOpen: false, // used on mobile only
   commandOpen: false,
-  toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setCommandOpen: (open) => set({ commandOpen: open }),
 }));
