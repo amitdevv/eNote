@@ -102,7 +102,10 @@ export function CodeBlockView({ node, updateAttributes }: NodeViewProps) {
       className="relative group my-[0.5em]"
       data-wrapped={wrapped ? 'true' : 'false'}
     >
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+      <div
+        contentEditable={false}
+        className="absolute top-2 right-2 z-10 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity select-none"
+      >
         <Popover.Root open={open} onOpenChange={setOpen}>
           <Popover.Trigger asChild>
             <button
