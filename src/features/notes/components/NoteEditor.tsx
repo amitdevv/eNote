@@ -149,7 +149,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
             <BtnIcon active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} icon={CheckmarkSquare01Icon} label="Task list" />
             <Divider />
             <BtnIcon active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} icon={QuoteUpIcon} label="Quote" />
-            <BtnIcon active={editor.isActive('code') || editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCode().run()} icon={SourceCodeCircleIcon} label="Code" />
+            <BtnIcon active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()} icon={SourceCodeCircleIcon} label="Code block" />
             <Popover.Root open={highlightOpen} onOpenChange={setHighlightOpen}>
               <Popover.Trigger asChild>
                 <button
