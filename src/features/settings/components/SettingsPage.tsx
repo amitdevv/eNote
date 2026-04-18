@@ -5,6 +5,7 @@ import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useSettings, type Density } from '../store';
 import { cn } from '@/shared/lib/cn';
 import { LabelsSettings } from '@/features/labels/components/LabelsSettings';
+import { HighlightsSettings } from '@/features/highlights/components/HighlightsSettings';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 
 const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
@@ -96,6 +97,8 @@ export function SettingsPage() {
           </Section>
 
           <LabelsSettings />
+
+          <HighlightsSettings />
 
           <Section title="Keyboard shortcuts">
             {[

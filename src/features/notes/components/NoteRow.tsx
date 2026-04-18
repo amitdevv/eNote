@@ -10,7 +10,14 @@ import { LabelChip } from './LabelChip';
 import { useLabelColorMap } from '@/features/labels/hooks';
 import { Tooltip } from '@/shared/components/ui/tooltip';
 
-export function NoteRow({ note }: { note: Note }) {
+type Props = {
+  note: Note;
+  selected?: boolean;
+  anySelected?: boolean;
+  onToggleSelect?: (id: string, shiftKey: boolean) => void;
+};
+
+export function NoteRow({ note, selected, anySelected, onToggleSelect }: Props) {
   const update = useUpdateNote();
   const colorMap = useLabelColorMap();
   const title = getDisplayTitle(note);
@@ -31,15 +38,54 @@ export function NoteRow({ note }: { note: Note }) {
     update.mutate({ id: note.id, patch: { archived: true } });
   }
 
+  function onCheckboxClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggleSelect?.(note.id, e.shiftKey);
+  }
+
   return (
     <motion.div
       layout="position"
       transition={{ type: 'spring', stiffness: 500, damping: 40, mass: 0.6 }}
+      className={cn(selected && 'bg-brand/5')}
     >
       <Link
         to={`/notes/${note.id}`}
-        className="group relative flex items-center gap-3 px-4 py-3.5 hover:bg-surface-muted/60 focus-visible:bg-surface-muted/60 focus-visible:outline-none transition-colors duration-150"
+        className="group relative flex items-center gap-3 pl-3 pr-4 py-3.5 hover:bg-surface-muted/60 focus-visible:bg-surface-muted/60 focus-visible:outline-none transition-colors duration-150"
       >
+        {/* Checkbox — visible on hover always, always when any selected */}
+        {onToggleSelect && (
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={selected}
+            aria-label={selected ? 'Deselect note' : 'Select note'}
+            onClick={onCheckboxClick}
+            className={cn(
+              'shrink-0 size-4 rounded border flex items-center justify-center transition-all duration-150',
+              selected
+                ? 'bg-brand border-brand text-white opacity-100'
+                : 'border-line-default bg-surface-raised text-transparent',
+              anySelected || selected
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
+            )}
+          >
+            {selected && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
+                <path
+                  d="M1 4l2.5 2.5L9 1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </button>
+        )}
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             {note.pinned && <HugeiconsIcon icon={PinIcon} size={13} className="text-brand shrink-0" />}

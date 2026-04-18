@@ -105,6 +105,29 @@ export function useDeleteNote() {
   });
 }
 
+export function useBulkUpdateNotes() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, patch }: { ids: string[]; patch: NoteUpdate }) =>
+      api.bulkUpdateNotes(ids, patch),
+    onSuccess: () => {
+      if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
+    },
+  });
+}
+
+export function useBulkDeleteNotes() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => api.bulkDeleteNotes(ids),
+    onSuccess: () => {
+      if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
+    },
+  });
+}
+
 export function useSearchNotes(query: string) {
   const { user } = useAuth();
   return useQuery({

@@ -4,9 +4,13 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
+import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { useEffect, useRef, useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { Link as RouterLink } from 'react-router-dom';
+import { useHighlights } from '@/features/highlights/hooks';
 import type { NoteDoc } from '@/shared/lib/supabase';
 import { cn } from '@/shared/lib/cn';
 import {
@@ -37,11 +41,14 @@ export function NoteEditor({ initialContent, onChange }: Props) {
 
   const [linkEditing, setLinkEditing] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [highlightOpen, setHighlightOpen] = useState(false);
+  const { data: highlights } = useHighlights();
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
+      Highlight.configure({ multicolor: true }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder: 'Start writing…  select text to format' }),
@@ -102,6 +109,16 @@ export function NoteEditor({ initialContent, onChange }: Props) {
     setLinkEditing(false);
   }
 
+  function applyHighlight(color: string | null) {
+    if (!editor) return;
+    if (color === null) {
+      editor.chain().focus().unsetHighlight().run();
+    } else {
+      editor.chain().focus().toggleHighlight({ color }).run();
+    }
+    setHighlightOpen(false);
+  }
+
   return (
     <>
       <BubbleMenu
@@ -133,6 +150,91 @@ export function NoteEditor({ initialContent, onChange }: Props) {
             <Divider />
             <BtnIcon active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} icon={QuoteUpIcon} label="Quote" />
             <BtnIcon active={editor.isActive('code') || editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCode().run()} icon={SourceCodeCircleIcon} label="Code" />
+            <Popover.Root open={highlightOpen} onOpenChange={setHighlightOpen}>
+              <Popover.Trigger asChild>
+                <button
+                  type="button"
+                  aria-label="Highlight"
+                  title="Highlight"
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-150',
+                    editor.isActive('highlight')
+                      ? 'bg-surface-active text-ink-strong'
+                      : 'text-ink-muted hover:bg-surface-muted hover:text-ink-strong'
+                  )}
+                >
+                  <span
+                    className="inline-block h-[14px] w-[14px] rounded"
+                    style={{
+                      background: editor.isActive('highlight')
+                        ? ((editor.getAttributes('highlight').color as string) ?? '#FEF9C3')
+                        : 'linear-gradient(135deg,#FEF9C3 0%,#FEF3C7 50%,#DBEAFE 100%)',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                    }}
+                  />
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  sideOffset={8}
+                  align="center"
+                  className="z-50 rounded-lg border border-line-default bg-surface-panel shadow-md overflow-hidden p-1.5 w-[220px] data-[state=open]:animate-fade-in"
+                >
+                  {(highlights ?? []).length === 0 ? (
+                    <div className="p-2 text-[12px] text-ink-muted text-center">
+                      No highlights yet.
+                      <RouterLink
+                        to="/settings"
+                        onClick={() => setHighlightOpen(false)}
+                        className="block mt-1 text-brand hover:underline"
+                      >
+                        Create some in Settings →
+                      </RouterLink>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid gap-0.5">
+                        {(highlights ?? []).map((h) => (
+                          <button
+                            key={h.id}
+                            type="button"
+                            onClick={() => applyHighlight(h.color)}
+                            className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default hover:bg-surface-muted transition-colors text-left"
+                          >
+                            <span
+                              className="size-4 rounded border border-line-default shrink-0"
+                              style={{ backgroundColor: h.color }}
+                            />
+                            <span className="truncate flex-1">{h.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {editor.isActive('highlight') && (
+                        <>
+                          <div className="h-px bg-line-subtle my-1" />
+                          <button
+                            type="button"
+                            onClick={() => applyHighlight(null)}
+                            className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors w-full text-left"
+                          >
+                            <span className="size-4 rounded border border-dashed border-line-default shrink-0" />
+                            Remove highlight
+                          </button>
+                        </>
+                      )}
+                      <div className="h-px bg-line-subtle my-1" />
+                      <RouterLink
+                        to="/settings"
+                        onClick={() => setHighlightOpen(false)}
+                        className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[12px] text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+                      >
+                        Manage highlights…
+                      </RouterLink>
+                    </>
+                  )}
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
             <BtnIcon active={editor.isActive('link')} onClick={openLinkEditor} icon={Link01Icon} label="Link" />
           </>
         )}

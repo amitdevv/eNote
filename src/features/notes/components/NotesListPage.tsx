@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotes, useCreateNote, useSearchNotes } from '../hooks';
 import { NoteRow } from './NoteRow';
 import { NotesSkeleton } from './NoteRowSkeleton';
+import { BulkActionBar } from './BulkActionBar';
 import { NotesFilterBar, DEFAULT_FILTERS, type FilterState } from './NotesFilterBar';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { EmptyState } from '@/shared/components/ui/empty-state';
@@ -36,6 +37,38 @@ export function NotesListPage() {
   const visible = searching ? searchResults ?? [] : notes ?? [];
   const loading = searching ? searchLoading : isLoading;
   const showSpinnerInInput = searching && (searchLoading || hasTypedButNotDebounced);
+
+  // Multi-select state
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [lastClickedId, setLastClickedId] = useState<string | null>(null);
+
+  function toggleSelect(id: string, shiftKey: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (shiftKey && lastClickedId) {
+        // Range-select between lastClickedId and id
+        const list = visible.map((n) => n.id);
+        const a = list.indexOf(lastClickedId);
+        const b = list.indexOf(id);
+        if (a !== -1 && b !== -1) {
+          const [start, end] = a < b ? [a, b] : [b, a];
+          for (let i = start; i <= end; i++) next.add(list[i]);
+          setLastClickedId(id);
+          return next;
+        }
+      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      setLastClickedId(id);
+      return next;
+    });
+  }
+
+  const selectedIds = useMemo(() => [...selected], [selected]);
+  const pinnedAll = selectedIds.length > 0 && selectedIds.every((id) => {
+    const note = (notes ?? []).find((n) => n.id === id);
+    return note?.pinned === true;
+  });
 
   return (
     <>
@@ -131,12 +164,24 @@ export function NotesListPage() {
           >
             <AnimatePresence initial={false}>
               {visible.map((n) => (
-                <NoteRow key={n.id} note={n} />
+                <NoteRow
+                  key={n.id}
+                  note={n}
+                  selected={selected.has(n.id)}
+                  anySelected={selected.size > 0}
+                  onToggleSelect={toggleSelect}
+                />
               ))}
             </AnimatePresence>
           </motion.div>
         )}
       </div>
+
+      <BulkActionBar
+        ids={selectedIds}
+        pinnedAll={pinnedAll}
+        onClear={() => setSelected(new Set())}
+      />
     </>
   );
 }

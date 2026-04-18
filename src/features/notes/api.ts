@@ -73,6 +73,18 @@ export async function deleteNote(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function bulkUpdateNotes(ids: string[], patch: NoteUpdate): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from('notes').update(patch).in('id', ids);
+  if (error) throw error;
+}
+
+export async function bulkDeleteNotes(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await supabase.from('notes').delete().in('id', ids);
+  if (error) throw error;
+}
+
 export async function searchNotes(userId: string, query: string): Promise<Note[]> {
   const q = query.trim();
   if (!q) return [];
