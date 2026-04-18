@@ -7,6 +7,7 @@ import { formatRelative } from '@/shared/lib/date';
 import { HugeiconsIcon, ArchiveIcon, Delete01Icon } from '@/shared/lib/icons';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
+import { PageHeader } from '@/shared/components/app/PageHeader';
 
 export function ArchivedPage() {
   const { data: notes, isLoading } = useNotes({ archived: true });
@@ -22,12 +23,14 @@ export function ArchivedPage() {
 
   return (
     <>
-      <header className="flex items-center justify-between border-b border-line-subtle px-4 h-11">
-        <h1 className="text-header font-medium text-ink-strong">Archived</h1>
-        <Link to="/notes" className="text-[13px] text-ink-muted hover:text-ink-strong transition-colors">
-          ← Back to Notes
-        </Link>
-      </header>
+      <PageHeader
+        title="Archived"
+        trailing={
+          <Link to="/notes" className="text-[13px] text-ink-muted hover:text-ink-strong transition-colors">
+            ← Back to Notes
+          </Link>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto">
         {isLoading && (

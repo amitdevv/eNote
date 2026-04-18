@@ -10,6 +10,21 @@ import type { NoteDoc } from '@/shared/lib/supabase';
 import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
+import { PageHeader } from '@/shared/components/app/PageHeader';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/dropdown-menu';
+import {
+  HugeiconsIcon,
+  MoreHorizontalIcon,
+  PinIcon,
+  ArchiveIcon,
+  Delete01Icon,
+} from '@/shared/lib/icons';
 
 type Draft = {
   title: string;
@@ -28,7 +43,6 @@ export function NoteDetailPage() {
   const [dirty, setDirty] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Load note → draft; track which noteId we've loaded so switching notes resets cleanly.
   const loadedIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (note && note.id !== loadedIdRef.current) {
@@ -38,7 +52,6 @@ export function NoteDetailPage() {
     }
   }, [note]);
 
-  // Auto-save with flush-on-exit. Only runs after note is loaded and user has edited.
   const { flush } = useAutoSave<Draft>({
     value: draft,
     enabled: !!note && dirty,
@@ -63,7 +76,6 @@ export function NoteDetailPage() {
     },
   });
 
-  // Also flush on route change (unmount handles most cases, but belt-and-suspenders).
   useEffect(() => () => flush(), [flush]);
 
   async function performDelete() {
@@ -113,29 +125,54 @@ export function NoteDetailPage() {
 
   return (
     <>
-      <header className="flex items-center justify-between border-b border-line-subtle px-4 h-11">
-        <button
-          onClick={() => {
-            flush();
-            navigate('/notes');
-          }}
-          className="text-header font-medium text-ink-muted hover:text-ink-strong transition-colors"
-        >
-          ← Notes
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="text-[12px] text-ink-subtle tabular-nums">{statusLabel}</span>
-          <Button size="sm" variant="ghost" onClick={togglePin}>
-            {note.pinned ? 'Unpin' : 'Pin'}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={toggleArchive}>
-            {note.archived ? 'Unarchive' : 'Archive'}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(true)} disabled={del.isPending}>
-            Delete
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        leading={
+          <button
+            onClick={() => {
+              flush();
+              navigate('/notes');
+            }}
+            className="text-header font-medium text-ink-muted hover:text-ink-strong transition-colors"
+          >
+            ← Notes
+          </button>
+        }
+        trailing={
+          <>
+            <span
+              className="text-[12px] text-ink-subtle tabular-nums min-w-[120px] text-right"
+              aria-live="polite"
+            >
+              {statusLabel}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  aria-label="Note actions"
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+                >
+                  <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={togglePin}>
+                  <HugeiconsIcon icon={PinIcon} size={14} className="text-ink-subtle" />
+                  {note.pinned ? 'Unpin' : 'Pin'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={toggleArchive}>
+                  <HugeiconsIcon icon={ArchiveIcon} size={14} className="text-ink-subtle" />
+                  {note.archived ? 'Unarchive' : 'Archive'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem destructive onSelect={() => setConfirmDelete(true)}>
+                  <HugeiconsIcon icon={Delete01Icon} size={14} />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
       <ConfirmDialog
         open={confirmDelete}
@@ -148,7 +185,7 @@ export function NoteDetailPage() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[720px] mx-auto px-12 py-10">
+        <div className="max-w-[720px] mx-auto px-10 md:px-12 py-12">
           <input
             value={draft.title}
             onChange={(e) => {
@@ -156,7 +193,7 @@ export function NoteDetailPage() {
               setDirty(true);
             }}
             placeholder="Untitled"
-            className="w-full bg-transparent text-[30px] font-semibold text-ink-strong tracking-tight placeholder:text-ink-placeholder focus:outline-none mb-6"
+            className="w-full bg-transparent text-[32px] leading-[1.15] font-semibold text-ink-strong tracking-[-0.02em] placeholder:text-ink-placeholder focus:outline-none mb-8 py-1 border-b border-transparent focus:border-line-subtle transition-colors duration-150"
           />
           <NoteEditor
             initialContent={draft.content}

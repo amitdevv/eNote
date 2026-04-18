@@ -1,5 +1,7 @@
 import { useAuth } from '@/features/auth/hooks';
 import { Button } from '@/shared/components/ui/button';
+import { Kbd } from '@/shared/components/ui/kbd';
+import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useSettings, type Density } from '../store';
 import { cn } from '@/shared/lib/cn';
 
@@ -53,12 +55,10 @@ export function SettingsPage() {
 
   return (
     <>
-      <header className="flex items-center justify-between border-b border-line-subtle px-4 h-11">
-        <h1 className="text-header font-medium text-ink-strong">Settings</h1>
-      </header>
+      <PageHeader title="Settings" />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[620px] mx-auto p-8 space-y-8">
+        <div className="max-w-[620px] mx-auto p-8 space-y-10">
           <Section title="Account">
             <Row label="Signed in as" hint={user?.email ?? ''}>
               <Button variant="outline" size="sm" onClick={() => signOut()}>
@@ -100,9 +100,7 @@ export function SettingsPage() {
               ['Close overlays', 'Esc'],
             ].map(([label, key]) => (
               <Row key={label} label={label}>
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-muted text-[11px] text-ink-default font-mono">
-                  {key}
-                </kbd>
+                <Kbd>{key}</Kbd>
               </Row>
             ))}
           </Section>

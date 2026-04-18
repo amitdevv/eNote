@@ -47,18 +47,20 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-surface-app flex items-center justify-center p-6">
-      <div className="w-full max-w-[360px]">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 size-10 rounded-xl bg-brand flex items-center justify-center text-white font-medium">
+      <div className="w-full max-w-[380px]">
+        <div className="mb-10 text-center">
+          <div className="mx-auto mb-4 size-11 rounded-xl bg-brand flex items-center justify-center text-white font-semibold text-[14px] shadow-xs">
             eN
           </div>
-          <h1 className="text-[18px] font-semibold text-ink-strong tracking-tight">eNote</h1>
-          <p className="mt-1 text-[13px] text-ink-muted">Sign in to continue</p>
+          <h1 className="text-[20px] font-semibold text-ink-strong tracking-[-0.01em]">
+            Welcome to eNote
+          </h1>
+          <p className="mt-1.5 text-[13px] text-ink-muted">Sign in to your notes</p>
         </div>
 
         {status === 'sent' ? (
-          <div className="rounded-xl border border-line-subtle bg-surface-panel shadow-sm p-5 text-center">
-            <p className="text-[13px] text-ink-strong font-medium">Check your email</p>
+          <div className="rounded-xl bg-surface-muted p-5 text-center">
+            <p className="text-[14px] text-ink-strong font-medium">Check your email</p>
             <p className="mt-1 text-[12px] text-ink-muted">
               We sent a magic link to <span className="text-ink-default">{email}</span>.
             </p>
@@ -68,7 +70,7 @@ export function LoginPage() {
             <Button
               variant="outline"
               size="lg"
-              className="w-full gap-2"
+              className="w-full gap-2 h-11"
               onClick={handleGoogle}
               disabled={status === 'google' || status === 'sending'}
             >
@@ -76,9 +78,9 @@ export function LoginPage() {
               <span>Continue with Google</span>
             </Button>
 
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-ink-subtle">
+            <div className="flex items-center gap-3 py-1">
               <div className="h-px flex-1 bg-line-default" />
-              <span>or</span>
+              <span className="text-[11px] uppercase tracking-wider text-ink-subtle">or</span>
               <div className="h-px flex-1 bg-line-default" />
             </div>
 
@@ -90,22 +92,28 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={status === 'sending'}
-                className="h-10 text-sm"
+                className="h-11 text-sm"
               />
               <Button
                 type="submit"
                 size="lg"
                 variant="default"
-                className="w-full"
+                className="w-full h-11"
                 disabled={status === 'sending' || !email.trim()}
               >
                 {status === 'sending' ? <Spinner className="border-white/40 border-t-white" /> : 'Send magic link'}
               </Button>
             </form>
 
-            {error && <p className="text-[12px] text-red-600">{error}</p>}
+            {error && (
+              <p className="text-[12px] text-red-600 text-center pt-1">{error}</p>
+            )}
           </div>
         )}
+
+        <p className="mt-10 text-center text-[11px] text-ink-subtle">
+          By continuing you agree to use eNote for personal notes.
+        </p>
       </div>
     </div>
   );
