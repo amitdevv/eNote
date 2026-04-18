@@ -17,13 +17,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-2">
-      <h2 className="text-[12px] font-medium uppercase tracking-wider text-ink-subtle px-1">
+    <section>
+      <h2 className="text-[12px] font-medium uppercase tracking-wider text-ink-subtle mb-3">
         {title}
       </h2>
-      <div className="rounded-xl border border-line-subtle bg-surface-raised overflow-hidden">
-        {children}
-      </div>
+      <div className="divide-y divide-line-subtle">{children}</div>
     </section>
   );
 }
@@ -38,7 +36,7 @@ function Row({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-line-subtle last:border-0">
+    <div className="flex items-center justify-between gap-4 py-3">
       <div className="min-w-0">
         <p className="text-[14px] text-ink-strong">{label}</p>
         {hint && <p className="text-[12px] text-ink-muted mt-0.5">{hint}</p>}
@@ -70,54 +68,43 @@ export function SettingsPage() {
           </Section>
 
           <Section title="Appearance">
-            <div className="p-4">
-              <p className="text-[14px] text-ink-strong">Density</p>
-              <p className="text-[12px] text-ink-muted mt-0.5 mb-3">
-                Scale of text and controls across the app.
-              </p>
-              <div className="grid grid-cols-3 gap-2">
+            <Row label="Density" hint="Scale of text and controls across the app.">
+              <div className="flex items-center gap-1 rounded-md bg-surface-muted p-0.5">
                 {DENSITY_OPTIONS.map((opt) => {
                   const active = density === opt.value;
                   return (
                     <button
                       key={opt.value}
                       onClick={() => setDensity(opt.value)}
+                      title={opt.hint}
                       className={cn(
-                        'rounded-lg border px-3 py-2.5 text-left transition-colors duration-150',
+                        'h-7 px-3 rounded-[5px] text-[12px] font-medium transition-colors duration-150',
                         active
-                          ? 'border-brand bg-brand/5 ring-1 ring-brand/30'
-                          : 'border-line-default bg-surface-raised hover:bg-surface-muted'
+                          ? 'bg-surface-raised text-ink-strong shadow-xs'
+                          : 'text-ink-muted hover:text-ink-strong'
                       )}
                     >
-                      <p
-                        className={cn(
-                          'text-[13px] font-medium',
-                          active ? 'text-ink-strong' : 'text-ink-default'
-                        )}
-                      >
-                        {opt.label}
-                      </p>
-                      <p className="text-[11px] text-ink-muted mt-0.5">{opt.hint}</p>
+                      {opt.label}
                     </button>
                   );
                 })}
               </div>
-            </div>
+            </Row>
           </Section>
 
           <Section title="Keyboard shortcuts">
-            <Row label="New note">
-              <kbd className="px-1.5 py-0.5 rounded border border-line-default text-[11px] text-ink-default bg-surface-raised font-mono">C</kbd>
-            </Row>
-            <Row label="Focus search">
-              <kbd className="px-1.5 py-0.5 rounded border border-line-default text-[11px] text-ink-default bg-surface-raised font-mono">/</kbd>
-            </Row>
-            <Row label="Command palette">
-              <kbd className="px-1.5 py-0.5 rounded border border-line-default text-[11px] text-ink-default bg-surface-raised font-mono">⌘K</kbd>
-            </Row>
-            <Row label="Close overlays">
-              <kbd className="px-1.5 py-0.5 rounded border border-line-default text-[11px] text-ink-default bg-surface-raised font-mono">Esc</kbd>
-            </Row>
+            {[
+              ['New note', 'C'],
+              ['Focus search', '/'],
+              ['Command palette', '⌘K'],
+              ['Close overlays', 'Esc'],
+            ].map(([label, key]) => (
+              <Row key={label} label={label}>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-muted text-[11px] text-ink-default font-mono">
+                  {key}
+                </kbd>
+              </Row>
+            ))}
           </Section>
         </div>
       </div>
