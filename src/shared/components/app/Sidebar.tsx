@@ -12,6 +12,7 @@ import {
 import { useAuth } from '@/features/auth/hooks';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/components/ui/button';
+import { Tooltip } from '@/shared/components/ui/tooltip';
 import { useCreateNote } from '@/features/notes/hooks';
 import { useNotesUI } from '@/features/notes/store';
 
@@ -98,15 +99,17 @@ export function Sidebar() {
             {user?.email?.split('@')[0] ?? 'eNote'}
           </span>
         </Link>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleCreate}
-          disabled={createNote.isPending}
-          aria-label="Create note"
-        >
-          <HugeiconsIcon icon={PlusSignIcon} size={14} />
-        </Button>
+        <Tooltip content="New note" shortcut="C">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={handleCreate}
+            disabled={createNote.isPending}
+            aria-label="Create note"
+          >
+            <HugeiconsIcon icon={PlusSignIcon} size={14} />
+          </Button>
+        </Tooltip>
       </div>
 
       <nav className="flex flex-col gap-px px-3">

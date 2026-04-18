@@ -8,7 +8,7 @@ import { useGlobalShortcuts } from '@/shared/hooks/useGlobalShortcuts';
 import { useApplyDensity } from '@/features/settings/hooks';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useNotesUI } from '@/features/notes/store';
-import { HugeiconsIcon, MoreHorizontalIcon } from '@/shared/lib/icons';
+import { HugeiconsIcon, Menu01Icon } from '@/shared/lib/icons';
 
 export function AppShell({ children }: { children: ReactNode }) {
   useGlobalShortcuts();
@@ -56,9 +56,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
             >
-              <HugeiconsIcon icon={MoreHorizontalIcon} size={18} />
+              <HugeiconsIcon icon={Menu01Icon} size={20} />
             </button>
           </div>
         )}

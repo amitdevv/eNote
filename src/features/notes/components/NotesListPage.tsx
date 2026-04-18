@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNotes, useCreateNote, useSearchNotes } from '../hooks';
 import { NoteRow } from './NoteRow';
+import { NotesSkeleton } from './NoteRowSkeleton';
 import { NotesFilterBar, DEFAULT_FILTERS, type FilterState } from './NotesFilterBar';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { EmptyState } from '@/shared/components/ui/empty-state';
@@ -11,13 +12,16 @@ import { Input } from '@/shared/components/ui/input';
 import { Kbd } from '@/shared/components/ui/kbd';
 import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { HugeiconsIcon, Search01Icon, Note01Icon } from '@/shared/lib/icons';
 
 export function NotesListPage() {
+  useDocumentTitle('Notes');
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedQuery = useDebounce(query, 200);
   const searching = debouncedQuery.trim().length > 0;
+  const hasTypedButNotDebounced = query.trim().length > 0 && query !== debouncedQuery;
 
   const { data: notes, isLoading } = useNotes(filters);
   const { data: searchResults, isFetching: searchLoading } = useSearchNotes(debouncedQuery);
@@ -31,6 +35,7 @@ export function NotesListPage() {
 
   const visible = searching ? searchResults ?? [] : notes ?? [];
   const loading = searching ? searchLoading : isLoading;
+  const showSpinnerInInput = searching && (searchLoading || hasTypedButNotDebounced);
 
   return (
     <>
@@ -67,7 +72,20 @@ export function NotesListPage() {
             className="pl-8 pr-10"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-            <Kbd>/</Kbd>
+            {showSpinnerInInput ? (
+              <Spinner className="h-3.5 w-3.5" />
+            ) : query ? (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="pointer-events-auto h-5 w-5 flex items-center justify-center rounded text-ink-subtle hover:text-ink-strong"
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            ) : (
+              <Kbd>/</Kbd>
+            )}
           </div>
         </div>
       </div>
@@ -75,11 +93,7 @@ export function NotesListPage() {
       {!searching && <NotesFilterBar state={filters} onChange={setFilters} />}
 
       <div className="flex-1 overflow-y-auto">
-        {loading && (
-          <div className="flex justify-center p-10">
-            <Spinner />
-          </div>
-        )}
+        {loading && (notes?.length ?? 0) === 0 && <NotesSkeleton />}
 
         {!loading && visible.length === 0 && !searching && (
           <EmptyState
@@ -115,9 +129,11 @@ export function NotesListPage() {
             transition={{ duration: 0.12 }}
             className="divide-y divide-line-subtle"
           >
-            {visible.map((n) => (
-              <NoteRow key={n.id} note={n} />
-            ))}
+            <AnimatePresence initial={false}>
+              {visible.map((n) => (
+                <NoteRow key={n.id} note={n} />
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
       </div>

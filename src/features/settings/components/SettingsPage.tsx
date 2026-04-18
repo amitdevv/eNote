@@ -5,6 +5,7 @@ import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useSettings, type Density } from '../store';
 import { cn } from '@/shared/lib/cn';
 import { LabelsSettings } from '@/features/labels/components/LabelsSettings';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 
 const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
   { value: 'compact', label: 'Compact', hint: 'Smaller text, denser rows' },
@@ -50,6 +51,7 @@ function Row({
 }
 
 export function SettingsPage() {
+  useDocumentTitle('Settings');
   const { user, signOut } = useAuth();
   const density = useSettings((s) => s.density);
   const setDensity = useSettings((s) => s.setDensity);

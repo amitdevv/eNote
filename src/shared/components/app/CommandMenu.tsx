@@ -2,7 +2,7 @@ import { Command } from 'cmdk';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotesUI } from '@/features/notes/store';
-import { useCreateNote, useSearchNotes } from '@/features/notes/hooks';
+import { useCreateNote, useNotes, useSearchNotes } from '@/features/notes/hooks';
 import { getDisplayTitle } from '@/features/notes/types';
 import { useAuth } from '@/features/auth/hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -31,6 +31,9 @@ export function CommandMenu() {
   const createNote = useCreateNote();
   const { signOut } = useAuth();
   const { data: results } = useSearchNotes(debouncedQuery);
+  const { data: allNotes } = useNotes();
+  const recentNotes = (allNotes ?? []).slice(0, 5);
+  const showRecent = !debouncedQuery.trim() && recentNotes.length > 0;
 
   useEffect(() => {
     if (!commandOpen) setQuery('');
@@ -83,6 +86,28 @@ export function CommandMenu() {
                   <Command.Item
                     key={n.id}
                     value={`note-${n.id}-${t}`}
+                    onSelect={() => {
+                      close();
+                      navigate(`/notes/${n.id}`);
+                    }}
+                    className={itemCls}
+                  >
+                    <HugeiconsIcon icon={Note01Icon} size={14} className="text-ink-subtle" />
+                    <span className="truncate flex-1">{t}</span>
+                  </Command.Item>
+                );
+              })}
+            </Command.Group>
+          )}
+
+          {showRecent && (
+            <Command.Group heading="Recent" className={groupCls}>
+              {recentNotes.map((n) => {
+                const t = getDisplayTitle(n);
+                return (
+                  <Command.Item
+                    key={n.id}
+                    value={`recent-${n.id}-${t}`}
                     onSelect={() => {
                       close();
                       navigate(`/notes/${n.id}`);

@@ -11,6 +11,9 @@ import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { PageHeader } from '@/shared/components/app/PageHeader';
+import { Tooltip } from '@/shared/components/ui/tooltip';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { getDisplayTitle } from '../types';
 import { LabelEditor } from './LabelEditor';
 import {
   DropdownMenu,
@@ -118,6 +121,8 @@ export function NoteDetailPage() {
     if (willArchive) navigate('/notes');
   }
 
+  useDocumentTitle(note ? getDisplayTitle(note) : null);
+
   const statusLabel = useMemo(() => {
     if (dirty) return 'Editing…';
     if (update.isPending) return 'Saving…';
@@ -167,14 +172,16 @@ export function NoteDetailPage() {
               {statusLabel}
             </span>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  aria-label="Note actions"
-                  className="flex h-7 w-7 items-center justify-center rounded-md text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
-                >
-                  <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
-                </button>
-              </DropdownMenuTrigger>
+              <Tooltip content="Note actions">
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Note actions"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+                  >
+                    <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+                  </button>
+                </DropdownMenuTrigger>
+              </Tooltip>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onSelect={togglePin}>
                   <HugeiconsIcon icon={PinIcon} size={14} className="text-ink-subtle" />

@@ -9,8 +9,10 @@ import { HugeiconsIcon, ArchiveIcon, Delete01Icon } from '@/shared/lib/icons';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { PageHeader } from '@/shared/components/app/PageHeader';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 
 export function ArchivedPage() {
+  useDocumentTitle('Archived');
   const { data: notes, isLoading } = useNotes({ archived: true });
   const update = useUpdateNote();
   const del = useDeleteNote();

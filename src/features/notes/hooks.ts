@@ -45,9 +45,51 @@ export function useUpdateNote() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: NoteUpdate }) => api.updateNote(id, patch),
+    // Optimistic: flip fields in the cache immediately so the UI feels instant.
+    onMutate: async ({ id, patch }) => {
+      if (!user) return { previousLists: [], previousDetail: undefined };
+      await qc.cancelQueries({ queryKey: [...keys.all, 'list', user.id] });
+      await qc.cancelQueries({ queryKey: keys.detail(id) });
+
+      const previousLists = qc.getQueriesData({ queryKey: [...keys.all, 'list', user.id] });
+      const previousDetail = qc.getQueryData(keys.detail(id));
+
+      // Update any cached list that contains this note.
+      qc.setQueriesData<import('./types').Note[] | undefined>(
+        { queryKey: [...keys.all, 'list', user.id] },
+        (old) => {
+          if (!old) return old;
+          const next = old.map((n) => (n.id === id ? { ...n, ...patch, updated_at: new Date().toISOString() } : n));
+          // Re-sort: pinned first (when pinned flips), updated_at desc.
+          return [...next].sort((a, b) => {
+            if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+            return a.updated_at < b.updated_at ? 1 : -1;
+          });
+        }
+      );
+
+      qc.setQueryData<import('./types').Note | undefined>(keys.detail(id), (old) =>
+        old ? { ...old, ...patch, updated_at: new Date().toISOString() } : old
+      );
+
+      return { previousLists, previousDetail };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback
+      if (context?.previousLists) {
+        for (const [key, data] of context.previousLists) {
+          qc.setQueryData(key, data);
+        }
+      }
+      if (context?.previousDetail !== undefined) {
+        qc.setQueryData(keys.detail(_vars.id), context.previousDetail);
+      }
+    },
     onSuccess: (note) => {
       qc.setQueryData(keys.detail(note.id), note);
-      if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
+    },
+    onSettled: (note) => {
+      if (note && user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
     },
   });
 }

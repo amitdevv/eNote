@@ -22,6 +22,7 @@ export {
   InboxIcon,
   Loading03Icon,
   Logout01Icon,
+  Menu01Icon,
   MoreHorizontalIcon,
   Note01Icon,
   PinIcon,
