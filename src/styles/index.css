@@ -24,13 +24,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Content column width, used by overlays that should center over
-     the content (not the viewport) on desktop. */
-  --sidebar-w: 244px;
-}
-
-@media (max-width: 768px) {
-  :root { --sidebar-w: 0px; }
 }
 
 body {

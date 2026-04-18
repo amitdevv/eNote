@@ -52,14 +52,14 @@ export function CommandMenu() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/25 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 bg-black/20 animate-fade-in"
       onClick={close}
     >
       <Command
         loop
         label="Command menu"
-        style={{ left: 'calc(50% + (var(--sidebar-w) / 2))' }}
-        className="absolute top-[15vh] -translate-x-1/2 w-[min(calc(100vw-2rem),560px)] overflow-hidden rounded-xl border border-line-default bg-surface-panel shadow-lg animate-slide-up"
+        style={{ translate: '-50% 0' }}
+        className="absolute left-1/2 top-[14vh] w-[min(calc(100vw-2rem),620px)] overflow-hidden rounded-2xl border border-line-default bg-surface-panel shadow-lg animate-sheet-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-line-subtle px-3 h-12">
