@@ -76,10 +76,13 @@ export function QuickCaptureDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-sm data-[state=open]:animate-fade-in" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/20 data-[state=open]:animate-fade-in" />
         <Dialog.Content
-          style={{ left: 'calc(50% + (var(--sidebar-w) / 2))' }}
-          className="fixed top-[14vh] -translate-x-1/2 z-50 w-[min(calc(100vw-2rem),560px)] rounded-xl border border-line-default bg-surface-panel shadow-lg overflow-hidden data-[state=open]:animate-slide-up focus:outline-none"
+          style={{
+            left: 'calc(50% + (var(--sidebar-w) / 2))',
+            translate: '-50% 0',
+          }}
+          className="fixed bottom-6 z-50 w-[min(calc(100vw-2rem),640px)] rounded-2xl border border-line-default bg-surface-panel shadow-lg overflow-hidden data-[state=open]:animate-sheet-in data-[state=closed]:animate-sheet-out focus:outline-none"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
               e.preventDefault();
