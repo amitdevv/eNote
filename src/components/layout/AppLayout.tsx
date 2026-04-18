@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -25,20 +25,19 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export const AppLayout: React.FC = () => {
-  const { 
-    notes, 
-    deleteNote, 
-    toggleStarred, 
-    searchQuery, 
+  const {
+    notes,
+    deleteNote,
+    toggleStarred,
+    searchQuery,
     setSearchQuery,
-    sortBy, 
+    sortBy,
     setSortBy,
-    filterBy, 
+    filterBy,
     setFilterBy,
     fetchNotes,
     loading: notesLoading,
-    clearCache,
-    loadFromCache
+    reset: resetNotes,
   } = useNotesStore();
   
   const { user } = useAuth();
@@ -107,46 +106,20 @@ export const AppLayout: React.FC = () => {
   };
 
 
-  // Optimized data loading with better caching
   useEffect(() => {
-    const loadData = async () => {
-      if (!user?.id) {
-        setInitialDataLoaded(false);
-        return;
-      }
-
-      // Try to load from cache first for instant response
-      const cachedLoaded = loadFromCache(user.id);
-      if (cachedLoaded) {
-        setInitialDataLoaded(true);
-      }
-
-      // Always try to fetch fresh data, but don't show loading if we have cached data
-      try {
-        await fetchNotes(user.id, false); // false = don't force refresh if data is fresh
-        setInitialDataLoaded(true);
-      } catch (error) {
-        console.error('Error loading notes:', error);
-        // If we have cached data, continue using it
-        if (!cachedLoaded) {
-          setInitialDataLoaded(true);
-        }
-      }
-    };
-
-    loadData();
-  }, [user?.id, fetchNotes, loadFromCache]);
-
-  // Clear cache and reset state when user changes
-  useEffect(() => {
-    if (!user) {
-      clearCache();
+    if (!user?.id) {
+      resetNotes();
       setInitialDataLoaded(false);
+      return;
     }
-  }, [user, clearCache]);
 
-  // Enhanced search functionality
-  const searchResults = searchQuery.trim() ? searchNotes(notes, searchQuery) : [];
+    fetchNotes(user.id).finally(() => setInitialDataLoaded(true));
+  }, [user?.id, fetchNotes, resetNotes]);
+
+  const searchResults = useMemo(
+    () => (searchQuery.trim() ? searchNotes(notes, searchQuery) : []),
+    [notes, searchQuery]
+  );
 
   // Simplified navigation - no folders
   useEffect(() => {
@@ -163,82 +136,74 @@ export const AppLayout: React.FC = () => {
     }
   }, [workspaceParam, isSettingsMode,isCanvasMode]);
 
-  // Predefined tags for filtering - unified system
   const predefinedTags = ['project', 'coding', 'college', 'personal', 'ideas', 'done', 'ongoing', 'future'];
 
-  // Filter and sort notes for normal view
-  const getFilteredNotes = () => {
+  const filteredNotes = useMemo(() => {
     let filtered = notes;
 
-    // Apply navigation-based filtering - simplified
     switch (navValue) {
       case 'all':
-        // Show all notes - no filtering needed
         break;
-      case 'today':
-        // Show notes updated today
+      case 'today': {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         filtered = filtered.filter(note => note.updatedAt >= today);
         break;
+      }
       case 'starred':
         filtered = filtered.filter(note => note.starred);
         break;
       default:
-        // Check if it's a tag filter
         if (predefinedTags.includes(navValue)) {
-          filtered = filtered.filter(note => 
-            note.tags && note.tags.includes(navValue)
-          );
+          filtered = filtered.filter(note => note.tags?.includes(navValue));
         }
         break;
     }
 
-    // Apply additional filter from header
     if (filterBy === 'starred') {
       filtered = filtered.filter(note => note.starred);
     }
 
-    const sortedNotes = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'alphabetical':
           return a.title.localeCompare(b.title);
-        case 'priority':
-          // Sort by priority (high, medium, low, none)
+        case 'priority': {
           const priorityOrder = { high: 3, medium: 2, low: 1 };
           const aPriority = priorityOrder[a.priority || 'low'] || 0;
           const bPriority = priorityOrder[b.priority || 'low'] || 0;
           return bPriority - aPriority;
+        }
         case 'recent':
         default:
           return b.updatedAt.getTime() - a.updatedAt.getTime();
       }
     });
+  }, [notes, navValue, filterBy, sortBy]);
 
-    return sortedNotes;
-  };
-
-  const filteredNotes = getFilteredNotes();
-
-  // Calculate note counts for sidebar
-  const getSidebarCounts = () => {
+  const sidebarCounts = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    return {
+
+    const counts: Record<string, number> = {
       all: notes.length,
-      today: notes.filter(note => note.updatedAt >= today).length,
-      starred: notes.filter(note => note.starred).length,
-      project: notes.filter(note => note.tags && note.tags.includes('project')).length,
-      coding: notes.filter(note => note.tags && note.tags.includes('coding')).length,
-      college: notes.filter(note => note.tags && note.tags.includes('college')).length,
-      personal: notes.filter(note => note.tags && note.tags.includes('personal')).length,
-      ideas: notes.filter(note => note.tags && note.tags.includes('ideas')).length,
-      done: notes.filter(note => note.tags && note.tags.includes('done')).length,
-      ongoing: notes.filter(note => note.tags && note.tags.includes('ongoing')).length,
-      future: notes.filter(note => note.tags && note.tags.includes('future')).length,
+      today: 0,
+      starred: 0,
     };
-  };
+    for (const tag of predefinedTags) counts[tag] = 0;
+
+    for (const note of notes) {
+      if (note.updatedAt >= today) counts.today++;
+      if (note.starred) counts.starred++;
+      if (note.tags) {
+        for (const tag of note.tags) {
+          if (tag in counts) counts[tag]++;
+        }
+      }
+    }
+
+    return counts;
+  }, [notes]);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -429,7 +394,7 @@ export const AppLayout: React.FC = () => {
           noteCount={filteredNotes.length}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapse}
-          sidebarCounts={getSidebarCounts()}
+          sidebarCounts={sidebarCounts}
         />
       </div>
 
@@ -445,7 +410,7 @@ export const AppLayout: React.FC = () => {
           onWorkspaceChange={handleWorkspaceChange}
           onNewNote={handleNewNote}
           noteCount={filteredNotes.length}
-          sidebarCounts={getSidebarCounts()}
+          sidebarCounts={sidebarCounts}
         />
       </div>
       
