@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Command } from 'cmdk';
+import * as Popover from '@radix-ui/react-popover';
 import { cn } from '@/shared/lib/cn';
 import {
   DropdownMenu,
@@ -5,12 +8,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { HugeiconsIcon, PinIcon, ArrowRight01Icon } from '@/shared/lib/icons';
+import {
+  HugeiconsIcon,
+  PinIcon,
+  ArrowRight01Icon,
+  PlusSignIcon,
+  Delete01Icon,
+  Note01Icon,
+  Search01Icon,
+} from '@/shared/lib/icons';
 import type { NoteSort } from '../api';
+import { useUserLabels } from '../hooks';
+
+// ── Types ────────────────────────────────────────────────────────────────
 
 export type FilterState = {
   pinnedOnly: boolean;
+  labels: string[];
   sort: NoteSort;
+};
+
+export const DEFAULT_FILTERS: FilterState = {
+  pinnedOnly: false,
+  labels: [],
+  sort: 'updated',
 };
 
 const SORT_LABELS: Record<NoteSort, string> = {
@@ -19,33 +40,107 @@ const SORT_LABELS: Record<NoteSort, string> = {
   title: 'Title',
 };
 
-function Pill({
-  active,
-  icon,
+// ── Subcomponents ───────────────────────────────────────────────────────
+
+function ChipShell({
+  onClear,
   children,
-  onClick,
+  interactive,
 }: {
-  active?: boolean;
-  icon?: React.ReactNode;
+  onClear?: () => void;
   children: React.ReactNode;
-  onClick?: () => void;
+  interactive?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={cn(
-        'h-7 inline-flex items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium transition-colors duration-150',
-        active
-          ? 'bg-surface-active text-ink-strong'
-          : 'text-ink-muted hover:bg-surface-muted hover:text-ink-strong'
+        'inline-flex h-7 items-center rounded-full bg-surface-muted text-[12px] font-medium text-ink-default',
+        interactive && 'hover:bg-surface-active transition-colors duration-150'
       )}
     >
-      {icon}
-      {children}
-    </button>
+      <span className="pl-2.5 flex items-center gap-1.5">{children}</span>
+      {onClear && (
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Remove filter"
+          className="h-7 w-7 flex items-center justify-center text-ink-subtle hover:text-ink-strong transition-colors"
+        >
+          <HugeiconsIcon icon={Delete01Icon} size={12} />
+        </button>
+      )}
+    </div>
   );
 }
+
+function LabelPicker({
+  selected,
+  onChange,
+}: {
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const { data: allLabels } = useUserLabels();
+  const labels = allLabels ?? [];
+
+  function toggle(label: string) {
+    const next = selected.includes(label)
+      ? selected.filter((l) => l !== label)
+      : [...selected, label];
+    onChange(next);
+  }
+
+  return (
+    <Command loop className="w-[240px]">
+      <div className="flex items-center gap-2 border-b border-line-subtle px-2.5 h-9">
+        <HugeiconsIcon icon={Search01Icon} size={13} className="text-ink-subtle shrink-0" />
+        <Command.Input
+          placeholder="Search labels…"
+          className="flex-1 bg-transparent text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+        />
+      </div>
+      <Command.List className="max-h-[260px] overflow-y-auto p-1">
+        <Command.Empty className="py-6 text-center text-[12px] text-ink-muted">
+          {labels.length === 0 ? 'No labels yet. Add one from a note.' : 'No matches.'}
+        </Command.Empty>
+        {labels.map((label) => {
+          const checked = selected.includes(label);
+          return (
+            <Command.Item
+              key={label}
+              value={label}
+              onSelect={() => toggle(label)}
+              className="flex items-center gap-2 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
+            >
+              <span
+                className={cn(
+                  'size-4 rounded border flex items-center justify-center shrink-0 transition-colors',
+                  checked ? 'bg-brand border-brand text-white' : 'border-line-default'
+                )}
+              >
+                {checked && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4l2.5 2.5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              <span className="truncate">{label}</span>
+            </Command.Item>
+          );
+        })}
+      </Command.List>
+    </Command>
+  );
+}
+
+// ── Main component ──────────────────────────────────────────────────────
+
+type FilterKind = 'pinned' | 'labels';
+
+const ALL_FILTERS: { id: FilterKind; label: string; icon: typeof PinIcon }[] = [
+  { id: 'pinned', label: 'Pinned', icon: PinIcon },
+  { id: 'labels', label: 'Labels', icon: Note01Icon },
+];
 
 export function NotesFilterBar({
   state,
@@ -54,65 +149,174 @@ export function NotesFilterBar({
   state: FilterState;
   onChange: (next: FilterState) => void;
 }) {
-  const anyActive = state.pinnedOnly || state.sort !== 'updated';
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [activeKind, setActiveKind] = useState<FilterKind | null>(null);
+  const [labelsOpen, setLabelsOpen] = useState(false);
+
+  const anyActive =
+    state.pinnedOnly || state.labels.length > 0 || state.sort !== 'updated';
+
+  function addFilter(kind: FilterKind) {
+    setPickerOpen(false);
+    if (kind === 'pinned') {
+      onChange({ ...state, pinnedOnly: true });
+    } else if (kind === 'labels') {
+      setActiveKind('labels');
+      setLabelsOpen(true);
+    }
+  }
 
   return (
-    <div className="flex items-center gap-1 border-b border-line-subtle px-3 h-11">
-      <Pill
-        active={state.pinnedOnly}
-        icon={<HugeiconsIcon icon={PinIcon} size={13} />}
-        onClick={() => onChange({ ...state, pinnedOnly: !state.pinnedOnly })}
-      >
-        Pinned
-      </Pill>
+    <div className="flex items-center gap-1.5 flex-wrap border-b border-line-subtle px-3 py-2 min-h-[44px]">
+      {/* Active: Pinned */}
+      {state.pinnedOnly && (
+        <ChipShell onClear={() => onChange({ ...state, pinnedOnly: false })}>
+          <HugeiconsIcon icon={PinIcon} size={12} className="text-brand" />
+          Pinned
+        </ChipShell>
+      )}
 
-      <div className="w-px h-4 bg-line-default mx-1" aria-hidden />
+      {/* Active: Labels (popover to edit selection) */}
+      {state.labels.length > 0 && (
+        <Popover.Root
+          open={labelsOpen && activeKind === 'labels'}
+          onOpenChange={(o) => {
+            setLabelsOpen(o);
+            if (o) setActiveKind('labels');
+          }}
+        >
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-muted hover:bg-surface-active text-[12px] font-medium text-ink-default transition-colors pl-2.5 pr-1"
+            >
+              <HugeiconsIcon icon={Note01Icon} size={12} className="text-ink-subtle" />
+              <span>
+                Labels
+                <span className="mx-1 text-ink-subtle">·</span>
+                {state.labels.length === 1 ? state.labels[0] : `${state.labels.length}`}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange({ ...state, labels: [] });
+                }}
+                aria-label="Clear labels filter"
+                className="h-5 w-5 flex items-center justify-center rounded text-ink-subtle hover:text-ink-strong ml-0.5"
+              >
+                <HugeiconsIcon icon={Delete01Icon} size={10} />
+              </button>
+            </button>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              sideOffset={6}
+              align="start"
+              className="z-50 rounded-lg border border-line-default bg-surface-panel shadow-md overflow-hidden data-[state=open]:animate-fade-in"
+            >
+              <LabelPicker
+                selected={state.labels}
+                onChange={(next) => onChange({ ...state, labels: next })}
+              />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+      )}
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {/* Active: non-default sort appears as a chip so it looks consistent with other filters */}
+      {state.sort !== 'updated' && (
+        <ChipShell onClear={() => onChange({ ...state, sort: 'updated' })}>
+          <span className="text-ink-subtle">Sort ·</span>
+          {SORT_LABELS[state.sort]}
+        </ChipShell>
+      )}
+
+      {/* + Filter trigger */}
+      <Popover.Root open={pickerOpen} onOpenChange={setPickerOpen}>
+        <Popover.Trigger asChild>
           <button
             type="button"
-            className={cn(
-              'h-7 inline-flex items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium transition-colors duration-150',
-              state.sort !== 'updated'
-                ? 'bg-surface-active text-ink-strong'
-                : 'text-ink-muted hover:bg-surface-muted hover:text-ink-strong'
-            )}
+            className="inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors border border-dashed border-line-default"
           >
-            <span className="text-ink-subtle">Sort ·</span>
-            <span>{SORT_LABELS[state.sort]}</span>
-            <HugeiconsIcon
-              icon={ArrowRight01Icon}
-              size={12}
-              className="rotate-90 text-ink-subtle"
-            />
+            <HugeiconsIcon icon={PlusSignIcon} size={12} />
+            Filter
           </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {(Object.keys(SORT_LABELS) as NoteSort[]).map((s) => (
-            <DropdownMenuItem
-              key={s}
-              onSelect={() => onChange({ ...state, sort: s })}
-              className={state.sort === s ? 'text-ink-strong' : ''}
-            >
-              {SORT_LABELS[s]}
-              {state.sort === s && (
-                <span className="ml-auto text-brand text-[12px]">✓</span>
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            sideOffset={6}
+            align="start"
+            className="z-50 w-[220px] rounded-lg border border-line-default bg-surface-panel shadow-md overflow-hidden data-[state=open]:animate-fade-in"
+          >
+            <Command loop>
+              <div className="flex items-center gap-2 border-b border-line-subtle px-2.5 h-9">
+                <HugeiconsIcon icon={Search01Icon} size={13} className="text-ink-subtle shrink-0" />
+                <Command.Input
+                  placeholder="Filter by…"
+                  className="flex-1 bg-transparent text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+                />
+              </div>
+              <Command.List className="p-1">
+                <Command.Empty className="py-6 text-center text-[12px] text-ink-muted">
+                  No filters.
+                </Command.Empty>
+                <Command.Group>
+                  {ALL_FILTERS.map((f) => (
+                    <Command.Item
+                      key={f.id}
+                      value={f.label}
+                      onSelect={() => addFilter(f.id)}
+                      className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
+                    >
+                      <HugeiconsIcon icon={f.icon} size={14} className="text-ink-subtle" />
+                      <span className="flex-1">{f.label}</span>
+                      <HugeiconsIcon icon={ArrowRight01Icon} size={12} className="text-ink-subtle" />
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              </Command.List>
+            </Command>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
-      {anyActive && (
-        <button
-          type="button"
-          onClick={() => onChange({ pinnedOnly: false, sort: 'updated' })}
-          className="ml-auto h-7 px-2 text-[12px] text-ink-subtle hover:text-ink-strong transition-colors"
-        >
-          Reset
-        </button>
-      )}
+      {/* Sort dropdown (always visible on the right) */}
+      <div className="ml-auto flex items-center gap-1.5">
+        {anyActive && (
+          <button
+            type="button"
+            onClick={() => onChange(DEFAULT_FILTERS)}
+            className="h-7 px-2 text-[12px] text-ink-subtle hover:text-ink-strong transition-colors"
+          >
+            Reset
+          </button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="h-7 inline-flex items-center gap-1 rounded-full px-2.5 text-[12px] font-medium text-ink-muted hover:bg-surface-muted hover:text-ink-strong transition-colors"
+            >
+              <span className="text-ink-subtle">Sort:</span>
+              {SORT_LABELS[state.sort]}
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                size={11}
+                className="rotate-90 text-ink-subtle"
+              />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {(Object.keys(SORT_LABELS) as NoteSort[]).map((s) => (
+              <DropdownMenuItem key={s} onSelect={() => onChange({ ...state, sort: s })}>
+                <span className="flex-1">{SORT_LABELS[s]}</span>
+                {state.sort === s && <span className="text-brand text-[12px]">✓</span>}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

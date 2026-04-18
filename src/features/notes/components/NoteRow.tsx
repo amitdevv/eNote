@@ -38,6 +38,21 @@ export function NoteRow({ note }: { note: Note }) {
           <span className="text-title font-medium text-ink-strong truncate">
             {title}
           </span>
+          {note.labels && note.labels.length > 0 && (
+            <span className="flex items-center gap-1 shrink-0">
+              {note.labels.slice(0, 3).map((l) => (
+                <span
+                  key={l}
+                  className="inline-flex h-5 items-center rounded-full bg-surface-muted px-1.5 text-[10px] font-medium text-ink-muted"
+                >
+                  {l}
+                </span>
+              ))}
+              {note.labels.length > 3 && (
+                <span className="text-[11px] text-ink-subtle">+{note.labels.length - 3}</span>
+              )}
+            </span>
+          )}
         </div>
         {preview ? (
           <p className="mt-0.5 text-preview text-ink-muted truncate">{preview}</p>

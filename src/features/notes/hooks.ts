@@ -71,3 +71,12 @@ export function useSearchNotes(query: string) {
     enabled: !!user && query.trim().length > 0,
   });
 }
+
+export function useUserLabels() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: user ? [...keys.all, 'labels', user.id] : ['notes', 'labels', 'none'],
+    queryFn: () => api.listUserLabels(user!.id),
+    enabled: !!user,
+  });
+}

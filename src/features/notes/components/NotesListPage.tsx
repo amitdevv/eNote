@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useNotes, useCreateNote, useSearchNotes } from '../hooks';
 import { NoteRow } from './NoteRow';
-import { NotesFilterBar, type FilterState } from './NotesFilterBar';
+import { NotesFilterBar, DEFAULT_FILTERS, type FilterState } from './NotesFilterBar';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Button } from '@/shared/components/ui/button';
@@ -15,7 +15,7 @@ import { HugeiconsIcon, Search01Icon, Note01Icon } from '@/shared/lib/icons';
 
 export function NotesListPage() {
   const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState<FilterState>({ pinnedOnly: false, sort: 'updated' });
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedQuery = useDebounce(query, 200);
   const searching = debouncedQuery.trim().length > 0;
 

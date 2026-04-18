@@ -11,6 +11,7 @@ import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
 import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { PageHeader } from '@/shared/components/app/PageHeader';
+import { LabelEditor } from './LabelEditor';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ type Draft = {
   title: string;
   content: NoteDoc;
   contentText: string;
+  labels: string[];
 };
 
 export function NoteDetailPage() {
@@ -40,7 +42,7 @@ export function NoteDetailPage() {
   const update = useUpdateNote();
   const del = useDeleteNote();
 
-  const [draft, setDraft] = useState<Draft>({ title: '', content: EMPTY_DOC, contentText: '' });
+  const [draft, setDraft] = useState<Draft>({ title: '', content: EMPTY_DOC, contentText: '', labels: [] });
   const [dirty, setDirty] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
@@ -48,7 +50,12 @@ export function NoteDetailPage() {
   const loadedIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (note && note.id !== loadedIdRef.current) {
-      setDraft({ title: note.title, content: note.content, contentText: note.content_text });
+      setDraft({
+        title: note.title,
+        content: note.content,
+        contentText: note.content_text,
+        labels: note.labels ?? [],
+      });
       setDirty(false);
       loadedIdRef.current = note.id;
 
@@ -78,6 +85,7 @@ export function NoteDetailPage() {
             title: d.title.trim() || 'Untitled',
             content: d.content,
             content_text: d.contentText,
+            labels: d.labels,
           },
         });
         setDirty(false);
@@ -207,7 +215,15 @@ export function NoteDetailPage() {
               setDirty(true);
             }}
             placeholder="Untitled"
-            className="w-full bg-transparent text-[32px] leading-[1.15] font-semibold text-ink-strong tracking-[-0.02em] placeholder:text-ink-placeholder focus:outline-none mb-8 py-1 border-b border-transparent focus:border-line-subtle transition-colors duration-150"
+            className="w-full bg-transparent text-[32px] leading-[1.15] font-semibold text-ink-strong tracking-[-0.02em] placeholder:text-ink-placeholder focus:outline-none mb-3 py-1 border-b border-transparent focus:border-line-subtle transition-colors duration-150"
+          />
+          <LabelEditor
+            labels={draft.labels}
+            onChange={(next) => {
+              setDraft((d) => ({ ...d, labels: next }));
+              setDirty(true);
+            }}
+            className="mb-6"
           />
           <NoteEditor
             initialContent={draft.content}

@@ -6,16 +6,18 @@ export type NoteSort = 'updated' | 'created' | 'title';
 export type NotesListFilters = {
   archived?: boolean;
   pinnedOnly?: boolean;
+  /** Any of these labels must be present on the note (array-overlap). */
+  labels?: string[];
   sort?: NoteSort;
 };
 
 export async function listNotes(userId: string, opts?: NotesListFilters): Promise<Note[]> {
-  const { archived = false, pinnedOnly = false, sort = 'updated' } = opts ?? {};
+  const { archived = false, pinnedOnly = false, labels = [], sort = 'updated' } = opts ?? {};
 
   let q = supabase.from('notes').select('*').eq('user_id', userId).eq('archived', archived);
   if (pinnedOnly) q = q.eq('pinned', true);
+  if (labels.length > 0) q = q.overlaps('labels', labels);
 
-  // Pinned always bubble to top (unless we're only showing pinned anyway).
   if (!pinnedOnly) q = q.order('pinned', { ascending: false });
 
   switch (sort) {
@@ -33,6 +35,20 @@ export async function listNotes(userId: string, opts?: NotesListFilters): Promis
   const { data, error } = await q;
   if (error) throw error;
   return data ?? [];
+}
+
+/** Collect the full set of labels the user has used, for the filter picker. */
+export async function listUserLabels(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('notes')
+    .select('labels')
+    .eq('user_id', userId);
+  if (error) throw error;
+  const all = new Set<string>();
+  for (const row of data ?? []) {
+    for (const l of row.labels ?? []) all.add(l);
+  }
+  return [...all].sort();
 }
 
 export async function getNote(id: string): Promise<Note | null> {

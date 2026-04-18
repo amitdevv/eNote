@@ -48,6 +48,7 @@ export interface Database {
           content_text: string;
           archived: boolean;
           pinned: boolean;
+          labels: string[];
           created_at: string;
           updated_at: string;
         };
@@ -59,6 +60,7 @@ export interface Database {
           content_text?: string;
           archived?: boolean;
           pinned?: boolean;
+          labels?: string[];
         };
         Update: {
           title?: string;
@@ -66,6 +68,7 @@ export interface Database {
           content_text?: string;
           archived?: boolean;
           pinned?: boolean;
+          labels?: string[];
         };
       };
     };
