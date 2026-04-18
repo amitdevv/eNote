@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCreateNote } from '../hooks';
 import { Button } from '@/shared/components/ui/button';
-import { Kbd } from '@/shared/components/ui/kbd';
 import { LabelEditor } from './LabelEditor';
 import type { NoteDoc } from '@/shared/lib/supabase';
 
@@ -110,41 +109,30 @@ export function QuickCaptureDialog({ open, onOpenChange }: Props) {
             <LabelEditor labels={labels} onChange={setLabels} />
           </div>
 
-          <div className="border-t border-line-subtle bg-surface-muted/30 flex items-center justify-between gap-3 px-4 py-2.5">
-            <div className="hidden sm:flex items-center gap-2 text-[11px] text-ink-subtle">
-              <Kbd>⌘</Kbd>
-              <Kbd>↵</Kbd>
-              <span>save</span>
-              <span className="text-ink-placeholder mx-1">·</span>
-              <Kbd>⇧⌘</Kbd>
-              <Kbd>↵</Kbd>
-              <span>open in editor</span>
-            </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-                disabled={busy}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => save(true)}
-                disabled={busy || !hasContent}
-              >
-                Open in editor
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => save(false)}
-                disabled={busy || !hasContent}
-              >
-                {busy ? 'Saving…' : 'Save'}
-              </Button>
-            </div>
+          <div className="border-t border-line-subtle bg-surface-muted/30 flex items-center justify-end gap-2 px-4 py-2.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => save(true)}
+              disabled={busy || !hasContent}
+            >
+              Open in editor
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => save(false)}
+              disabled={busy || !hasContent}
+            >
+              {busy ? 'Saving…' : 'Save'}
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

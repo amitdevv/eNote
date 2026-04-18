@@ -6,7 +6,6 @@ import { useCreateNote, useNotes, useSearchNotes } from '@/features/notes/hooks'
 import { getDisplayTitle } from '@/features/notes/types';
 import { useAuth } from '@/features/auth/hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import { Kbd } from '@/shared/components/ui/kbd';
 import {
   HugeiconsIcon,
   PlusSignIcon,
@@ -70,7 +69,6 @@ export function CommandMenu() {
             placeholder="Search notes or run a command…"
             className="flex-1 bg-transparent text-[14px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
           />
-          <Kbd>Esc</Kbd>
         </div>
 
         <Command.List className="max-h-[50vh] overflow-y-auto p-1.5">
@@ -126,7 +124,6 @@ export function CommandMenu() {
             <Command.Item value="new-note" onSelect={handleCreate} className={itemCls}>
               <HugeiconsIcon icon={PlusSignIcon} size={14} className="text-ink-subtle" />
               <span className="flex-1">New note</span>
-              <Kbd>C</Kbd>
             </Command.Item>
             <Command.Item
               value="open-archived"
@@ -164,23 +161,6 @@ export function CommandMenu() {
           </Command.Group>
         </Command.List>
 
-        <div className="flex items-center justify-between gap-2 border-t border-line-subtle px-3 h-9 text-[11px] text-ink-subtle">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5">
-              <Kbd>↑</Kbd>
-              <Kbd>↓</Kbd>
-              <span>navigate</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Kbd>↵</Kbd>
-              <span>select</span>
-            </span>
-          </div>
-          <span className="flex items-center gap-1.5">
-            <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd>
-          </span>
-        </div>
       </Command>
     </div>
   );

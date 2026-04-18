@@ -22,17 +22,19 @@ export const TooltipContent = React.forwardRef<
 TooltipContent.displayName = 'TooltipContent';
 
 /**
- * Convenience wrapper: `<Tooltip content="Pin · P">{child}</Tooltip>`.
- * `shortcut` renders a lightly-tinted kbd after the label.
+ * Convenience wrapper: `<Tooltip content="Pin">{child}</Tooltip>`.
+ * Accepts an optional `shortcut` prop but does not render it — shortcuts
+ * are shown only in Settings to avoid chrome noise. The prop is kept so
+ * call sites compile; future behaviour may reintroduce it selectively.
  */
 export function Tooltip({
   content,
-  shortcut,
   side = 'top',
   delayDuration = 200,
   children,
 }: {
   content: React.ReactNode;
+  /** Reserved. Not rendered — see file comment. */
   shortcut?: string;
   side?: 'top' | 'right' | 'bottom' | 'left';
   delayDuration?: number;
@@ -43,16 +45,7 @@ export function Tooltip({
     <TooltipPrimitive.Root delayDuration={delayDuration}>
       <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
       <TooltipPrimitive.Portal>
-        <TooltipContent side={side}>
-          <span className="flex items-center gap-1.5">
-            <span>{content}</span>
-            {shortcut && (
-              <span className="rounded bg-white/10 px-1 font-mono text-[10px] text-white/80">
-                {shortcut}
-              </span>
-            )}
-          </span>
-        </TooltipContent>
+        <TooltipContent side={side}>{content}</TooltipContent>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>
   );

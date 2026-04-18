@@ -12,8 +12,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // The primary CTA. Reserve for one action per surface.
-        default: 'bg-ink-strong text-surface-raised hover:bg-ink-default',
+        // The primary CTA — brand green. Reserve for one action per surface.
+        default: 'bg-brand text-brand-fg hover:brightness-[1.08] active:brightness-95 shadow-xs',
         // Softer filled — use for secondary actions.
         secondary: 'bg-surface-muted text-ink-strong hover:bg-surface-active',
         // Fully transparent until hover. Default for icon buttons, nav items.
@@ -24,7 +24,8 @@ const buttonVariants = cva(
         chip: 'bg-transparent text-ink-default hover:bg-surface-muted px-2 -mx-1 rounded-md',
         destructive: 'bg-red-600 text-white hover:bg-red-700',
         link: 'bg-transparent text-brand underline-offset-4 hover:underline',
-        brand: 'bg-brand text-brand-fg hover:brightness-110',
+        // Deprecated: same as default now. Keeping the name so existing call sites compile.
+        brand: 'bg-brand text-brand-fg hover:brightness-[1.08] active:brightness-95 shadow-xs',
       },
       size: {
         sm: 'h-7 px-2.5 text-[12px] rounded-md',

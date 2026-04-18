@@ -95,7 +95,7 @@ export function Sidebar() {
             {user?.email?.split('@')[0] ?? 'eNote'}
           </span>
         </Link>
-        <Tooltip content="New note" shortcut="C">
+        <Tooltip content="New note">
           <Button
             size="icon"
             variant="ghost"

@@ -28,14 +28,23 @@ export function useGlobalShortcuts() {
     { enableOnFormTags: false }
   );
 
+  // Slash and ⌘F both open the command palette (which doubles as search).
   useHotkeys(
     '/',
     (e) => {
       e.preventDefault();
-      const input = document.querySelector<HTMLInputElement>('[data-search-input]');
-      input?.focus();
+      setCommandOpen(true);
     },
     { enableOnFormTags: false }
+  );
+
+  useHotkeys(
+    'mod+f',
+    (e) => {
+      e.preventDefault();
+      setCommandOpen(true);
+    },
+    { enableOnFormTags: true }
   );
 
   useHotkeys(
