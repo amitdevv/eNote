@@ -5,8 +5,6 @@ import { useNote, useUpdateNote, useDeleteNote } from '../hooks';
 import { NoteEditor } from './NoteEditor';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { Button } from '@/shared/components/ui/button';
-import type { NoteDoc } from '@/shared/lib/supabase';
-import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
 import {
   useDraftSnapshot,
@@ -17,6 +15,7 @@ import { ConfirmDialog } from '@/shared/components/ui/dialog';
 import { PageHeader } from '@/shared/components/app/PageHeader';
 import { Tooltip } from '@/shared/components/ui/tooltip';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import type { Note } from '../types';
 import { getDisplayTitle } from '../types';
 import { LabelEditor } from './LabelEditor';
 import {
@@ -36,7 +35,7 @@ import {
 
 type Draft = {
   title: string;
-  content: NoteDoc;
+  content: Note['content'];
   contentText: string;
   labels: string[];
 };
@@ -44,57 +43,79 @@ type Draft = {
 export function NoteDetailPage() {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { data: note, isLoading } = useNote(noteId);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!note) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        <p className="text-[14px] text-ink-muted">Note not found.</p>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/notes')}>
+          Back to notes
+        </Button>
+      </div>
+    );
+  }
+
+  // Inner component is keyed on note.id so draft is (re)initialised
+  // synchronously from the loaded note — no useEffect race on first render.
+  return <NoteDetail key={note.id} note={note} />;
+}
+
+function NoteDetail({ note }: { note: Note }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const update = useUpdateNote();
   const del = useDeleteNote();
 
-  const [draft, setDraft] = useState<Draft>({ title: '', content: EMPTY_DOC, contentText: '', labels: [] });
-  const [dirty, setDirty] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement | null>(null);
-
-  const loadedIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (note && note.id !== loadedIdRef.current) {
-      const serverDraft: Draft = {
+  const [draft, setDraft] = useState<Draft>(() => {
+    const recovered = readDraftSnapshot<Draft>(note.id, note.updated_at);
+    return (
+      recovered ?? {
         title: note.title,
         content: note.content,
         contentText: note.content_text,
         labels: note.labels ?? [],
-      };
-      const recovered = readDraftSnapshot<Draft>(note.id, note.updated_at);
-      if (recovered) {
-        setDraft(recovered);
-        setDirty(true);
-        toast('Recovered unsaved changes', {
-          description: 'Picked up where you left off.',
-        });
-      } else {
-        setDraft(serverDraft);
-        setDirty(false);
       }
-      loadedIdRef.current = note.id;
+    );
+  });
+  // Start dirty if we recovered from a snapshot so autosave writes on first change.
+  const [dirty, setDirty] = useState(() =>
+    readDraftSnapshot<Draft>(note.id, note.updated_at) !== null,
+  );
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
-      // If user just created this note, focus the title so they can start typing immediately.
-      const state = location.state as { fresh?: boolean } | null;
-      if (state?.fresh) {
-        requestAnimationFrame(() => {
-          titleInputRef.current?.focus();
-          titleInputRef.current?.select();
-        });
-        // Clear the flag so refresh doesn't re-focus.
-        window.history.replaceState({}, '');
-      }
+  useEffect(() => {
+    if (dirty) {
+      toast('Recovered unsaved changes', {
+        description: 'Picked up where you left off.',
+      });
     }
-  }, [note, location.state]);
+    const state = location.state as { fresh?: boolean } | null;
+    if (state?.fresh) {
+      requestAnimationFrame(() => {
+        titleInputRef.current?.focus();
+        titleInputRef.current?.select();
+      });
+      window.history.replaceState({}, '');
+    }
+    // intentional: run once per mount (one per note via the outer key)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { flush } = useAutoSave<Draft>({
     value: draft,
-    enabled: !!note && dirty,
+    enabled: dirty,
     delay: 700,
     save: async (d) => {
-      if (!note) return;
       try {
         await update.mutateAsync({
           id: note.id,
@@ -118,14 +139,13 @@ export function NoteDetailPage() {
   useEffect(() => () => flush(), [flush]);
 
   useDraftSnapshot<Draft>({
-    id: note?.id,
+    id: note.id,
     draft,
-    baseUpdatedAt: note?.updated_at ?? null,
-    enabled: !!note && dirty,
+    baseUpdatedAt: note.updated_at,
+    enabled: dirty,
   });
 
   async function performDelete() {
-    if (!note) return;
     flush();
     clearDraftSnapshot(note.id);
     await del.mutateAsync(note.id);
@@ -133,37 +153,16 @@ export function NoteDetailPage() {
   }
 
   function togglePin() {
-    if (!note) return;
     update.mutate({ id: note.id, patch: { pinned: !note.pinned } });
   }
 
   function toggleArchive() {
-    if (!note) return;
     const willArchive = !note.archived;
     update.mutate({ id: note.id, patch: { archived: willArchive } });
     if (willArchive) navigate('/notes');
   }
 
-  useDocumentTitle(note ? getDisplayTitle(note) : null);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (!note) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-2">
-        <p className="text-[14px] text-ink-muted">Note not found.</p>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/notes')}>
-          Back to notes
-        </Button>
-      </div>
-    );
-  }
+  useDocumentTitle(getDisplayTitle(note));
 
   return (
     <>
@@ -243,7 +242,6 @@ export function NoteDetailPage() {
             className="mb-6"
           />
           <NoteEditor
-            key={note.id}
             initialContent={draft.content}
             onChange={(doc, text) => {
               setDraft((d) => ({ ...d, content: doc, contentText: text }));

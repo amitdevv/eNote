@@ -16,6 +16,8 @@ import {
   QuoteUpIcon,
   SourceCodeCircleIcon,
   MinusSignIcon,
+  Image01Icon,
+  TableIcon,
 } from '@/shared/lib/icons';
 import { SlashMenu, type SlashMenuHandle } from './components/SlashMenu';
 
@@ -99,6 +101,31 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
     keywords: ['divider', 'hr', 'rule', 'separator'],
     command: ({ editor, range }) =>
       editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
+  },
+  {
+    title: 'Image',
+    description: 'Embed an image by URL',
+    icon: Image01Icon,
+    keywords: ['image', 'picture', 'photo', 'img'],
+    command: ({ editor, range }) => {
+      const url = window.prompt('Image URL');
+      const src = url?.trim();
+      if (!src) return;
+      editor.chain().focus().deleteRange(range).setImage({ src }).run();
+    },
+  },
+  {
+    title: 'Table',
+    description: '3×3 starter table',
+    icon: TableIcon,
+    keywords: ['table', 'grid'],
+    command: ({ editor, range }) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run(),
   },
 ];
 

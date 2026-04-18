@@ -8,28 +8,188 @@ import { TaskComposer } from './TaskComposer';
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { PageHeader } from '@/shared/components/app/PageHeader';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/shared/components/ui/dropdown-menu';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { cn } from '@/shared/lib/cn';
-import { HugeiconsIcon, CheckmarkSquare01Icon } from '@/shared/lib/icons';
+import { HugeiconsIcon, CheckmarkSquare01Icon, PlusSignIcon } from '@/shared/lib/icons';
 import { groupByDay, dayHeading, isOverdue } from '../date';
 
 type View = 'inbox' | 'today' | 'upcoming';
+type SortKey = 'default' | 'priority' | 'due' | 'title';
+type SortDir = 'asc' | 'desc';
+
+type Sort = { key: SortKey; dir: SortDir };
+
+function sortTasks(list: Task[], sort: Sort): Task[] {
+  if (sort.key === 'default') return list;
+  const sign = sort.dir === 'asc' ? 1 : -1;
+  return [...list].sort((a, b) => {
+    switch (sort.key) {
+      case 'priority':
+        return sign * (a.priority - b.priority);
+      case 'due': {
+        const av = a.due_at ? new Date(a.due_at).getTime() : Number.POSITIVE_INFINITY;
+        const bv = b.due_at ? new Date(b.due_at).getTime() : Number.POSITIVE_INFINITY;
+        return sign * (av - bv);
+      }
+      case 'title':
+        return sign * a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+}
+
+type ColumnOption = { key: SortKey; dir: SortDir; label: string };
+
+const COLUMN_OPTIONS: Record<SortKey, ColumnOption[]> = {
+  title: [
+    { key: 'title', dir: 'asc', label: 'A → Z' },
+    { key: 'title', dir: 'desc', label: 'Z → A' },
+  ],
+  priority: [
+    { key: 'priority', dir: 'asc', label: 'Highest first (P1 → P4)' },
+    { key: 'priority', dir: 'desc', label: 'Lowest first (P4 → P1)' },
+  ],
+  due: [
+    { key: 'due', dir: 'asc', label: 'Earliest first' },
+    { key: 'due', dir: 'desc', label: 'Latest first' },
+  ],
+  default: [],
+};
+
+function ColumnButton({
+  column,
+  label,
+  sort,
+  onSortChange,
+  align = 'left',
+  width,
+}: {
+  column: SortKey;
+  label: string;
+  sort: Sort;
+  onSortChange: (next: Sort) => void;
+  align?: 'left' | 'right';
+  width?: string;
+}) {
+  const active = sort.key === column;
+  const arrow = active ? (sort.dir === 'asc' ? '↑' : '↓') : '';
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'inline-flex h-6 items-center gap-1 rounded px-1.5 text-[12px] font-medium uppercase tracking-wide transition-colors',
+            active
+              ? 'text-ink-strong bg-surface-muted'
+              : 'text-ink-muted hover:text-ink-strong hover:bg-surface-muted/70',
+            align === 'right' && 'justify-end',
+            width,
+          )}
+          style={align === 'right' ? { marginLeft: 'auto' } : undefined}
+        >
+          {label} {arrow}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align={align === 'right' ? 'end' : 'start'}>
+        <DropdownMenuLabel>Sort by {label.toLowerCase()}</DropdownMenuLabel>
+        {COLUMN_OPTIONS[column].map((opt) => {
+          const isActive =
+            sort.key === opt.key && sort.dir === opt.dir;
+          return (
+            <DropdownMenuItem
+              key={`${opt.key}-${opt.dir}`}
+              onSelect={() => onSortChange({ key: opt.key, dir: opt.dir })}
+            >
+              <span className="flex-1">{opt.label}</span>
+              {isActive && <span className="text-brand">✓</span>}
+            </DropdownMenuItem>
+          );
+        })}
+        {active && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => onSortChange({ key: 'default', dir: 'asc' })}
+            >
+              <span className="flex-1 text-ink-muted">Clear sort</span>
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function ColumnHeader({
+  sort,
+  onSortChange,
+}: {
+  sort: Sort;
+  onSortChange: (next: Sort) => void;
+}) {
+  return (
+    <div className="sticky top-0 z-10 h-9 flex items-center px-2 gap-2 bg-surface-app/95 backdrop-blur-sm border-b border-line-subtle">
+      <span className="size-[18px] shrink-0" aria-hidden />
+      <div className="flex-1 min-w-0">
+        <ColumnButton
+          column="title"
+          label="Name"
+          sort={sort}
+          onSortChange={onSortChange}
+        />
+      </div>
+      <div className="w-[96px] flex justify-end">
+        <ColumnButton
+          column="priority"
+          label="Priority"
+          sort={sort}
+          onSortChange={onSortChange}
+          align="right"
+        />
+      </div>
+      <div className="w-[96px] flex justify-end">
+        <ColumnButton
+          column="due"
+          label="Due"
+          sort={sort}
+          onSortChange={onSortChange}
+          align="right"
+        />
+      </div>
+      {/* Spacer for the hover delete button column in TaskRow */}
+      <span className="w-7 shrink-0" aria-hidden />
+    </div>
+  );
+}
 
 function SectionHeader({
   primary,
   secondary,
   tone,
+  action,
 }: {
   primary: string;
   secondary?: string;
   tone?: 'overdue' | 'today' | 'default';
+  action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 pt-5 pb-2 px-2 border-b border-line-subtle">
+    <div className="h-9 flex items-center justify-between gap-3 px-2 bg-surface-muted/40 border-b border-line-subtle">
       <h3 className="flex items-baseline gap-2">
         <span
           className={cn(
-            'text-[13px] font-semibold',
+            'text-[12px] font-semibold',
             tone === 'overdue'
               ? 'text-red-600'
               : tone === 'today'
@@ -39,55 +199,67 @@ function SectionHeader({
         >
           {primary}
         </span>
-        {secondary && <span className="text-[12px] text-ink-muted">{secondary}</span>}
+        {secondary && (
+          <span className="text-[11px] text-ink-muted tabular-nums">{secondary}</span>
+        )}
       </h3>
+      {action}
     </div>
   );
 }
 
-function InboxView({ tasks }: { tasks: Task[] }) {
-  const open = tasks.filter((t) => !t.done);
-  const done = tasks.filter((t) => t.done);
+function InboxView({
+  tasks,
+  sort,
+  composerKey,
+}: {
+  tasks: Task[];
+  sort: Sort;
+  composerKey: number;
+}) {
   const clearDone = useClearCompleted();
+  const open = sortTasks(tasks.filter((t) => !t.done), sort);
+  const done = sortTasks(tasks.filter((t) => t.done), sort);
 
   return (
     <>
-      <TaskComposer />
+      <div className="mb-4">
+        <TaskComposer key={composerKey} autoFocus={composerKey > 0} />
+      </div>
 
       {open.length === 0 && done.length === 0 ? (
         <EmptyState
           icon={<HugeiconsIcon icon={CheckmarkSquare01Icon} size={18} />}
           title="Inbox zero"
-          description="Add a task above. Keep quick captures here; drag to a day when you're ready to commit."
+          description="Add a task above. Keep quick captures here; move them to a day when you're ready."
           className="py-16"
         />
       ) : (
         <>
           {open.length > 0 && (
-            <section>
-              <div className="flex flex-col">
-                {open.map((t) => (
-                  <TaskRow key={t.id} task={t} />
-                ))}
-              </div>
-            </section>
+            <div className="flex flex-col">
+              {open.map((t) => (
+                <TaskRow key={t.id} task={t} />
+              ))}
+            </div>
           )}
 
           {done.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between pt-4 pb-2 px-2 border-b border-line-subtle">
-                <h3 className="text-[12px] font-medium uppercase tracking-wide text-ink-subtle">
-                  Completed · {done.length}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => clearDone.mutate()}
-                  disabled={clearDone.isPending}
-                >
-                  {clearDone.isPending ? 'Clearing…' : 'Clear completed'}
-                </Button>
-              </div>
+            <section className="mt-4">
+              <SectionHeader
+                primary="Completed"
+                secondary={`${done.length}`}
+                action={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearDone.mutate()}
+                    disabled={clearDone.isPending}
+                  >
+                    {clearDone.isPending ? 'Clearing…' : 'Clear'}
+                  </Button>
+                }
+              />
               <div className="flex flex-col">
                 {done.map((t) => (
                   <TaskRow key={t.id} task={t} />
@@ -101,23 +273,43 @@ function InboxView({ tasks }: { tasks: Task[] }) {
   );
 }
 
-function TodayView({ tasks }: { tasks: Task[] }) {
+function TodayView({
+  tasks,
+  sort,
+  composerKey,
+}: {
+  tasks: Task[];
+  sort: Sort;
+  composerKey: number;
+}) {
   const today = startOfDay(new Date());
   const { overdue, dueToday } = useMemo(() => {
     const open = tasks.filter((t) => !t.done && t.due_at);
     return {
-      overdue: open.filter((t) => isOverdue(t.due_at!)),
-      dueToday: open.filter((t) => {
-        const d = parseISO(t.due_at!);
-        return isSameDay(d, today);
-      }),
+      overdue: sortTasks(
+        open.filter((t) => isOverdue(t.due_at!)),
+        sort,
+      ),
+      dueToday: sortTasks(
+        open.filter((t) => {
+          const d = parseISO(t.due_at!);
+          return isSameDay(d, today);
+        }),
+        sort,
+      ),
     };
-  }, [tasks, today]);
+  }, [tasks, today, sort]);
 
   if (overdue.length === 0 && dueToday.length === 0) {
     return (
       <>
-        <TaskComposer defaultDueAt={today.toISOString()} />
+        <div className="mb-4">
+          <TaskComposer
+            key={composerKey}
+            defaultDueAt={today.toISOString()}
+            autoFocus={composerKey > 0}
+          />
+        </div>
         <EmptyState
           icon={<HugeiconsIcon icon={CheckmarkSquare01Icon} size={18} />}
           title="Nothing due today"
@@ -134,7 +326,7 @@ function TodayView({ tasks }: { tasks: Task[] }) {
         <section>
           <SectionHeader
             primary="Overdue"
-            secondary={`${overdue.length} ${overdue.length === 1 ? 'task' : 'tasks'}`}
+            secondary={`${overdue.length}`}
             tone="overdue"
           />
           <div className="flex flex-col">
@@ -148,11 +340,7 @@ function TodayView({ tasks }: { tasks: Task[] }) {
       <section>
         <SectionHeader
           primary="Today"
-          secondary={
-            dueToday.length > 0
-              ? `${dueToday.length} ${dueToday.length === 1 ? 'task' : 'tasks'}`
-              : undefined
-          }
+          secondary={dueToday.length > 0 ? `${dueToday.length}` : undefined}
           tone="today"
         />
         <div className="flex flex-col">
@@ -160,15 +348,27 @@ function TodayView({ tasks }: { tasks: Task[] }) {
             <TaskRow key={t.id} task={t} hideDate />
           ))}
         </div>
-        <div className="pt-2">
-          <TaskComposer defaultDueAt={today.toISOString()} />
+        <div className="px-2 py-2">
+          <TaskComposer
+            key={composerKey}
+            defaultDueAt={today.toISOString()}
+            autoFocus={composerKey > 0}
+          />
         </div>
       </section>
     </>
   );
 }
 
-function UpcomingView({ tasks }: { tasks: Task[] }) {
+function UpcomingView({
+  tasks,
+  sort,
+  composerKey,
+}: {
+  tasks: Task[];
+  sort: Sort;
+  composerKey: number;
+}) {
   const today = startOfDay(new Date());
   const future = tasks.filter((t) => {
     if (t.done || !t.due_at) return false;
@@ -176,12 +376,17 @@ function UpcomingView({ tasks }: { tasks: Task[] }) {
     return d >= today;
   });
   const buckets = groupByDay(future);
-  const undated = tasks.filter((t) => !t.done && !t.due_at);
+  const undated = sortTasks(
+    tasks.filter((t) => !t.done && !t.due_at),
+    sort,
+  );
 
   if (buckets.length === 0 && undated.length === 0) {
     return (
       <>
-        <TaskComposer />
+        <div className="mb-4">
+          <TaskComposer key={composerKey} autoFocus={composerKey > 0} />
+        </div>
         <EmptyState
           icon={<HugeiconsIcon icon={CheckmarkSquare01Icon} size={18} />}
           title="No upcoming tasks"
@@ -196,12 +401,11 @@ function UpcomingView({ tasks }: { tasks: Task[] }) {
     <>
       {buckets.map(({ date, items }) => {
         const heading = dayHeading(date);
-        const tone =
-          isSameDay(date, today)
-            ? 'today'
-            : date < today
-              ? 'overdue'
-              : 'default';
+        const tone = isSameDay(date, today)
+          ? 'today'
+          : date < today
+            ? 'overdue'
+            : 'default';
         return (
           <section key={date.toISOString()}>
             <SectionHeader
@@ -210,11 +414,11 @@ function UpcomingView({ tasks }: { tasks: Task[] }) {
               tone={tone}
             />
             <div className="flex flex-col">
-              {items.map((t) => (
+              {sortTasks(items, sort).map((t) => (
                 <TaskRow key={t.id} task={t} hideDate />
               ))}
             </div>
-            <div className="pt-2 pb-3">
+            <div className="px-2 py-2">
               <TaskComposer defaultDueAt={date.toISOString()} />
             </div>
           </section>
@@ -244,6 +448,7 @@ const VIEWS: { id: View; label: string }[] = [
 export function TasksPage() {
   useDocumentTitle('Tasks');
   const [view, setView] = useState<View>('today');
+  const [sort, setSort] = useState<Sort>({ key: 'default', dir: 'asc' });
   const { data: tasks, isLoading } = useTasks();
   const all = tasks ?? [];
 
@@ -260,14 +465,25 @@ export function TasksPage() {
     };
   }, [all]);
 
+  const [composerKey, setComposerKey] = useState(0);
+  const bumpComposer = () => setComposerKey((k) => k + 1);
+
   return (
     <>
-      <PageHeader title="Tasks" />
+      <PageHeader
+        title="Tasks"
+        trailing={
+          <Button size="sm" variant="default" onClick={bumpComposer}>
+            <HugeiconsIcon icon={PlusSignIcon} size={12} strokeWidth={2.4} />
+            Add task
+          </Button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[760px] mx-auto px-6 py-8">
+        <div className="max-w-[860px] mx-auto px-4 py-6">
           <Tabs.Root value={view} onValueChange={(v) => setView(v as View)}>
-            <Tabs.List className="flex items-center gap-1 border-b border-line-subtle mb-5">
+            <Tabs.List className="flex items-center gap-1 border-b border-line-subtle mb-4 px-2">
               {VIEWS.map((v) => (
                 <Tabs.Trigger
                   key={v.id}
@@ -292,14 +508,17 @@ export function TasksPage() {
               </div>
             ) : (
               <>
-                <Tabs.Content value="inbox" className="space-y-4 focus:outline-none">
-                  <InboxView tasks={all} />
+                <Tabs.Content value="inbox" className="focus:outline-none">
+                  <ColumnHeader sort={sort} onSortChange={setSort} />
+                  <InboxView tasks={all} sort={sort} composerKey={composerKey} />
                 </Tabs.Content>
-                <Tabs.Content value="today" className="space-y-4 focus:outline-none">
-                  <TodayView tasks={all} />
+                <Tabs.Content value="today" className="focus:outline-none">
+                  <ColumnHeader sort={sort} onSortChange={setSort} />
+                  <TodayView tasks={all} sort={sort} composerKey={composerKey} />
                 </Tabs.Content>
                 <Tabs.Content value="upcoming" className="focus:outline-none">
-                  <UpcomingView tasks={all} />
+                  <ColumnHeader sort={sort} onSortChange={setSort} />
+                  <UpcomingView tasks={all} sort={sort} composerKey={composerKey} />
                 </Tabs.Content>
               </>
             )}

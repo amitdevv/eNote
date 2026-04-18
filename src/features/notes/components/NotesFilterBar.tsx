@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Command } from 'cmdk';
 import * as Popover from '@radix-ui/react-popover';
 import { cn } from '@/shared/lib/cn';
 import {
@@ -91,36 +90,47 @@ function LabelPicker({
     onChange(next);
   }
 
+  const [query, setQuery] = useState('');
+  const filtered = labels.filter((l) =>
+    l.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
   return (
-    <Command loop className="w-[240px]">
+    <div className="w-[240px]">
       <div className="flex items-center gap-2 border-b border-line-subtle px-2.5 h-9">
         <HugeiconsIcon icon={Search01Icon} size={13} className="text-ink-subtle shrink-0" />
-        <Command.Input
+        <input
+          autoFocus
           placeholder="Search labels…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           className="flex-1 bg-transparent text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
         />
       </div>
-      <Command.List className="max-h-[260px] overflow-y-auto p-1">
-        <Command.Empty className="py-6 text-center text-[12px] text-ink-muted">
-          {labels.length === 0 ? 'No labels yet. Create one in Settings.' : 'No matches.'}
-        </Command.Empty>
-        {labels.map((l) => {
-          const checked = selected.includes(l.name);
-          return (
-            <Command.Item
-              key={l.id}
-              value={l.name}
-              onSelect={() => toggle(l.name)}
-              className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
-            >
-              <LabelDot color={l.color} />
-              <span className="truncate flex-1">{l.name}</span>
-              {checked && <span className="text-brand text-[13px]">✓</span>}
-            </Command.Item>
-          );
-        })}
-      </Command.List>
-    </Command>
+      <div className="max-h-[260px] overflow-y-auto p-1 flex flex-col">
+        {filtered.length === 0 ? (
+          <div className="py-6 text-center text-[12px] text-ink-muted">
+            {labels.length === 0 ? 'No labels yet. Create one in Settings.' : 'No matches.'}
+          </div>
+        ) : (
+          filtered.map((l) => {
+            const checked = selected.includes(l.name);
+            return (
+              <button
+                key={l.id}
+                type="button"
+                onClick={() => toggle(l.name)}
+                className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default hover:bg-surface-muted transition-colors text-left"
+              >
+                <LabelDot color={l.color} />
+                <span className="truncate flex-1">{l.name}</span>
+                {checked && <span className="text-brand text-[13px]">✓</span>}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -141,7 +151,7 @@ export function NotesFilterBar({
   onChange: (next: FilterState) => void;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [activeKind, setActiveKind] = useState<FilterKind | null>(null);
+  const [pickerView, setPickerView] = useState<'main' | 'labels'>('main');
   const [labelsOpen, setLabelsOpen] = useState(false);
   const colorMap = useLabelColorMap();
 
@@ -149,12 +159,13 @@ export function NotesFilterBar({
     state.pinnedOnly || state.labels.length > 0 || state.sort !== 'updated';
 
   function addFilter(kind: FilterKind) {
-    setPickerOpen(false);
     if (kind === 'pinned') {
       onChange({ ...state, pinnedOnly: true });
+      setPickerOpen(false);
+      setPickerView('main');
     } else if (kind === 'labels') {
-      setActiveKind('labels');
-      setLabelsOpen(true);
+      // Stay in the same popover — switch to the labels sub-view.
+      setPickerView('labels');
     }
   }
 
@@ -171,13 +182,7 @@ export function NotesFilterBar({
       {/* Active: Labels (popover to edit selection). Shows colored chip if single,
           else a neutral chip with a count. */}
       {state.labels.length > 0 && (
-        <Popover.Root
-          open={labelsOpen && activeKind === 'labels'}
-          onOpenChange={(o) => {
-            setLabelsOpen(o);
-            if (o) setActiveKind('labels');
-          }}
-        >
+        <Popover.Root open={labelsOpen} onOpenChange={setLabelsOpen}>
           <Popover.Trigger asChild>
             <button
               type="button"
@@ -241,7 +246,13 @@ export function NotesFilterBar({
       )}
 
       {/* + Filter trigger */}
-      <Popover.Root open={pickerOpen} onOpenChange={setPickerOpen}>
+      <Popover.Root
+        open={pickerOpen}
+        onOpenChange={(o) => {
+          setPickerOpen(o);
+          if (!o) setPickerView('main');
+        }}
+      >
         <Popover.Trigger asChild>
           <button
             type="button"
@@ -255,36 +266,29 @@ export function NotesFilterBar({
           <Popover.Content
             sideOffset={6}
             align="start"
-            className="z-50 w-[220px] rounded-lg border border-line-default bg-surface-panel shadow-md overflow-hidden data-[state=open]:animate-fade-in"
+            className="z-50 rounded-lg border border-line-default bg-surface-panel shadow-md overflow-hidden data-[state=open]:animate-fade-in"
           >
-            <Command loop>
-              <div className="flex items-center gap-2 border-b border-line-subtle px-2.5 h-9">
-                <HugeiconsIcon icon={Search01Icon} size={13} className="text-ink-subtle shrink-0" />
-                <Command.Input
-                  placeholder="Filter by…"
-                  className="flex-1 bg-transparent text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
-                />
+            {pickerView === 'main' ? (
+              <div className="w-[220px] flex flex-col p-1">
+                {ALL_FILTERS.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => addFilter(f.id)}
+                    className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default hover:bg-surface-muted transition-colors text-left"
+                  >
+                    <HugeiconsIcon icon={f.icon} size={14} className="text-ink-subtle" />
+                    <span className="flex-1">{f.label}</span>
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={12} className="text-ink-subtle" />
+                  </button>
+                ))}
               </div>
-              <Command.List className="p-1">
-                <Command.Empty className="py-6 text-center text-[12px] text-ink-muted">
-                  No filters.
-                </Command.Empty>
-                <Command.Group>
-                  {ALL_FILTERS.map((f) => (
-                    <Command.Item
-                      key={f.id}
-                      value={f.label}
-                      onSelect={() => addFilter(f.id)}
-                      className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
-                    >
-                      <HugeiconsIcon icon={f.icon} size={14} className="text-ink-subtle" />
-                      <span className="flex-1">{f.label}</span>
-                      <HugeiconsIcon icon={ArrowRight01Icon} size={12} className="text-ink-subtle" />
-                    </Command.Item>
-                  ))}
-                </Command.Group>
-              </Command.List>
-            </Command>
+            ) : (
+              <LabelPicker
+                selected={state.labels}
+                onChange={(next) => onChange({ ...state, labels: next })}
+              />
+            )}
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

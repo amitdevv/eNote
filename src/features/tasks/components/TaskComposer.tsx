@@ -74,12 +74,12 @@ export function TaskComposer({ defaultDueAt, autoFocus, onCancel }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 h-9 w-full px-2 rounded-md text-[13px] text-ink-muted hover:bg-surface-muted/60 hover:text-ink-strong transition-colors"
+        className="flex items-center gap-2 h-10 w-full px-3 rounded-lg border border-dashed border-line-default bg-surface-raised text-[13px] text-ink-muted hover:border-brand/60 hover:text-ink-strong hover:bg-surface-muted/40 transition-colors"
       >
-        <span className="flex size-5 items-center justify-center rounded-full bg-brand/90 text-white">
+        <span className="flex size-5 items-center justify-center rounded-full bg-brand text-white">
           <HugeiconsIcon icon={PlusSignIcon} size={12} strokeWidth={2.4} />
         </span>
-        Add task
+        <span className="font-medium">Add task</span>
       </button>
     );
   }

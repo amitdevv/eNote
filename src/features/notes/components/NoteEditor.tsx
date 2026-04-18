@@ -9,6 +9,17 @@ import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import Typography from '@tiptap/extension-typography';
+import TextAlign from '@tiptap/extension-text-align';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import Image from '@tiptap/extension-image';
+import CharacterCount from '@tiptap/extension-character-count';
+import Focus from '@tiptap/extension-focus';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
 import { createLowlight } from 'lowlight';
 import { SlashCommand } from '../slashCommand';
 // Common languages — add more by importing from `highlight.js/lib/languages/*`
@@ -61,11 +72,17 @@ import {
   Link01Icon,
   Heading01Icon,
   Heading02Icon,
+  Heading03Icon,
   LeftToRightListBulletIcon,
   LeftToRightListNumberIcon,
   CheckmarkSquare01Icon,
   QuoteUpIcon,
   SourceCodeCircleIcon,
+  CodeIcon,
+  MinusSignIcon,
+  AlignLeftIcon,
+  AlignHorizontalCenterIcon,
+  AlignRightIcon,
   Delete01Icon,
 } from '@/shared/lib/icons';
 
@@ -98,6 +115,17 @@ export function NoteEditor({ initialContent, onChange }: Props) {
       }),
       Underline,
       Highlight.configure({ multicolor: true }),
+      Typography,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Subscript,
+      Superscript,
+      Image.configure({ inline: false, allowBase64: false }),
+      CharacterCount,
+      Focus.configure({ className: 'has-focus', mode: 'shallowest' }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({
@@ -237,16 +265,23 @@ export function NoteEditor({ initialContent, onChange }: Props) {
             <BtnIcon active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} icon={TextItalicIcon} label="Italic" kbd="⌘I" />
             <BtnIcon active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} icon={TextUnderlineIcon} label="Underline" kbd="⌘U" />
             <BtnIcon active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} icon={TextStrikethroughIcon} label="Strikethrough" />
+            <BtnIcon active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} icon={CodeIcon} label="Inline code" kbd="⌘E" />
             <Divider />
             <BtnIcon active={editor.isActive('heading', { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} icon={Heading01Icon} label="Heading 1" />
             <BtnIcon active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} icon={Heading02Icon} label="Heading 2" />
+            <BtnIcon active={editor.isActive('heading', { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} icon={Heading03Icon} label="Heading 3" />
             <Divider />
             <BtnIcon active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} icon={LeftToRightListBulletIcon} label="Bullet list" />
             <BtnIcon active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} icon={LeftToRightListNumberIcon} label="Numbered list" />
             <BtnIcon active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} icon={CheckmarkSquare01Icon} label="Task list" />
             <Divider />
+            <BtnIcon active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()} icon={AlignLeftIcon} label="Align left" />
+            <BtnIcon active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()} icon={AlignHorizontalCenterIcon} label="Align center" />
+            <BtnIcon active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} icon={AlignRightIcon} label="Align right" />
+            <Divider />
             <BtnIcon active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} icon={QuoteUpIcon} label="Quote" />
             <BtnIcon active={editor.isActive('codeBlock')} onClick={toggleCodeBlockSmart} icon={SourceCodeCircleIcon} label="Code block" />
+            <BtnIcon active={false} onClick={() => editor.chain().focus().setHorizontalRule().run()} icon={MinusSignIcon} label="Divider" />
             <Popover.Root open={highlightOpen} onOpenChange={setHighlightOpen}>
               <Popover.Trigger asChild>
                 <button
@@ -338,6 +373,12 @@ export function NoteEditor({ initialContent, onChange }: Props) {
       </BubbleMenu>
 
       <EditorContent editor={editor} />
+
+      <div className="mt-8 pt-3 border-t border-line-subtle flex items-center gap-3 text-[11px] text-ink-subtle tabular-nums">
+        <span>{editor.storage.characterCount.words()} words</span>
+        <span className="text-ink-default/20">·</span>
+        <span>{editor.storage.characterCount.characters()} chars</span>
+      </div>
     </>
   );
 }

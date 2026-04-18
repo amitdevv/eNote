@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotes } from '../hooks';
 import { useNotesUI } from '../store';
-import { NoteRow } from './NoteRow';
+import { NoteCard } from './NoteCard';
 import { NotesSkeleton } from './NoteRowSkeleton';
 import { BulkActionBar } from './BulkActionBar';
 import { NotesFilterBar, DEFAULT_FILTERS, type FilterState } from './NotesFilterBar';
@@ -105,11 +105,11 @@ export function NotesListPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.12 }}
-            className="divide-y divide-line-subtle"
+            className="grid gap-3 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
           >
             <AnimatePresence initial={false}>
               {visible.map((n) => (
-                <NoteRow
+                <NoteCard
                   key={n.id}
                   note={n}
                   selected={selected.has(n.id)}
