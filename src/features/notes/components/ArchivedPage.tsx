@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useNotes, useUpdateNote, useDeleteNote } from '../hooks';
+import { getDisplayTitle } from '../types';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { formatRelative } from '@/shared/lib/date';
@@ -55,18 +56,26 @@ export function ArchivedPage() {
             className="divide-y divide-line-subtle"
           >
             {notes.map((n) => {
-              const preview = n.content_text?.trim().slice(0, 140) || 'Empty note';
+              const title = getDisplayTitle(n);
+              const hasRealTitle = !!n.title?.trim() && n.title !== 'Untitled';
+              const preview = hasRealTitle
+                ? (n.content_text?.trim().slice(0, 180) || 'Empty note')
+                : (n.content_text?.split('\n').slice(1).join(' ').trim().slice(0, 180) || '');
               return (
                 <Link
                   key={n.id}
                   to={`/notes/${n.id}`}
-                  className="group flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60 transition-colors duration-150"
+                  className="group flex items-center gap-3 px-4 py-3.5 hover:bg-surface-muted/60 transition-colors duration-150"
                 >
                   <div className="flex-1 min-w-0">
                     <span className="text-title font-medium text-ink-strong truncate block">
-                      {n.title || 'Untitled'}
+                      {title}
                     </span>
-                    <p className="mt-0.5 text-preview text-ink-muted truncate">{preview}</p>
+                    {preview ? (
+                      <p className="mt-0.5 text-preview text-ink-muted truncate">{preview}</p>
+                    ) : (
+                      <p className="mt-0.5 text-preview text-ink-placeholder italic">Empty note</p>
+                    )}
                   </div>
                   <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
                     <button

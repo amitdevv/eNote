@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotesUI } from '@/features/notes/store';
 import { useCreateNote, useSearchNotes } from '@/features/notes/hooks';
+import { getDisplayTitle } from '@/features/notes/types';
 import { useAuth } from '@/features/auth/hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { Kbd } from '@/shared/components/ui/kbd';
@@ -76,20 +77,23 @@ export function CommandMenu() {
 
           {debouncedQuery.trim() && results && results.length > 0 && (
             <Command.Group heading="Notes" className={groupCls}>
-              {results.map((n) => (
-                <Command.Item
-                  key={n.id}
-                  value={`note-${n.id}-${n.title}`}
-                  onSelect={() => {
-                    close();
-                    navigate(`/notes/${n.id}`);
-                  }}
-                  className={itemCls}
-                >
-                  <HugeiconsIcon icon={Note01Icon} size={14} className="text-ink-subtle" />
-                  <span className="truncate flex-1">{n.title || 'Untitled'}</span>
-                </Command.Item>
-              ))}
+              {results.map((n) => {
+                const t = getDisplayTitle(n);
+                return (
+                  <Command.Item
+                    key={n.id}
+                    value={`note-${n.id}-${t}`}
+                    onSelect={() => {
+                      close();
+                      navigate(`/notes/${n.id}`);
+                    }}
+                    className={itemCls}
+                  >
+                    <HugeiconsIcon icon={Note01Icon} size={14} className="text-ink-subtle" />
+                    <span className="truncate flex-1">{t}</span>
+                  </Command.Item>
+                );
+              })}
             </Command.Group>
           )}
 

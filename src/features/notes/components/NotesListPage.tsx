@@ -33,7 +33,16 @@ export function NotesListPage() {
   return (
     <>
       <PageHeader
-        title="Notes"
+        title={
+          <span className="flex items-center gap-2">
+            Notes
+            {notes && notes.length > 0 && (
+              <span className="text-[12px] font-normal text-ink-subtle tabular-nums">
+                {notes.length}
+              </span>
+            )}
+          </span>
+        }
         trailing={
           <Button size="sm" variant="outline" onClick={handleCreate} disabled={createNote.isPending}>
             New note
