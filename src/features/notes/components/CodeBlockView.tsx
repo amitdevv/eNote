@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { NodeViewWrapper, NodeViewContent, type NodeViewProps } from '@tiptap/react';
 import { toast } from 'sonner';
 import * as Popover from '@radix-ui/react-popover';
@@ -77,7 +77,7 @@ function ChevronIcon() {
   );
 }
 
-export function CodeBlockView({ node, updateAttributes }: NodeViewProps) {
+function CodeBlockViewImpl({ node, updateAttributes }: NodeViewProps) {
   const [open, setOpen] = useState(false);
   const [copiedAt, setCopiedAt] = useState(0);
   const language = (node.attrs.language ?? null) as string | null;
@@ -193,3 +193,23 @@ export function CodeBlockView({ node, updateAttributes }: NodeViewProps) {
     </NodeViewWrapper>
   );
 }
+
+/**
+ * Memo on attrs only — NOT on content.
+ *
+ * Why: TipTap re-passes a new `node` prop on every keystroke. Without memo,
+ * React re-renders the whole NodeView on every character, which rebuilds
+ * the <pre><code> DOM that ProseMirror holds a stable reference to.
+ * ProseMirror then tries to place the selection on the stale DOM node
+ * — the cursor jumps out of the block.
+ *
+ * Content updates still work because TipTap writes them into NodeViewContent
+ * via ProseMirror directly; React doesn't need to know about them.
+ * We only need to re-render when attrs change (language, wrapped).
+ */
+export const CodeBlockView = memo(
+  CodeBlockViewImpl,
+  (prev, next) =>
+    prev.node.attrs.language === next.node.attrs.language &&
+    prev.node.attrs.wrapped === next.node.attrs.wrapped
+);
