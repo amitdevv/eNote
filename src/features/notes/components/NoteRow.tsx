@@ -5,6 +5,7 @@ import { formatRelative } from '@/shared/lib/date';
 import { HugeiconsIcon, PinIcon, ArchiveIcon } from '@/shared/lib/icons';
 import { useUpdateNote } from '../hooks';
 import { cn } from '@/shared/lib/cn';
+import { LabelChip } from './LabelChip';
 
 export function NoteRow({ note }: { note: Note }) {
   const update = useUpdateNote();
@@ -41,12 +42,7 @@ export function NoteRow({ note }: { note: Note }) {
           {note.labels && note.labels.length > 0 && (
             <span className="flex items-center gap-1 shrink-0">
               {note.labels.slice(0, 3).map((l) => (
-                <span
-                  key={l}
-                  className="inline-flex h-5 items-center rounded-full bg-surface-muted px-1.5 text-[10px] font-medium text-ink-muted"
-                >
-                  {l}
-                </span>
+                <LabelChip key={l} label={l} size="xs" />
               ))}
               {note.labels.length > 3 && (
                 <span className="text-[11px] text-ink-subtle">+{note.labels.length - 3}</span>

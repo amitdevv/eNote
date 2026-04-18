@@ -1,6 +1,8 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { HugeiconsIcon, Delete01Icon, PlusSignIcon } from '@/shared/lib/icons';
+import { LabelChip } from './LabelChip';
+import { labelColor } from '../labelColor';
 
 type Props = {
   labels: string[];
@@ -39,23 +41,22 @@ export function LabelEditor({ labels, onChange, className }: Props) {
 
   return (
     <div className={cn('flex items-center flex-wrap gap-1.5', className)}>
-      {labels.map((label) => (
-        <span
-          key={label}
-          className="inline-flex h-6 items-center gap-1 rounded-full bg-surface-muted pl-2 pr-0.5 text-[11px] font-medium text-ink-default"
-        >
-          <span className="size-1.5 rounded-full bg-brand/70" />
-          <span>{label}</span>
-          <button
-            type="button"
-            onClick={() => remove(label)}
-            aria-label={`Remove label ${label}`}
-            className="h-5 w-5 flex items-center justify-center text-ink-subtle hover:text-ink-strong rounded-full transition-colors"
-          >
-            <HugeiconsIcon icon={Delete01Icon} size={10} />
-          </button>
-        </span>
-      ))}
+      {labels.map((label) => {
+        const c = labelColor(label);
+        return (
+          <LabelChip key={label} label={label} size="sm" className="pr-0.5">
+            <button
+              type="button"
+              onClick={() => remove(label)}
+              aria-label={`Remove label ${label}`}
+              className="h-4 w-4 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors"
+              style={{ color: c.text }}
+            >
+              <HugeiconsIcon icon={Delete01Icon} size={10} />
+            </button>
+          </LabelChip>
+        );
+      })}
 
       {editing ? (
         <input
@@ -69,7 +70,7 @@ export function LabelEditor({ labels, onChange, className }: Props) {
             setEditing(false);
           }}
           placeholder="label, label…"
-          className="h-6 w-[120px] bg-transparent text-[11px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
+          className="h-6 w-[140px] bg-transparent text-[12px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none"
         />
       ) : (
         <button

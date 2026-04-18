@@ -18,7 +18,7 @@ Everything below descends from those two:
 
 1. **Chrome recedes, content leads.** Sidebar is dimmer than content. Main surface is the brightest thing on screen. Controls are low-contrast until hovered.
 2. **Warm neutrals, not cool neutrals.** Our grays have a faint warm tint — less clinical, more paper-like. Pure blue-tinted grays feel sterile at density.
-3. **One accent, rationed.** Teal (`#009BB6`) appears in exactly two places: workspace avatar, and active identity (selected workspace). Never on buttons, rows, or tags. Tag/category colors — when we add them — use desaturated, not full saturation.
+3. **One accent + one bounded palette.** Teal (`#009BB6`) is reserved for identity (workspace avatar, selected state, pin). Labels/statuses/priorities use the separate 12-hue palette in §2.6 — never the brand teal. Buttons and rows stay neutral.
 4. **Soft depth over hard edges.** `shadow-xs` + 1px translucent border beats a 2px solid border. Fewer separators overall; if two elements are on different surfaces, you don't need a line between them.
 5. **Rounded, restrained.** 8px default radius. 12px for surfaces/cards. 9999px for pill controls. Never 4px (too sharp), never 16px (too playful).
 6. **Text hierarchy by weight + shade, not size.** Three sizes cover 95% of the UI: 12px (meta), 13px (body UI), 16px (content). Differentiate via weight (400/500/600) and ink shade.
@@ -106,7 +106,41 @@ Use Tailwind defaults. Canonical values:
 
 Dark mode: same structure, swap `rgba(0,0,0,*)` → `rgba(0,0,0,.35)` and add a top-edge highlight `inset 0 1px 0 rgba(255,255,255,.04)` for raised surfaces.
 
-### 2.6 Typography
+### 2.6 Accent palette — labels, statuses, priorities
+
+Linear's colored-dot + tinted-pill pattern is the one place the app earns color.
+Each label string hashes deterministically to a palette entry (see
+`src/features/notes/labelColor.ts`) so `work` is always the same amber,
+`idea` always the same blue — no per-user config.
+
+Rules:
+- Use the palette only for **labels, statuses, and priorities**. Never for chrome or body surfaces.
+- A pill has three parts: **dot** (the color signal), **bg** (quiet tint), **text** (readable on the tint).
+- On the notes list row we use `size="xs"` (20px tall); on the editor and filters `size="sm"` (24px).
+- The dot is also used alone (without the pill) in pickers, where the label text sits next to it — matches Linear's status picker.
+
+| Family | `--dot` | `--bg` | `--text` |
+|---|---|---|---|
+| amber | `#F59E0B` | `#FEF3C7` | `#92400E` |
+| yellow | `#EAB308` | `#FEF9C3` | `#854D0E` |
+| lime | `#84CC16` | `#ECFCCB` | `#3F6212` |
+| green | `#22C55E` | `#DCFCE7` | `#166534` |
+| teal | `#14B8A6` | `#CCFBF1` | `#115E59` |
+| cyan | `#06B6D4` | `#CFFAFE` | `#155E75` |
+| blue | `#3B82F6` | `#DBEAFE` | `#1E40AF` |
+| indigo | `#6366F1` | `#E0E7FF` | `#3730A3` |
+| purple | `#A855F7` | `#F3E8FF` | `#6B21A8` |
+| pink | `#EC4899` | `#FCE7F3` | `#9D174D` |
+| red | `#EF4444` | `#FEE2E2` | `#991B1B` |
+| stone | `#78716C` | `#F5F5F4` | `#44403C` |
+
+**Why 12 entries, not 6 or 20?** Six is too few — frequent collisions between
+unrelated labels. Twenty means adjacent hues are indistinguishable. Twelve
+lets every label feel distinct while staying within a curated set.
+
+**Dark mode note** (when we add it): keep the dots, swap the bg to `color-mix(dot, #000 70%)` and text to `color-mix(dot, #FFF 60%)`. Already roughed in §2.2.
+
+### 2.7 Typography
 
 **Font stack:** `Inter Variable, system-ui, sans-serif` for UI. `Geist` for branded content. Monospace: `Fira Code, ui-monospace`.
 
@@ -122,7 +156,7 @@ Dark mode: same structure, swap `rgba(0,0,0,*)` → `rgba(0,0,0,.35)` and add a 
 
 **Letter spacing:** `-0.01em` on size ≥ 14px. Default otherwise.
 
-### 2.7 Motion
+### 2.8 Motion
 
 | Token | Value | Usage |
 |---|---|---|
@@ -184,6 +218,9 @@ Each primitive lives in `src/components/ui/`. Pattern: `forwardRef`, `cva` varia
 - `EmptyState` — centered icon + title + caption + optional CTA.
 - `Avatar` — initials or image, `rounded-lg` for workspace, `rounded-full` for people.
 - `Badge` / `Chip` — count indicators, tag pills.
+- `LabelChip` — tinted pill with colored dot + label text. `xs` (20px) / `sm` (24px) / `md` (28px). Hashes string to §2.6 palette.
+- `LabelDot` — dot only, for pickers where text sits beside it.
+- `LabelEditor` — inline tag input with chips, Enter/comma commits, Backspace removes last, auto-strips `#`, lowercases, dedupes.
 - `Breadcrumb` — `Workspace › ID › Title` pattern for detail views. `ink-default` 13px medium, `ink-subtle` chevron separator. Truncates middle segment on narrow widths.
 - `PropertyCard` — 316px right-rail card. `surface-raised` + `rounded-[10px]` + 1px `#F7F7F7` border + `shadow-xs`. Header: label 13px regular `ink-subtle` + caret. Rows: 28px pill buttons with 14–16px icon + label.
 - `PillGroup` — horizontal segmented group of icon buttons (e.g. copy URL / copy ID / copy branch / copy-as-prompt). Single rounded container, 1px divider between segments, no gaps. 28px tall.

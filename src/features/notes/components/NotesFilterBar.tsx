@@ -19,6 +19,7 @@ import {
 } from '@/shared/lib/icons';
 import type { NoteSort } from '../api';
 import { useUserLabels } from '../hooks';
+import { LabelChip, LabelDot } from './LabelChip';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -110,21 +111,11 @@ function LabelPicker({
               key={label}
               value={label}
               onSelect={() => toggle(label)}
-              className="flex items-center gap-2 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
+              className="flex items-center gap-2.5 rounded-md px-2 h-8 text-[13px] text-ink-default cursor-pointer data-[selected=true]:bg-surface-muted"
             >
-              <span
-                className={cn(
-                  'size-4 rounded border flex items-center justify-center shrink-0 transition-colors',
-                  checked ? 'bg-brand border-brand text-white' : 'border-line-default'
-                )}
-              >
-                {checked && (
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4l2.5 2.5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </span>
-              <span className="truncate">{label}</span>
+              <LabelDot label={label} />
+              <span className="truncate flex-1">{label}</span>
+              {checked && <span className="text-brand text-[13px]">✓</span>}
             </Command.Item>
           );
         })}
@@ -176,7 +167,8 @@ export function NotesFilterBar({
         </ChipShell>
       )}
 
-      {/* Active: Labels (popover to edit selection) */}
+      {/* Active: Labels (popover to edit selection). Shows colored chip if single,
+          else a neutral chip with a count. */}
       {state.labels.length > 0 && (
         <Popover.Root
           open={labelsOpen && activeKind === 'labels'}
@@ -188,25 +180,40 @@ export function NotesFilterBar({
           <Popover.Trigger asChild>
             <button
               type="button"
-              className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-muted hover:bg-surface-active text-[12px] font-medium text-ink-default transition-colors pl-2.5 pr-1"
+              className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
             >
-              <HugeiconsIcon icon={Note01Icon} size={12} className="text-ink-subtle" />
-              <span>
-                Labels
-                <span className="mx-1 text-ink-subtle">·</span>
-                {state.labels.length === 1 ? state.labels[0] : `${state.labels.length}`}
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange({ ...state, labels: [] });
-                }}
-                aria-label="Clear labels filter"
-                className="h-5 w-5 flex items-center justify-center rounded text-ink-subtle hover:text-ink-strong ml-0.5"
-              >
-                <HugeiconsIcon icon={Delete01Icon} size={10} />
-              </button>
+              {state.labels.length === 1 ? (
+                <LabelChip label={state.labels[0]} size="sm" className="pr-0.5">
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({ ...state, labels: [] });
+                    }}
+                    className="h-4 w-4 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors"
+                  >
+                    <HugeiconsIcon icon={Delete01Icon} size={10} />
+                  </span>
+                </LabelChip>
+              ) : (
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-muted text-[12px] font-medium text-ink-default pl-2 pr-1">
+                  <span className="flex items-center -space-x-1">
+                    {state.labels.slice(0, 3).map((l) => (
+                      <LabelDot key={l} label={l} size={8} className="ring-2 ring-surface-panel" />
+                    ))}
+                  </span>
+                  <span>{state.labels.length} labels</span>
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({ ...state, labels: [] });
+                    }}
+                    aria-label="Clear labels filter"
+                    className="h-5 w-5 flex items-center justify-center rounded-full text-ink-subtle hover:text-ink-strong hover:bg-surface-active"
+                  >
+                    <HugeiconsIcon icon={Delete01Icon} size={10} />
+                  </span>
+                </span>
+              )}
             </button>
           </Popover.Trigger>
           <Popover.Portal>
