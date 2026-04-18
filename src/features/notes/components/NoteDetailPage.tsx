@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useNote, useUpdateNote, useDeleteNote } from '../hooks';
 import { NoteEditor } from './NoteEditor';
 import { Spinner } from '@/shared/components/ui/spinner';
 import { Button } from '@/shared/components/ui/button';
-import { formatAgo } from '@/shared/lib/date';
 import type { NoteDoc } from '@/shared/lib/supabase';
 import { EMPTY_DOC } from '../types';
 import { useAutoSave } from '@/shared/hooks/useAutoSave';
@@ -123,13 +122,6 @@ export function NoteDetailPage() {
 
   useDocumentTitle(note ? getDisplayTitle(note) : null);
 
-  const statusLabel = useMemo(() => {
-    if (dirty) return 'Editing…';
-    if (update.isPending) return 'Saving…';
-    if (note) return `Saved ${formatAgo(note.updated_at)}`;
-    return '';
-  }, [dirty, update.isPending, note]);
-
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -165,12 +157,6 @@ export function NoteDetailPage() {
         }
         trailing={
           <>
-            <span
-              className="text-[12px] text-ink-subtle tabular-nums min-w-[120px] text-right"
-              aria-live="polite"
-            >
-              {statusLabel}
-            </span>
             <DropdownMenu>
               <Tooltip content="Note actions">
                 <DropdownMenuTrigger asChild>
