@@ -1,12 +1,13 @@
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useNavigate } from 'react-router-dom';
 import { useNotesUI } from '@/features/notes/store';
-import { useCreateNote } from '@/features/notes/hooks';
 
 export function useGlobalShortcuts() {
-  const navigate = useNavigate();
-  const { commandOpen, setCommandOpen } = useNotesUI();
-  const createNote = useCreateNote();
+  const {
+    commandOpen,
+    setCommandOpen,
+    quickCaptureOpen,
+    setQuickCaptureOpen,
+  } = useNotesUI();
 
   useHotkeys(
     'mod+k',
@@ -17,12 +18,12 @@ export function useGlobalShortcuts() {
     { enableOnFormTags: true }
   );
 
+  // Quick-capture: opens a compact modal. No full-editor navigation unless user asks.
   useHotkeys(
     'c',
-    async (e) => {
+    (e) => {
       e.preventDefault();
-      const note = await createNote.mutateAsync();
-      navigate(`/notes/${note.id}`, { state: { fresh: true } });
+      setQuickCaptureOpen(true);
     },
     { enableOnFormTags: false }
   );
@@ -41,6 +42,7 @@ export function useGlobalShortcuts() {
     'esc',
     () => {
       if (commandOpen) setCommandOpen(false);
+      if (quickCaptureOpen) setQuickCaptureOpen(false);
     },
     { enableOnFormTags: true }
   );

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNotes, useCreateNote, useSearchNotes } from '../hooks';
+import { useNotes, useSearchNotes } from '../hooks';
+import { useNotesUI } from '../store';
 import { NoteRow } from './NoteRow';
 import { NotesSkeleton } from './NoteRowSkeleton';
 import { BulkActionBar } from './BulkActionBar';
@@ -9,11 +9,11 @@ import { NotesFilterBar, DEFAULT_FILTERS, type FilterState } from './NotesFilter
 import { Spinner } from '@/shared/components/ui/spinner';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
 import { Kbd } from '@/shared/components/ui/kbd';
 import { PageHeader } from '@/shared/components/app/PageHeader';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { cn } from '@/shared/lib/cn';
 import { HugeiconsIcon, Search01Icon, Note01Icon } from '@/shared/lib/icons';
 
 export function NotesListPage() {
@@ -26,12 +26,10 @@ export function NotesListPage() {
 
   const { data: notes, isLoading } = useNotes(filters);
   const { data: searchResults, isFetching: searchLoading } = useSearchNotes(debouncedQuery);
-  const createNote = useCreateNote();
-  const navigate = useNavigate();
+  const setQuickCaptureOpen = useNotesUI((s) => s.setQuickCaptureOpen);
 
-  async function handleCreate() {
-    const note = await createNote.mutateAsync();
-    navigate(`/notes/${note.id}`, { state: { fresh: true } });
+  function handleCreate() {
+    setQuickCaptureOpen(true);
   }
 
   const visible = searching ? searchResults ?? [] : notes ?? [];
@@ -84,42 +82,44 @@ export function NotesListPage() {
           </span>
         }
         trailing={
-          <Button size="sm" variant="outline" onClick={handleCreate} disabled={createNote.isPending}>
+          <Button size="sm" variant="outline" onClick={handleCreate}>
             New note
           </Button>
         }
       />
 
-      <div className="border-b border-line-subtle px-4 py-2.5">
-        <div className="relative">
+      <div className="border-b border-line-subtle px-3 py-2">
+        <div className={cn(
+          'group relative flex items-center gap-2 h-8 rounded-md px-2.5',
+          'bg-transparent hover:bg-surface-muted/60 focus-within:bg-surface-muted/60',
+          'transition-colors duration-150',
+        )}>
           <HugeiconsIcon
             icon={Search01Icon}
             size={14}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+            className="text-ink-subtle shrink-0 pointer-events-none"
           />
-          <Input
+          <input
             data-search-input
             placeholder="Search notes…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-8 pr-10"
+            className="flex-1 bg-transparent text-[13px] text-ink-strong placeholder:text-ink-placeholder focus:outline-none border-0"
           />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-            {showSpinnerInInput ? (
-              <Spinner className="h-3.5 w-3.5" />
-            ) : query ? (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                className="pointer-events-auto h-5 w-5 flex items-center justify-center rounded text-ink-subtle hover:text-ink-strong"
-                aria-label="Clear search"
-              >
-                ×
-              </button>
-            ) : (
-              <Kbd>/</Kbd>
-            )}
-          </div>
+          {showSpinnerInInput ? (
+            <Spinner className="h-3.5 w-3.5" />
+          ) : query ? (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="h-5 w-5 flex items-center justify-center rounded text-ink-subtle hover:text-ink-strong"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          ) : (
+            <Kbd>/</Kbd>
+          )}
         </div>
       </div>
 
@@ -139,7 +139,7 @@ export function NotesListPage() {
             }
             action={
               !filters.pinnedOnly && (
-                <Button size="md" onClick={handleCreate} disabled={createNote.isPending}>
+                <Button size="md" onClick={handleCreate}>
                   Create note
                 </Button>
               )

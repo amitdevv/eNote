@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import type { IconSvgElement } from '@hugeicons/react';
 import {
   HugeiconsIcon,
@@ -13,7 +13,6 @@ import { useAuth } from '@/features/auth/hooks';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/components/ui/button';
 import { Tooltip } from '@/shared/components/ui/tooltip';
-import { useCreateNote } from '@/features/notes/hooks';
 import { useNotesUI } from '@/features/notes/store';
 
 function Item({
@@ -69,19 +68,16 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function Sidebar() {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const createNote = useCreateNote();
   const setSidebarOpen = useNotesUI((s) => s.setSidebarOpen);
+  const setQuickCaptureOpen = useNotesUI((s) => s.setQuickCaptureOpen);
 
   const initials = (user?.email ?? '?').slice(0, 2).toUpperCase();
 
-  async function handleCreate() {
+  function handleCreate() {
     setSidebarOpen(false);
-    const note = await createNote.mutateAsync();
-    navigate(`/notes/${note.id}`, { state: { fresh: true } });
+    setQuickCaptureOpen(true);
   }
 
-  // Close mobile drawer after navigating
   const closeDrawer = () => setSidebarOpen(false);
 
   return (
@@ -104,7 +100,6 @@ export function Sidebar() {
             size="icon"
             variant="ghost"
             onClick={handleCreate}
-            disabled={createNote.isPending}
             aria-label="Create note"
           >
             <HugeiconsIcon icon={PlusSignIcon} size={14} />

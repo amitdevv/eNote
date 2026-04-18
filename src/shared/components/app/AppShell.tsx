@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { CommandMenu } from './CommandMenu';
 import { PageTransition } from './PageTransition';
+import { QuickCaptureDialog } from '@/features/notes/components/QuickCaptureDialog';
 import { useGlobalShortcuts } from '@/shared/hooks/useGlobalShortcuts';
 import { useApplyDensity } from '@/features/settings/hooks';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
@@ -17,6 +18,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const sidebarOpen = useNotesUI((s) => s.sidebarOpen);
   const setSidebarOpen = useNotesUI((s) => s.setSidebarOpen);
+  const quickCaptureOpen = useNotesUI((s) => s.quickCaptureOpen);
+  const setQuickCaptureOpen = useNotesUI((s) => s.setQuickCaptureOpen);
 
   return (
     <div className="flex h-screen w-screen bg-surface-app text-ink-default font-inter overflow-hidden">
@@ -70,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <CommandMenu />
+      <QuickCaptureDialog open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen} />
     </div>
   );
 }
