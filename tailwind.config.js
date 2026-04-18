@@ -12,47 +12,57 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
       fontFamily: {
         inter: ['Inter', 'system-ui', 'sans-serif'],
+        geist: ['Geist', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"Fira Code"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        nav: 'var(--size-nav)',
+        title: 'var(--size-title)',
+        preview: 'var(--size-preview)',
+        header: 'var(--size-header)',
       },
       colors: {
+        // Legacy shadcn tokens (kept for existing components)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+        destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+        popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
+        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+
+        // eNote design system tokens (see DESIGN.md §2)
+        surface: {
+          app: "var(--surface-app)",
+          panel: "var(--surface-panel)",
+          raised: "var(--surface-raised)",
+          muted: "var(--surface-muted)",
+          active: "var(--surface-active)",
         },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+        ink: {
+          strong: "var(--ink-strong)",
+          DEFAULT: "var(--ink-default)",
+          muted: "var(--ink-muted)",
+          subtle: "var(--ink-subtle)",
+          placeholder: "var(--ink-placeholder)",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+        line: {
+          subtle: "var(--line-subtle)",
+          DEFAULT: "var(--line-default)",
         },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+        brand: {
+          DEFAULT: "var(--brand)",
+          fg: "var(--brand-fg)",
         },
       },
       borderRadius: {
@@ -60,24 +70,30 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        xs: "0 1px 1px rgba(0,0,0,.04), 0 3px 6px rgba(0,0,0,.02)",
+        'xs-dark': "inset 0 1px 0 rgba(255,255,255,.04), 0 1px 1px rgba(0,0,0,.35)",
+        sm: "0 3px 6px -2px rgba(0,0,0,.02), 0 1px 1px rgba(0,0,0,.04)",
+        md: "0 8px 24px -4px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04)",
+        lg: "0 16px 48px -8px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06)",
+      },
+      transitionTimingFunction: {
+        'out-quart': 'cubic-bezier(.25,1,.5,1)',
+        'out-expo': 'cubic-bezier(.16,1,.3,1)',
+      },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        shimmer: {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(100%)" },
-        },
+        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
+        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        shimmer: { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(100%)" } },
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "slide-up": { from: { opacity: "0", transform: "translateY(4px)" }, to: { opacity: "1", transform: "translateY(0)" } },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 1.5s ease-in-out infinite",
+        "fade-in": "fade-in 150ms ease-out",
+        "slide-up": "slide-up 200ms cubic-bezier(.16,1,.3,1)",
       },
     },
   },

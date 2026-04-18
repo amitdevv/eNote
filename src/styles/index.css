@@ -1,0 +1,325 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&family=Recursive:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=PT+Sans:wght@400;700&family=Kalam:wght@300;400;700&family=Inconsolata:wght@300;400;500;600;700&family=Patrick+Hand:wght@400&family=Handlee:wght@400&family=La+Belle+Aurore:wght@400&family=Special+Elite:wght@400&family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+/* Geist Font - using variable font from Vercel */
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/gh/vercel/geist-font@main/packages/geist-sans/dist/GeistVF.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+@layer base {
+  :root {
+    /* eNote design tokens — warm neutral palette, see DESIGN.md §2 */
+    --surface-app: #F4F3F1;
+    --surface-panel: #FDFCFA;
+    --surface-raised: #FFFFFE;
+    --surface-muted: #EFEEEC;
+    --surface-active: #E6E4E1;
+
+    --ink-strong: #1C1B19;
+    --ink-default: #2E2D2A;
+    --ink-muted: #5C5A56;
+    --ink-subtle: #6B6965;
+    --ink-placeholder: #A09E9A;
+
+    --line-subtle: #F0EEEB;
+    --line-default: #E2E0DC;
+
+    --brand: #009BB6;
+    --brand-fg: #FFFFFF;
+
+    /* Typography scale — default density */
+    --size-nav: 14px;
+    --size-title: 15px;
+    --size-preview: 13px;
+    --size-header: 14px;
+    --size-editor: 17px;
+
+    --radius: 0.5rem;
+
+    /* Legacy shadcn tokens — mapped to new tokens for back-compat */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+  }
+
+  html[data-density="compact"] {
+    --size-nav: 13px;
+    --size-title: 14px;
+    --size-preview: 12px;
+    --size-header: 13px;
+    --size-editor: 16px;
+  }
+  html[data-density="comfortable"] {
+    --size-nav: 15.5px;
+    --size-title: 17px;
+    --size-preview: 14px;
+    --size-header: 15.5px;
+    --size-editor: 19px;
+  }
+
+  .dark {
+    --surface-app: #0F0E0D;
+    --surface-panel: #171614;
+    --surface-raised: #1E1C1A;
+    --surface-muted: #252320;
+    --surface-active: #2E2B27;
+
+    --ink-strong: #F5F4F2;
+    --ink-default: #D6D4D0;
+    --ink-muted: #9C9A95;
+    --ink-subtle: #807E78;
+    --ink-placeholder: #57554F;
+
+    --line-subtle: #1F1E1B;
+    --line-default: #2A2825;
+
+    --brand: #12B5D0;
+    --brand-fg: #FFFFFF;
+
+    --background: 0 0% 9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* TipTap editor — minimal prose styling, Linear/Notion-like */
+  .tiptap {
+    outline: none;
+    color: var(--ink-default);
+    font-size: var(--size-editor);
+    line-height: 1.65;
+    min-height: 60vh;
+  }
+  .tiptap > * + * {
+    margin-top: 0.75em;
+  }
+  .tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--ink-placeholder);
+    float: left;
+    pointer-events: none;
+    height: 0;
+  }
+  .tiptap h1, .tiptap h2, .tiptap h3 {
+    color: var(--ink-strong);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+  .tiptap h1 { font-size: 1.75em; margin-top: 1.2em; }
+  .tiptap h2 { font-size: 1.375em; margin-top: 1em; }
+  .tiptap h3 { font-size: 1.125em; margin-top: 0.8em; }
+  .tiptap ul, .tiptap ol {
+    padding-left: 1.25em;
+  }
+  .tiptap ul { list-style: disc; }
+  .tiptap ol { list-style: decimal; }
+  .tiptap li > p { margin: 0; }
+  .tiptap blockquote {
+    border-left: 2px solid var(--line-default);
+    padding-left: 1em;
+    color: var(--ink-muted);
+  }
+  .tiptap code {
+    background: var(--surface-muted);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'Fira Code', ui-monospace, monospace;
+  }
+  .tiptap pre {
+    background: var(--surface-muted);
+    padding: 0.75em 1em;
+    border-radius: 8px;
+    font-family: 'Fira Code', ui-monospace, monospace;
+    font-size: 0.9em;
+    overflow-x: auto;
+  }
+  .tiptap pre code {
+    background: transparent;
+    padding: 0;
+  }
+  .tiptap hr {
+    border: none;
+    border-top: 1px solid var(--line-default);
+    margin: 1.5em 0;
+  }
+  .tiptap a {
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Hide scrollbar while keeping scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #212121;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #232323;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2a2a2a;
+}
+
+/* Smooth transitions for all interactive elements */
+button, input, textarea, select {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom focus styles */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+}
+
+/* Override global styles for search inputs */
+.search-input {
+  transition: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.search-input:focus {
+  transition: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Animation keyframes */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+#memopal{
+    font-family: 'Press Start 2P', monospace;
+}
