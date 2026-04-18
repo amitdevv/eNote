@@ -99,7 +99,7 @@ export function NoteEditor({ initialContent, onChange }: Props) {
       Highlight.configure({ multicolor: true }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Placeholder.configure({ placeholder: 'Start writing…  select text to format' }),
+      Placeholder.configure({ placeholder: 'Start writing…' }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
