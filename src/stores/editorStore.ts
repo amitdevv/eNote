@@ -1,156 +1,75 @@
 import { create } from 'zustand';
 import { Note } from '@/types/note';
-import { getTitleFromContent } from '@/utils/titleUtils';
 
 interface EditorStore {
-  // Current note being edited
   currentNoteId: string | null;
-  
-  // Editor state
   content: string;
-  contentType: 'markdown' | 'html';
   tags: string[];
   fontFamily: string;
   fontSize: number;
-  
-  // UI state
-  isDirty: boolean;
-  lastSaved: Date | null;
-  
-  // Actions
+
   setCurrentNote: (note: Note | null) => void;
   setContent: (content: string) => void;
-  setContentType: (type: 'markdown' | 'html') => void;
   setTags: (tags: string[]) => void;
   setFontFamily: (fontFamily: string) => void;
   setFontSize: (fontSize: number) => void;
   addTag: (tag: string) => void;
   removeTag: (tag: string) => void;
-  
-  // Editor lifecycle
   resetEditor: () => void;
-  markDirty: () => void;
-  markClean: () => void;
-  
-  // Computed getters
-  getTitle: () => string;
 }
 
-export const useEditorStore = create<EditorStore>((set, get) => {
-  // Get default settings from localStorage for initial state
-  const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
-  const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
-  const defaultFontSize = settingsStore.state?.defaultFontSize || 20;
+const getDefaults = () => {
+  try {
+    const settings = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
+    return {
+      fontFamily: settings.state?.defaultFont || 'Fira Code',
+      fontSize: settings.state?.defaultFontSize || 20,
+    };
+  } catch {
+    return { fontFamily: 'Fira Code', fontSize: 20 };
+  }
+};
 
-  return {
-    currentNoteId: null,
-    content: '',
-    contentType: 'markdown',
-    tags: [],
-    fontFamily: defaultFont,
-    fontSize: defaultFontSize,
-    isDirty: false,
-    lastSaved: null,
+const emptyState = () => ({
+  currentNoteId: null,
+  content: '',
+  tags: [] as string[],
+  ...getDefaults(),
+});
+
+export const useEditorStore = create<EditorStore>((set, get) => ({
+  ...emptyState(),
 
   setCurrentNote: (note) => {
     if (note) {
       set({
         currentNoteId: note.id,
         content: note.content,
-        contentType: note.type || 'markdown',
         tags: note.tags || [],
         fontFamily: note.fontFamily || 'Fira Code',
         fontSize: note.fontSize || 20,
-        isDirty: false,
-        lastSaved: note.updatedAt instanceof Date ? note.updatedAt : new Date(note.updatedAt),
       });
     } else {
-      // New note - get default settings from localStorage
-      const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
-      const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
-      const defaultFontSize = settingsStore.state?.defaultFontSize || 20;
-      
-      set({
-        currentNoteId: null,
-        content: '',
-        contentType: 'markdown',
-        tags: [],
-        fontFamily: defaultFont,
-        fontSize: defaultFontSize,
-        isDirty: false,
-        lastSaved: null,
-      });
+      set(emptyState());
     }
   },
 
-  setContent: (content) => {
-    set({ content, isDirty: true });
-  },
-
-  setContentType: (contentType) => {
-    set({ contentType, isDirty: true });
-  },
-
-  setTags: (tags) => {
-    set({ tags, isDirty: true });
-  },
-
-  setFontFamily: (fontFamily) => {
-    set({ fontFamily, isDirty: true });
-  },
-
-  setFontSize: (fontSize) => {
-    set({ fontSize, isDirty: true });
-  },
+  setContent: (content) => set({ content }),
+  setTags: (tags) => set({ tags }),
+  setFontFamily: (fontFamily) => set({ fontFamily }),
+  setFontSize: (fontSize) => set({ fontSize }),
 
   addTag: (tag) => {
-    const state = get();
-    const trimmedTag = tag.trim();
-    
-    if (trimmedTag && !state.tags.includes(trimmedTag)) {
-      const newTags = [...state.tags, trimmedTag];
-      set({ 
-        tags: newTags, 
-        isDirty: true 
-      });
+    const trimmed = tag.trim();
+    const { tags } = get();
+    if (trimmed && !tags.includes(trimmed)) {
+      set({ tags: [...tags, trimmed] });
     }
   },
 
   removeTag: (tagToRemove) => {
-    const state = get();
-    const newTags = state.tags.filter(tag => tag !== tagToRemove);
-    
-    set({ 
-      tags: newTags, 
-      isDirty: true 
-    });
+    set({ tags: get().tags.filter(tag => tag !== tagToRemove) });
   },
 
-  resetEditor: () => {
-    // Get default settings from localStorage
-    const settingsStore = JSON.parse(localStorage.getItem('eNote-settings') || '{}');
-    const defaultFont = settingsStore.state?.defaultFont || 'Fira Code';
-    const defaultFontSize = settingsStore.state?.defaultFontSize || 20;
-    
-    set({
-      currentNoteId: null,
-      content: '',
-      contentType: 'markdown',
-      tags: [],
-      fontFamily: defaultFont,
-      fontSize: defaultFontSize,
-      isDirty: false,
-      lastSaved: null,
-    });
-  },
-
-  markDirty: () => set({ isDirty: true }),
-  
-  markClean: () => set({ isDirty: false, lastSaved: new Date() }),
-  
-  getTitle: () => {
-    const state = get();
-    return getTitleFromContent(state.content);
-  },
-  };
-}); 
+  resetEditor: () => set(emptyState()),
+}));

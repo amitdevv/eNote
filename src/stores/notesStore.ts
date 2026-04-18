@@ -28,8 +28,6 @@ const dbNoteToNote = (dbNote: any): Note => ({
   id: dbNote.id,
   title: dbNote.title,
   content: dbNote.content,
-  type: 'markdown',
-  folderId: dbNote.folder_id,
   createdAt: new Date(dbNote.created_at),
   updatedAt: new Date(dbNote.updated_at),
   tags: dbNote.tags || [],
@@ -43,7 +41,6 @@ const noteToDbNote = (note: Partial<Note>, userId: string) => ({
   title: getTitleFromContent(note.content || ''),
   content: note.content || '',
   type: 'markdown',
-  folder_id: note.folderId || null,
   tags: note.tags || [],
   starred: note.starred || false,
   priority: note.priority || null,
@@ -104,7 +101,6 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       dbUpdates.title = updates.title;
     }
 
-    if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
     if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
     if (updates.starred !== undefined) dbUpdates.starred = updates.starred;
     if (updates.priority !== undefined) dbUpdates.priority = updates.priority;

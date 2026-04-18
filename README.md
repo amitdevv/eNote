@@ -5,22 +5,19 @@ eNote is a modern note-taking application I built for anyone who needs to organi
 
 ## What it does
 - Clean interface with light and dark themes
-- Rich text editor with slash commands for quick formatting
-- Built-in code editor with syntax highlighting
-- Focus mode for distraction-free writing
-- Multiple font families to choose from
-- Real-time text statistics and word count
-- Folder organization system
-- Search through all your notes
+- Markdown note editor with auto-generated titles
+- Multiple font families and sizes
+- Search across all your notes
+- Tag-based filtering (project, coding, college, personal, ideas, etc.)
+- Image-to-text (OCR) for pulling text out of screenshots
 - Auto-save so you never lose work
-- Keyboard shortcuts for faster navigation
-- Customizable settings and themes
+- Customizable settings
 
 ## Built with
-- React and TypeScript for the frontend
-- Tailwind CSS for styling
-- TipTap as the text editor
-- Supabase for backend services
+- React and TypeScript
+- Tailwind CSS
+- Supabase (Postgres + Google OAuth)
+- Zustand for state
 - Vite for fast development
 
 ## Getting started

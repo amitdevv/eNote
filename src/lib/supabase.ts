@@ -40,52 +40,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// Simplified user count functions
-export const getTotalRegisteredUsers = async (): Promise<number> => {
-  try {
-    // Try using the database function first
-    const { data, error } = await supabase.rpc('get_total_user_count');
-    
-    if (!error && typeof data === 'number') {
-      return data;
-    }
-
-    // Fallback to counting from notes table
-    const { data: notesData } = await supabase
-      .from('notes')
-      .select('user_id');
-    
-    if (notesData) {
-      const uniqueUsersWithNotes = new Set(notesData.map(note => note.user_id)).size;
-      return Math.max(uniqueUsersWithNotes, 3);
-    }
-
-    return 3; // Default fallback
-  } catch (error) {
-    console.error('Error in getTotalRegisteredUsers:', error);
-    return 3;
-  }
-};
-
-export const getActiveUserCount = async (): Promise<number> => {
-  try {
-    const { data: notesData } = await supabase
-      .from('notes')
-      .select('user_id');
-    
-    if (notesData) {
-      const uniqueActiveUsers = new Set(notesData.map(note => note.user_id)).size;
-      return Math.max(uniqueActiveUsers, 1);
-    }
-    
-    return 2;
-  } catch (error) {
-    console.error('Error in getActiveUserCount:', error);
-    return 2;
-  }
-};
-
-// Database types based on your current schema
+// Database types based on current schema
 export interface Database {
   public: {
     Tables: {
@@ -94,9 +49,6 @@ export interface Database {
           id: string;
           title: string;
           content: string;
-          type: string;
-          status: string;
-          folder_id: string | null;
           created_at: string;
           updated_at: string;
           tags: string[];
@@ -110,9 +62,6 @@ export interface Database {
           id?: string;
           title: string;
           content?: string;
-          type?: string;
-          status?: string;
-          folder_id?: string | null;
           created_at?: string;
           updated_at?: string;
           tags?: string[];
@@ -126,9 +75,6 @@ export interface Database {
           id?: string;
           title?: string;
           content?: string;
-          type?: string;
-          status?: string;
-          folder_id?: string | null;
           created_at?: string;
           updated_at?: string;
           tags?: string[];
@@ -136,35 +82,6 @@ export interface Database {
           priority?: string | null;
           font_family?: string;
           font_size?: number;
-          user_id?: string;
-        };
-      };
-      folders: {
-        Row: {
-          id: string;
-          name: string;
-          color: string;
-          parent_id: string | null;
-          created_at: string;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          color?: string;
-          parent_id?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          color?: string;
-          parent_id?: string | null;
-          created_at?: string;
-          updated_at?: string;
           user_id?: string;
         };
       };
