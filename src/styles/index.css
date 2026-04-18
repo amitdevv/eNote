@@ -266,6 +266,39 @@ body {
     white-space: pre;
   }
 
+  /* ────── Syntax highlighting (highlight.js classes via lowlight) ──────
+     Minimal, warm-palette light theme. Tokens map to the 12-hue palette
+     in §2.6 so code fits visually with labels/highlights instead of
+     shouting rainbow. */
+  .tiptap pre code .hljs-comment,
+  .tiptap pre code .hljs-quote          { color: #9CA3AF; font-style: italic; }
+  .tiptap pre code .hljs-keyword,
+  .tiptap pre code .hljs-selector-tag,
+  .tiptap pre code .hljs-literal,
+  .tiptap pre code .hljs-section,
+  .tiptap pre code .hljs-link           { color: #A855F7; } /* purple — keywords */
+  .tiptap pre code .hljs-string,
+  .tiptap pre code .hljs-title,
+  .tiptap pre code .hljs-name,
+  .tiptap pre code .hljs-type,
+  .tiptap pre code .hljs-attribute,
+  .tiptap pre code .hljs-symbol,
+  .tiptap pre code .hljs-bullet,
+  .tiptap pre code .hljs-addition,
+  .tiptap pre code .hljs-variable,
+  .tiptap pre code .hljs-template-tag,
+  .tiptap pre code .hljs-template-variable { color: #16A34A; } /* green — strings */
+  .tiptap pre code .hljs-number,
+  .tiptap pre code .hljs-regexp,
+  .tiptap pre code .hljs-built_in,
+  .tiptap pre code .hljs-meta,
+  .tiptap pre code .hljs-deletion       { color: #B45309; } /* amber — numbers */
+  .tiptap pre code .hljs-function .hljs-title,
+  .tiptap pre code .hljs-class .hljs-title,
+  .tiptap pre code .hljs-tag            { color: #2563EB; } /* blue — functions/tags */
+  .tiptap pre code .hljs-emphasis       { font-style: italic; }
+  .tiptap pre code .hljs-strong         { font-weight: 600; }
+
   /* Divider */
   .tiptap hr {
     border: none;

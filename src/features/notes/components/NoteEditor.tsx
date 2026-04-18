@@ -7,6 +7,24 @@ import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { createLowlight } from 'lowlight';
+// Common languages — add more by importing from `highlight.js/lib/languages/*`
+import js from 'highlight.js/lib/languages/javascript';
+import ts from 'highlight.js/lib/languages/typescript';
+import html from 'highlight.js/lib/languages/xml';
+import css from 'highlight.js/lib/languages/css';
+import json from 'highlight.js/lib/languages/json';
+import bash from 'highlight.js/lib/languages/bash';
+import python from 'highlight.js/lib/languages/python';
+import sql from 'highlight.js/lib/languages/sql';
+import md from 'highlight.js/lib/languages/markdown';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import java from 'highlight.js/lib/languages/java';
+
+const lowlight = createLowlight();
+lowlight.register({ js, javascript: js, ts, typescript: ts, html, xml: html, css, json, bash, shell: bash, sh: bash, python, py: python, sql, markdown: md, md, go, golang: go, rust, rs: rust, java });
 import { useEffect, useRef, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Link as RouterLink } from 'react-router-dom';
@@ -46,7 +64,17 @@ export function NoteEditor({ initialContent, onChange }: Props) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        // Disable StarterKit's plain CodeBlock — we replace it with the
+        // Lowlight version below for syntax highlighting.
+        codeBlock: false,
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        // Auto-detect language when it's not specified on the node
+        defaultLanguage: null,
+      }),
       Underline,
       Highlight.configure({ multicolor: true }),
       TaskList,
