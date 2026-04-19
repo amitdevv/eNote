@@ -18,6 +18,8 @@ export default {
       fontFamily: {
         inter: ['Inter', 'system-ui', 'sans-serif'],
         geist: ['Geist', 'Inter', 'system-ui', 'sans-serif'],
+        serif: ['"Iowan Old Style"', 'Lora', 'ui-serif', 'Georgia', 'Cambria', 'serif'],
+        display: ['"Iowan Old Style"', 'ui-serif', 'Georgia', 'serif'],
         mono: ['"Fira Code"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
@@ -106,6 +108,14 @@ export default {
           from: { opacity: "1", translate: "-50% 0" },
           to: { opacity: "0", translate: "-50% 24px" },
         },
+        "float-a": {
+          "0%, 100%": { transform: "translateY(0) rotate(var(--r, 0deg))" },
+          "50%": { transform: "translateY(-10px) rotate(var(--r, 0deg))" },
+        },
+        "float-b": {
+          "0%, 100%": { transform: "translateY(0) rotate(var(--r, 0deg))" },
+          "50%": { transform: "translateY(-14px) rotate(var(--r, 0deg))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -117,6 +127,8 @@ export default {
         // Emil-style: slightly overshoot ease, fast, anchored at the bottom edge.
         "sheet-in": "sheet-in 280ms cubic-bezier(.16,1,.3,1)",
         "sheet-out": "sheet-out 180ms cubic-bezier(.4,0,1,1)",
+        "float-a": "float-a 6s ease-in-out infinite",
+        "float-b": "float-b 7.5s ease-in-out infinite",
       },
     },
   },

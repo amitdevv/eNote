@@ -9,6 +9,15 @@
   font-display: swap;
 }
 
+/* Iowan Old Style — locally-served display serif for hero/landing */
+@font-face {
+  font-family: 'Iowan Old Style';
+  src: url('/fonts/IowanOld.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

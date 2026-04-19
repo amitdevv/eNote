@@ -42,7 +42,7 @@ function ProtectedShell({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   return (
     <ErrorBoundary>
       <AppShell>
@@ -65,7 +65,7 @@ export function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/notes" replace /> : <LoginPage />} />
+      <Route path="/login" element={<Navigate to={user ? '/notes' : '/'} replace />} />
       <Route
         path="/notes"
         element={
@@ -122,7 +122,7 @@ export function AppRoutes() {
           </ProtectedShell>
         }
       />
-      <Route path="/" element={<Navigate to={user ? '/notes' : '/login'} replace />} />
+      <Route path="/" element={user ? <Navigate to="/notes" replace /> : <LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
