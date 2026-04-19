@@ -8,6 +8,7 @@ import {
   Settings01Icon,
   Logout01Icon,
   PlusSignIcon,
+  BubbleChatIcon,
 } from '@/shared/lib/icons';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/features/auth/hooks';
@@ -129,6 +130,9 @@ export function Sidebar() {
       <nav className="flex flex-col gap-0.5 px-3 mt-4">
         <Item to="/tasks" icon={CheckmarkSquare01Icon} onClick={closeDrawer}>
           Tasks
+        </Item>
+        <Item to="/ask" icon={BubbleChatIcon} onClick={closeDrawer}>
+          Ask
         </Item>
       </nav>
 

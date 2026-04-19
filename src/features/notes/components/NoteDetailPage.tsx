@@ -18,6 +18,8 @@ import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import type { Note } from '../types';
 import { getDisplayTitle } from '../types';
 import { LabelEditor } from './LabelEditor';
+import { RelatedNotes } from '@/features/ai/components/RelatedNotes';
+import { IndexingDot } from '@/features/ai/components/IndexingDot';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,15 +170,18 @@ function NoteDetail({ note }: { note: Note }) {
     <>
       <PageHeader
         leading={
-          <button
-            onClick={() => {
-              flush();
-              navigate('/notes');
-            }}
-            className="text-header font-medium text-ink-muted hover:text-ink-strong transition-colors"
-          >
-            ← Notes
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                flush();
+                navigate('/notes');
+              }}
+              className="text-header font-medium text-ink-muted hover:text-ink-strong transition-colors"
+            >
+              ← Notes
+            </button>
+            <IndexingDot noteId={note.id} />
+          </div>
         }
         trailing={
           <>
@@ -248,6 +253,7 @@ function NoteDetail({ note }: { note: Note }) {
               setDirty(true);
             }}
           />
+          <RelatedNotes noteId={note.id} />
         </div>
       </div>
     </>

@@ -21,6 +21,9 @@ const SettingsPage = lazy(() =>
 const TasksPage = lazy(() =>
   import('@/features/tasks/components/TasksPage').then((m) => ({ default: m.TasksPage }))
 );
+const AskPage = lazy(() =>
+  import('@/features/ai/components/AskPage').then((m) => ({ default: m.AskPage }))
+);
 
 function LoadingFallback() {
   return (
@@ -92,6 +95,22 @@ export function AppRoutes() {
         element={
           <ProtectedShell>
             <TasksPage />
+          </ProtectedShell>
+        }
+      />
+      <Route
+        path="/ask"
+        element={
+          <ProtectedShell>
+            <AskPage />
+          </ProtectedShell>
+        }
+      />
+      <Route
+        path="/ask/:convId"
+        element={
+          <ProtectedShell>
+            <AskPage />
           </ProtectedShell>
         }
       />

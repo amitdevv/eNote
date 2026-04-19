@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/hooks';
 import * as api from './api';
 import type { NoteInsert, NoteUpdate } from './types';
+import { scheduleEmbed, buildEmbedText } from '@/features/ai/embedQueue';
 
 const keys = {
   all: ['notes'] as const,
@@ -34,8 +35,9 @@ export function useCreateNote() {
   return useMutation({
     mutationFn: (partial: Partial<NoteInsert> | void) =>
       api.createNote(user!.id, partial ?? undefined),
-    onSuccess: () => {
+    onSuccess: (note) => {
       if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
+      scheduleEmbed(note.id, () => buildEmbedText(note.title, note.content_text));
     },
   });
 }
@@ -87,6 +89,7 @@ export function useUpdateNote() {
     },
     onSuccess: (note) => {
       qc.setQueryData(keys.detail(note.id), note);
+      scheduleEmbed(note.id, () => buildEmbedText(note.title, note.content_text));
     },
     onSettled: (note) => {
       if (note && user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });

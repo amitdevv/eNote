@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/cn';
 import { AccountSettings } from '@/features/account/components/AccountSettings';
 import { LabelsSettings } from '@/features/labels/components/LabelsSettings';
 import { HighlightsSettings } from '@/features/highlights/components/HighlightsSettings';
+import { AISettings } from '@/features/ai/components/AISettings';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { SettingsSection, SettingsRow, SettingsDivider } from './SettingsSection';
 
@@ -17,11 +18,12 @@ const DENSITY_OPTIONS: { value: Density; label: string; hint: string }[] = [
   { value: 'comfortable', label: 'Comfortable', hint: 'Larger text, more breathing room' },
 ];
 
-type TabId = 'account' | 'appearance' | 'labels' | 'highlights' | 'shortcuts';
+type TabId = 'account' | 'appearance' | 'ai' | 'labels' | 'highlights' | 'shortcuts';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'account', label: 'Account' },
   { id: 'appearance', label: 'Appearance' },
+  { id: 'ai', label: 'AI' },
   { id: 'labels', label: 'Labels' },
   { id: 'highlights', label: 'Highlights' },
   { id: 'shortcuts', label: 'Shortcuts' },
@@ -161,6 +163,10 @@ export function SettingsPage() {
                   </div>
                 </SettingsRow>
               </SettingsSection>
+            </Tabs.Content>
+
+            <Tabs.Content value="ai" className="focus:outline-none">
+              <AISettings />
             </Tabs.Content>
 
             <Tabs.Content value="labels" className="focus:outline-none">

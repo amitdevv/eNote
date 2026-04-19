@@ -80,6 +80,9 @@ improvement*.md
 todo*.md
 notes*.md
 roadmap*.md
+plan*.md
+*PLAN.md
+MEMORY_PLAN.md
 
 # Database and setup files (development only)
 cleanup-database.sql
