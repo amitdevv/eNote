@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import type { IconSvgElement } from '@hugeicons/react';
 import {
   HugeiconsIcon,
+  AiBrain02Icon,
   Archive02Icon,
   Note01Icon,
   CheckmarkSquare01Icon,
@@ -133,6 +134,9 @@ export function Sidebar() {
         </Item>
         <Item to="/ask" icon={BubbleChatIcon} onClick={closeDrawer}>
           Ask
+        </Item>
+        <Item to="/memory" icon={AiBrain02Icon} onClick={closeDrawer}>
+          Memory
         </Item>
       </nav>
 

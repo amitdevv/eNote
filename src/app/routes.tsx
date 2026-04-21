@@ -24,6 +24,9 @@ const TasksPage = lazy(() =>
 const AskPage = lazy(() =>
   import('@/features/ai/components/AskPage').then((m) => ({ default: m.AskPage }))
 );
+const MemoryPage = lazy(() =>
+  import('@/features/ai/components/MemoryPage').then((m) => ({ default: m.MemoryPage }))
+);
 
 function LoadingFallback() {
   return (
@@ -111,6 +114,14 @@ export function AppRoutes() {
         element={
           <ProtectedShell>
             <AskPage />
+          </ProtectedShell>
+        }
+      />
+      <Route
+        path="/memory"
+        element={
+          <ProtectedShell>
+            <MemoryPage />
           </ProtectedShell>
         }
       />

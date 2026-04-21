@@ -32,6 +32,22 @@ type Turn = {
   error: string | null;
 };
 
+// Compact "when" string for source chips. Mirrors the prompt-side describer
+// the Edge Function uses, so the UI label and the LLM's own perception of
+// "freshness" stay in sync. (Match logic in supabase/functions/gemini-ask.)
+function formatSourceWhen(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '';
+  const diffMin = Math.round((Date.now() - t) / 60_000);
+  if (diffMin < 1) return 'now';
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h`;
+  const diffDay = Math.round(diffHr / 24);
+  if (diffDay < 14) return `${diffDay}d`;
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 function AnswerBody({
   text,
   sources,
@@ -95,6 +111,11 @@ function SourceList({
                   <span className="text-caption font-medium text-ink-strong truncate">
                     {s.title || 'Untitled'}
                   </span>
+                  {s.updatedAt && (
+                    <span className="shrink-0 text-micro text-ink-subtle tabular-nums">
+                      {formatSourceWhen(s.updatedAt)}
+                    </span>
+                  )}
                 </div>
                 {s.preview && (
                   <p className="text-micro text-ink-muted line-clamp-2">

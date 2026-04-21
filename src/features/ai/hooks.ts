@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/hooks';
 import * as api from './api';
 import { embedNote } from './api';
-import type { SemanticHit } from './api';
+import type { SemanticHit, UserFact } from './api';
 import * as convs from './conversations';
 import type {
   ConversationSummary,
@@ -88,6 +88,96 @@ export function useBackfillEmbeddings() {
         }
       }
       return { total, embedded };
+    },
+  });
+}
+
+/**
+ * Backfill facts for every existing note that needs it, one at a time.
+ * Sequential (same reason as embeddings backfill — Gemini RPM limits).
+ *
+ * Resume-friendly: only processes notes whose facts_extracted_at is null or
+ * stale. Closing the tab and re-running picks up where it left off.
+ *
+ * Cancellable: pass an AbortSignal. Cancellation stops at the next iteration
+ * boundary (the in-flight extract-facts call still completes — Gemini already
+ * being charged for it).
+ *
+ * Extraction is more expensive than embedding: 1 chat call + N embedding
+ * calls per note. We surface progress so the UI can show a bar.
+ */
+export function useBackfillFacts() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({
+      onProgress,
+      signal,
+    }: {
+      onProgress?: (done: number, total: number) => void;
+      signal?: AbortSignal;
+    } = {}) => {
+      const notes = await api.listNoteIdsForFactBackfill();
+      const total = notes.length;
+      if (total === 0) return { total: 0, processed: 0, cancelled: false };
+
+      let processed = 0;
+      let cancelled = false;
+      for (const note of notes) {
+        if (signal?.aborted) {
+          cancelled = true;
+          break;
+        }
+        try {
+          await api.extractFactsForNote(note.id);
+        } catch (e) {
+          if (import.meta.env.DEV) {
+            console.warn('[ai] fact backfill item failed', note.id, e);
+          }
+          // 429 from Gemini is survivable for the rest of the batch if we
+          // pause a bit — quota is per-minute. Sleep 2s on any error as a
+          // cheap rate-limit breather (abortable).
+          await new Promise<void>((resolve) => {
+            const t = setTimeout(resolve, 2_000);
+            signal?.addEventListener('abort', () => {
+              clearTimeout(t);
+              resolve();
+            });
+          });
+        }
+        processed += 1;
+        onProgress?.(processed, total);
+      }
+
+      // Refresh the Memory page after a backfill batch so the user sees the
+      // newly-learned facts without a manual reload.
+      if (user) {
+        qc.invalidateQueries({ queryKey: ['ai', 'facts', user.id] });
+      }
+
+      return { total, processed, cancelled };
+    },
+  });
+}
+
+export function useMyFacts() {
+  const { user } = useAuth();
+  const { data: status } = useAIStatus();
+  return useQuery<UserFact[]>({
+    queryKey: user ? ['ai', 'facts', user.id] : ['ai', 'facts', 'none'],
+    queryFn: () => api.listMyFacts(),
+    enabled: !!user && !!status?.connected,
+    staleTime: 15_000,
+  });
+}
+
+export function useRetireFact() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (factId: string) => api.retireFact(factId),
+    onSuccess: () => {
+      if (user) qc.invalidateQueries({ queryKey: ['ai', 'facts', user.id] });
     },
   });
 }

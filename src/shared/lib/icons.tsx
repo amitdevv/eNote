@@ -30,6 +30,7 @@ export function HugeiconsIcon({
 }
 
 export {
+  AiBrain02Icon,
   ArchiveIcon,
   Archive02Icon,
   ArrowRight01Icon,

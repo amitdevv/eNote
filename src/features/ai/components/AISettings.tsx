@@ -12,6 +12,7 @@ import {
   useConnectGemini,
   useDisconnectGemini,
   useBackfillEmbeddings,
+  useBackfillFacts,
   useTodayUsage,
 } from '../hooks';
 import { clearAllEmbeddings } from '../api';
@@ -45,12 +46,52 @@ export function AISettings() {
   const connect = useConnectGemini();
   const disconnect = useDisconnectGemini();
   const backfill = useBackfillEmbeddings();
+  const backfillFacts = useBackfillFacts();
   const { data: usage } = useTodayUsage();
   const [reindexing, setReindexing] = useState(false);
 
   const [apiKey, setApiKey] = useState('');
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [factsProgress, setFactsProgress] = useState<{ done: number; total: number } | null>(null);
   const backfillStartedRef = useRef(false);
+  // Holds the AbortController for an in-flight memory backfill so the cancel
+  // button can stop it. Lives in a ref because the controller doesn't need
+  // to trigger re-renders — the backfill mutation status already does.
+  const factsAbortRef = useRef<AbortController | null>(null);
+
+  async function handleBuildMemory() {
+    if (backfillFacts.isPending) return;
+    const controller = new AbortController();
+    factsAbortRef.current = controller;
+    setFactsProgress({ done: 0, total: 0 });
+    try {
+      const { processed, total, cancelled } = await backfillFacts.mutateAsync({
+        onProgress: (done, t) => setFactsProgress({ done, total: t }),
+        signal: controller.signal,
+      });
+      setFactsProgress(null);
+      factsAbortRef.current = null;
+      if (cancelled) {
+        toast.message('Memory build paused', {
+          description: `Got through ${processed} of ${total}. Resume any time.`,
+        });
+      } else if (total === 0) {
+        toast.message('Memory is up to date');
+      } else {
+        toast.success(`Learned from ${processed} of ${total} notes`);
+      }
+    } catch (e) {
+      setFactsProgress(null);
+      factsAbortRef.current = null;
+      toast.error("Couldn't finish learning", {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    }
+  }
+
+  function handleCancelMemory() {
+    factsAbortRef.current?.abort();
+  }
 
   async function handleConnect() {
     const trimmed = apiKey.trim();
@@ -199,6 +240,41 @@ export function AISettings() {
                 {reindexing || backfill.isPending ? 'Re-indexing…' : 'Re-index'}
               </Button>
             </SettingsRow>
+
+            <SettingsDivider />
+            <SettingsRow
+              label="Smart memory"
+              hint="Read every note and extract durable facts about you (preferences, attributes, ongoing situations). When facts conflict between notes, the newer one supersedes the older — Ask uses these as the authoritative answer for factual questions. Resumable: only re-reads notes that have changed since their last extraction."
+            >
+              {backfillFacts.isPending ? (
+                <Button size="sm" variant="ghost" onClick={handleCancelMemory}>
+                  Cancel
+                </Button>
+              ) : (
+                <Button size="sm" variant="ghost" onClick={handleBuildMemory}>
+                  Build memory
+                </Button>
+              )}
+            </SettingsRow>
+
+            {factsProgress && factsProgress.total > 0 && (
+              <div className="px-4 py-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-caption text-ink-muted">
+                    Learning from notes
+                  </span>
+                  <span className="text-caption text-ink-muted tabular-nums">
+                    {factsProgress.done} / {factsProgress.total}
+                  </span>
+                </div>
+                <div className="h-1 rounded-full bg-surface-muted overflow-hidden">
+                  <div
+                    className="h-full bg-brand transition-[width] duration-300"
+                    style={{ width: `${(factsProgress.done / factsProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             <SettingsDivider />
             <div className="px-4 py-3.5">

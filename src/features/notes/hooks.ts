@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/hooks';
 import * as api from './api';
 import type { NoteInsert, NoteUpdate } from './types';
 import { scheduleEmbed, buildEmbedText } from '@/features/ai/embedQueue';
+import { scheduleExtractFacts } from '@/features/ai/factsQueue';
 
 const keys = {
   all: ['notes'] as const,
@@ -38,6 +39,7 @@ export function useCreateNote() {
     onSuccess: (note) => {
       if (user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });
       scheduleEmbed(note.id, () => buildEmbedText(note.title, note.content_text));
+      scheduleExtractFacts(note.id);
     },
   });
 }
@@ -90,6 +92,7 @@ export function useUpdateNote() {
     onSuccess: (note) => {
       qc.setQueryData(keys.detail(note.id), note);
       scheduleEmbed(note.id, () => buildEmbedText(note.title, note.content_text));
+      scheduleExtractFacts(note.id);
     },
     onSettled: (note) => {
       if (note && user) qc.invalidateQueries({ queryKey: [...keys.all, 'list', user.id] });

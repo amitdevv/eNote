@@ -94,6 +94,133 @@ export async function embedQuery(text: string): Promise<number[]> {
   return res.embedding;
 }
 
+// ─── Fact extraction ────────────────────────────────────────────────────────
+
+export type ExtractFactsResult = {
+  ok: true;
+  extracted: number;
+  superseded: number;
+  facts: { id: string; predicate: string; statement: string }[];
+};
+
+/**
+ * Extract atomic facts from a note. Replaces any prior facts from the same
+ * note. Reconciles vs existing facts: if the new fact has the same
+ * (subject, predicate) as an existing latest fact, the old one is marked
+ * is_latest = false and superseded_by points to the new row.
+ *
+ * Fire-and-forget from the note save hook (via factsQueue).
+ */
+export async function extractFactsForNote(noteId: string): Promise<ExtractFactsResult> {
+  return callFn<ExtractFactsResult>('/extract-facts', {
+    method: 'POST',
+    body: JSON.stringify({ noteId }),
+  });
+}
+
+/**
+ * List non-archived notes that NEED fact extraction. A note needs extraction
+ * if it hasn't been extracted yet OR if it was modified after its last
+ * extraction. Lets the backfill resume across sessions and skip work that's
+ * already current — the difference between a 70-minute re-run and a
+ * 30-second tail update.
+ *
+ * We deliberately fetch only ids and titles — content_text isn't needed
+ * client-side because extract-facts loads it server-side.
+ */
+export async function listNoteIdsForFactBackfill(): Promise<{ id: string; title: string }[]> {
+  // PostgREST .or() with column-comparison: facts_extracted_at IS NULL
+  // (never extracted) OR notes.updated_at > facts_extracted_at (note edited
+  // after last extraction). The second branch needs a JS-side filter because
+  // PostgREST doesn't expose direct column-vs-column comparison in .or().
+  const { data, error } = await supabase
+    .from('notes')
+    .select('id,title,updated_at,facts_extracted_at')
+    .eq('archived', false)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  type Row = { id: string; title: string; updated_at: string; facts_extracted_at: string | null };
+  return ((data ?? []) as Row[])
+    .filter((r) => {
+      if (!r.facts_extracted_at) return true;
+      return new Date(r.updated_at).getTime() > new Date(r.facts_extracted_at).getTime();
+    })
+    .map((r) => ({ id: r.id, title: r.title }));
+}
+
+// ─── Facts (catalog + manual retirement) ────────────────────────────────────
+
+export type UserFact = {
+  id: string;
+  subject: string;
+  predicate: string;
+  object: string;
+  statement: string;
+  source_note_id: string;
+  source_excerpt: string | null;
+  source_note_title: string | null;
+  is_latest: boolean;
+  superseded_by: string | null;
+  superseded_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * List every CURRENT fact (is_latest=true) for the caller, with the source
+ * note's title joined in for display. Newest first.
+ */
+export async function listMyFacts(): Promise<UserFact[]> {
+  const { data, error } = await supabase
+    .from('user_facts')
+    .select(
+      'id,subject,predicate,object,statement,source_note_id,source_excerpt,is_latest,superseded_by,superseded_at,created_at,updated_at,notes:source_note_id(title)'
+    )
+    .eq('is_latest', true)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  // PostgREST returns the embedded `notes` relationship as an array even for
+  // a to-one foreign key. We always read the first (and only) element.
+  type Row = Omit<UserFact, 'source_note_title'> & {
+    notes: { title: string }[] | { title: string } | null;
+  };
+  return ((data ?? []) as unknown as Row[]).map((r) => {
+    const joined = Array.isArray(r.notes) ? r.notes[0] : r.notes;
+    return {
+      id: r.id,
+      subject: r.subject,
+      predicate: r.predicate,
+      object: r.object,
+      statement: r.statement,
+      source_note_id: r.source_note_id,
+      source_excerpt: r.source_excerpt,
+      source_note_title: joined?.title ?? null,
+      is_latest: r.is_latest,
+      superseded_by: r.superseded_by,
+      superseded_at: r.superseded_at,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+    };
+  });
+}
+
+/**
+ * Manually retire a fact the user disagrees with. Sets is_latest=false but
+ * leaves superseded_by NULL so we know it was a manual retirement, not
+ * automatic supersession by a newer fact.
+ */
+export async function retireFact(factId: string): Promise<void> {
+  const { error } = await supabase
+    .from('user_facts')
+    .update({
+      is_latest: false,
+      superseded_at: new Date().toISOString(),
+      user_edited: true,
+    })
+    .eq('id', factId);
+  if (error) throw error;
+}
+
 // ─── Search & related ───────────────────────────────────────────────────────
 
 export type SemanticHit = {
@@ -149,6 +276,7 @@ export type AskSource = {
   title: string;
   preview: string;
   similarity: number;
+  updatedAt: string;
 };
 
 export type AskHandlers = {

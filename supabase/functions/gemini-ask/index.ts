@@ -41,26 +41,98 @@ type SourceRef = {
   title: string;
   preview: string;
   similarity: number;
+  updatedAt: string;
 };
+
+type FactHit = {
+  id: string;
+  subject: string;
+  predicate: string;
+  object: string;
+  statement: string;
+  source_note_id: string | null;
+  source_excerpt: string | null;
+  created_at: string;
+  similarity: number;
+};
+
+// Facts below this similarity are noise — better to not show them than to
+// confuse the model. Calibrated against SEMANTIC_SIMILARITY embeddings of
+// short fact statements; tune if we see the model missing obvious matches.
+const FACT_MIN_SIMILARITY = 0.55;
 
 function sseEvent(event: string, data: string): string {
   const lines = data.split('\n').map((l) => `data: ${l}`).join('\n');
   return `event: ${event}\n${lines}\n\n`;
 }
 
-function buildPrompt(question: string, sources: SourceRef[], notes: string[]): string {
-  const header = `You are answering a question using the user's personal notes as the ONLY source.
+// Human-readable relative date for the prompt. The LLM is far more reliable
+// at "more recent than" reasoning when timestamps are described in plain
+// English ("yesterday", "3 days ago") than when given raw ISO strings.
+function describeWhen(iso: string, now: Date): string {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return 'unknown date';
+  const diffMs = now.getTime() - t;
+  const diffMin = Math.round(diffMs / 60_000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+  const diffDay = Math.round(diffHr / 24);
+  if (diffDay < 14) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+function buildPrompt(
+  question: string,
+  sources: SourceRef[],
+  notes: string[],
+  factsBlock: string,
+): string {
+  const header = factsBlock
+    ? `You are answering a question about the user. You have TWO sources:
+
+1. CURRENT FACTS — a small, deduplicated set of canonical facts about the user. These reflect the user's CURRENT state. They have already been reconciled, so they will never contradict each other.
+2. NOTES — full text of the most relevant notes. Notes may contain older statements that have since been revised. When a note contradicts a fact, the FACT is correct; the note is outdated.
+
+Rules:
+- If the question is answered by a CURRENT FACT, answer from that fact. Cite the note in square brackets like [1] (the citation tag is already shown next to each fact).
+- If the question needs more than facts (synthesis, recall, summary), use the NOTES too — but ignore note content that contradicts a CURRENT FACT.
+- Cite every factual claim with the note number, like [1] or [2].
+- If multiple notes agree, cite the most relevant one (no need to cite all).
+- Concise. Short sentences. No preamble.
+- If neither source contains the answer, say so plainly. Never invent.`
+    : `You are answering a question using the user's personal notes as the ONLY source.
 Rules:
 - Cite every factual claim with the note number in square brackets, like [1] or [2].
 - If the notes don't contain the answer, say so plainly. Do NOT invent facts.
 - Keep the answer concise. Short paragraphs. No preamble like "Based on your notes…".
 - If more than one note supports a claim, cite them all: [1][3].`;
 
+  const now = new Date();
   const notesBlock = sources
-    .map((s, i) => `[${s.n}] "${s.title || 'Untitled'}"\n${notes[i]}`)
+    .map((s, i) => {
+      const when = describeWhen(s.updatedAt, now);
+      return `[${s.n}] "${s.title || 'Untitled'}" — updated ${when}\n${notes[i]}`;
+    })
     .join('\n\n');
 
+  if (factsBlock) {
+    return `${header}\n\nCURRENT FACTS:\n${factsBlock}\n\nNOTES:\n${notesBlock}\n\nQuestion: ${question}\n\nAnswer:`;
+  }
   return `${header}\n\nNotes:\n${notesBlock}\n\nQuestion: ${question}\n\nAnswer:`;
+}
+
+// Pick the most useful slice of a note for the prompt. For short notes (the
+// common case) we keep the whole thing. For longer notes we keep the TAIL —
+// in journal-style usage, recently-added lines sit at the bottom and that's
+// where the current state of any evolving fact lives. Without this, a long
+// note where the user revised "fav subject = science" at the end would be
+// truncated to its outdated head.
+function noteSliceForPrompt(text: string, max = 4000): string {
+  const t = (text ?? '').trim();
+  if (t.length <= max) return t || '(empty note)';
+  return `…(earlier content truncated)…\n${t.slice(-max)}`;
 }
 
 // First-turn placeholder title: just the question, truncated. gemini-title
@@ -135,28 +207,81 @@ Deno.serve(async (req) => {
     const queryVec = await embedText(apiKey, question, 'RETRIEVAL_QUERY');
     const vecLiteral = `[${queryVec.join(',')}]`;
 
-    // 2. RAG
-    const { data: hits, error: rErr } = await user.rpc('search_notes_by_embedding', {
-      query_embedding: vecLiteral,
-      match_count: 5,
-    });
-    if (rErr) throw new HttpError(500, `RPC failed: ${rErr.message}`);
+    // 2. Hybrid retrieval — RAG over notes AND lookup of canonical facts.
+    //    Run them in parallel; both go through RLS-scoped RPCs so the user
+    //    can never see anyone else's data.
+    const [notesRes, factsRes] = await Promise.all([
+      user.rpc('search_notes_by_embedding', {
+        query_embedding: vecLiteral,
+        match_count: 5,
+      }),
+      user.rpc('search_facts_by_embedding', {
+        query_embedding: vecLiteral,
+        match_count: 3,
+        min_similarity: FACT_MIN_SIMILARITY,
+      }),
+    ]);
+    if (notesRes.error) throw new HttpError(500, `RPC failed: ${notesRes.error.message}`);
+    if (factsRes.error) {
+      // Facts retrieval is best-effort — if the RPC fails we still answer
+      // from notes alone. Don't fail the whole request.
+      console.warn('search_facts_by_embedding failed:', factsRes.error.message);
+    }
     bumpUsage(user, 'embed');
 
-    const rows = (hits ?? []) as Array<{
+    const noteRows = (notesRes.data ?? []) as Array<{
       id: string;
       title: string;
       content_text: string;
+      updated_at: string;
       similarity: number;
     }>;
+    const factRows = (factsRes.data ?? []) as FactHit[];
 
-    const sources: SourceRef[] = rows.map((r, i) => ({
+    // Pull in any note that a fact cites but that didn't make the top-5
+    // RAG hits — otherwise the citation [N] in the answer can't be linked
+    // back to a real source chip.
+    const noteIdsInRag = new Set(noteRows.map((r) => r.id));
+    const missingFactNoteIds = Array.from(
+      new Set(
+        factRows
+          .map((f) => f.source_note_id)
+          .filter((id): id is string => !!id && !noteIdsInRag.has(id))
+      )
+    );
+    let extraNotes: typeof noteRows = [];
+    if (missingFactNoteIds.length > 0) {
+      const { data: extra } = await user
+        .from('notes')
+        .select('id,title,content_text,updated_at')
+        .in('id', missingFactNoteIds);
+      extraNotes = ((extra ?? []) as Array<{
+        id: string;
+        title: string;
+        content_text: string;
+        updated_at: string;
+      }>).map((n) => ({ ...n, similarity: 0 }));
+    }
+
+    const allNoteRows = [...noteRows, ...extraNotes];
+
+    const sources: SourceRef[] = allNoteRows.map((r, i) => ({
       n: i + 1,
       id: r.id,
       title: r.title ?? 'Untitled',
       preview: (r.content_text ?? '').slice(0, 240),
       similarity: r.similarity,
+      updatedAt: r.updated_at,
     }));
+
+    // Map each fact to its source-note citation number, if known.
+    const noteIdToN = new Map(sources.map((s) => [s.id, s.n]));
+    const factsBlock = factRows
+      .map((f) => {
+        const n = f.source_note_id ? noteIdToN.get(f.source_note_id) : undefined;
+        return n ? `- ${f.statement} [${n}]` : `- ${f.statement}`;
+      })
+      .join('\n');
 
     // Helper: persist the final turn. We call this once we know the answer
     // (or whatever partial answer we got).
@@ -196,10 +321,8 @@ Deno.serve(async (req) => {
     }
 
     // 3. Stream Gemini
-    const notesText = rows.map((r) =>
-      (r.content_text ?? '').slice(0, 2000).trim() || '(empty note)'
-    );
-    const prompt = buildPrompt(question, sources, notesText);
+    const notesText = allNoteRows.map((r) => noteSliceForPrompt(r.content_text ?? ''));
+    const prompt = buildPrompt(question, sources, notesText, factsBlock);
 
     const geminiRes = await fetch(
       `${BASE}/models/${GEN_MODEL}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`,
