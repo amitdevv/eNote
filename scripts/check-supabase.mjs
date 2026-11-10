@@ -19,26 +19,26 @@ export async function checkSupabase(env = process.env, request = fetch) {
     if (role !== 'anon') throw new Error('Use a public anon/publishable key, not a service-role or secret key.');
   }
   // This reaches PostgREST/Postgres, unlike a ping to the static landing page.
-  // Zero rows requested; RLS remains in effect. No note contents are returned.
-  const endpoint = new URL('/rest/v1/notes?select=id&limit=0', url);
+  // Read one harmless sentinel; RLS stays enabled and no user tables are queried.
+  const endpoint = new URL('/rest/v1/app_health?select=id,status&id=eq.1&limit=1', url);
   const response = await request(endpoint, {
     headers: { apikey: SUPABASE_ANON_KEY },
     redirect: 'error',
     signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok) {
-    throw new Error(`Database check failed (HTTP ${response.status}). Check project status, API key, and notes table permissions.`);
+    throw new Error(`Database check failed (HTTP ${response.status}). Check project status, API key, and app_health migration and permissions.`);
   }
   const data = await response.json();
-  if (!Array.isArray(data) || data.length !== 0) {
-    throw new Error('Database check returned an unexpected response.');
+  if (!Array.isArray(data) || data.length !== 1 || data[0]?.id !== 1 || data[0]?.status !== 'ok') {
+    throw new Error('Database check did not return the expected app_health sentinel. Apply the migration and check its row/policy.');
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     await checkSupabase();
-    console.log('Supabase database check passed. No rows requested or changed.');
+    console.log('Supabase database check passed. Health sentinel verified; no data changed.');
   } catch (error) {
     // Do not print request headers, URLs, or response bodies.
     console.error(error.message.startsWith('fetch') ? 'Database check could not reach Supabase.' : error.message);

@@ -3,14 +3,16 @@ import assert from 'node:assert/strict';
 import { checkSupabase } from './check-supabase.mjs';
 
 const env = { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'sb_publishable_test' };
-test('queries the database without requesting rows or changing data', async () => {
+test('reads the expected health sentinel without querying notes or changing data', async () => {
   await checkSupabase(env, async (url, options) => {
-    assert.equal(url.pathname, '/rest/v1/notes');
-    assert.equal(url.searchParams.get('limit'), '0');
+    assert.equal(url.pathname, '/rest/v1/app_health');
+    assert.equal(url.searchParams.get('limit'), '1');
+    assert.equal(url.searchParams.get('id'), 'eq.1');
+    assert.equal(url.searchParams.get('select'), 'id,status');
     assert.equal(options.method ?? 'GET', 'GET');
     assert.equal(options.redirect, 'error');
     assert.equal(options.headers.apikey, env.SUPABASE_ANON_KEY);
-    return Response.json([]);
+    return Response.json([{ id: 1, status: 'ok' }]);
   });
 });
 test('rejects missing configuration, admin keys, and unsafe origins before sending requests', async () => {
@@ -25,5 +27,7 @@ test('fails for paused/unavailable projects, access errors, and invalid response
   for (const status of [401, 403, 404, 503, 540]) {
     await assert.rejects(checkSupabase(env, async () => new Response(null, { status })), new RegExp(`HTTP ${status}`));
   }
-  await assert.rejects(checkSupabase(env, async () => Response.json({ error: 'unexpected' })), /unexpected response/);
+  for (const body of [[], null, {}, [null], [{ id: 2, status: 'ok' }], [{ id: 1, status: 'failed' }], [{ id: 1, status: 'ok' }, { id: 1, status: 'ok' }]]) {
+    await assert.rejects(checkSupabase(env, async () => Response.json(body)), /expected app_health sentinel/);
+  }
 });
