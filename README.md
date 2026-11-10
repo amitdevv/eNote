@@ -182,3 +182,37 @@ supabase/
 ## License
 
 MIT.
+
+## Supabase availability on the Free plan
+
+Supabase can pause Free-plan projects after a week of low database activity.
+The `Supabase database health` GitHub Actions workflow performs a read-only
+Data API query every six hours (`23 */6 * * *`, UTC). It requests zero rows
+from `notes`, leaves RLS enabled, and never uses an admin key or writes data.
+This is a best-effort activity/availability check, not a no-pause guarantee.
+
+Setup:
+1. Set repository **Settings → Secrets and variables → Actions** secrets:
+   - `SUPABASE_URL`: the same project origin as `VITE_SUPABASE_URL`.
+   - `SUPABASE_ANON_KEY`: the app's public anon/publishable key, never a
+     service-role or secret key.
+2. Merge the workflow into the default branch. Schedules do not run from PRs.
+3. Under **Actions → Supabase database health**, use **Run workflow** to test.
+   Enable failed-workflow notifications in your GitHub notification settings.
+
+The check fails on missing configuration, an unavailable/paused project,
+invalid API credentials, or inaccessible `notes` schema. Review the failed
+run and Supabase dashboard; if already paused, manually resume the project.
+A request does not automatically restore a paused project.
+
+GitHub can delay/drop scheduled runs and disables schedules in public repos
+with no repository activity for 60 days. Check that the workflow is still
+enabled if this repo is quiet. An independent external scheduler can avoid
+that GitHub-specific limitation, but still cannot guarantee Supabase will
+never pause a Free project. A Supabase paid plan removes inactivity pausing;
+it does not guarantee zero downtime from other causes.
+
+References: [Supabase pausing policy](https://supabase.com/docs/guides/platform/free-project-pausing)
+and [GitHub schedule limitations](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+
+Probe tests: `node --test scripts/check-supabase.test.mjs`.
